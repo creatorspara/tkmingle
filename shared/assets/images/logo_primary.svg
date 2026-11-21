@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 560" width="100%" height="100%">
+  <defs>
+    <linearGradient id="primaryArchGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8875FF" />
+      <stop offset="50%" stop-color="#A594FF" />
+      <stop offset="100%" stop-color="#B9A9FF" />
+    </linearGradient>
+    <linearGradient id="primaryHorizonGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8875FF" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#8875FF"/>
+      <stop offset="100%" stop-color="#B9A9FF" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Centered Emblem -->
+  <g transform="translate(50, 0)">
+    <!-- Outer Pointed Arch -->
+    <path d="M 70 290 C 70 170, 120 70, 200 40 C 280 70, 330 170, 330 290 C 315 285, 290 280, 265 280 C 265 180, 235 105, 200 85 C 165 105, 135 180, 135 280 C 110 280, 85 285, 70 290 Z" 
+          fill="url(#primaryArchGrad)" />
+
+    <!-- Domes (White) -->
+    <g fill="#FFFFFF">
+      <path d="M 200 80 L 203 105 L 197 105 Z" />
+      <circle cx="200" cy="78" r="3.5" />
+      <path d="M 160 145 C 160 110, 180 95, 200 95 C 220 95, 240 110, 240 145 Z" />
+      
+      <path d="M 140 120 L 142 138 L 138 138 Z" />
+      <circle cx="140" cy="118" r="2.5" />
+      <path d="M 122 155 C 122 130, 132 122, 140 122 C 148 122, 158 130, 158 155 Z" />
+
+      <path d="M 260 120 L 262 138 L 258 138 Z" />
+      <circle cx="260" cy="118" r="2.5" />
+      <path d="M 242 155 C 242 130, 252 122, 260 122 C 268 122, 278 130, 278 155 Z" />
+
+      <path d="M 100 190 L 105 180 L 125 180 L 125 155 L 155 155 L 155 145 L 245 145 L 245 155 L 275 155 L 275 180 L 295 180 L 300 190 L 290 280 C 260 270, 230 268, 200 268 C 170 268, 140 270, 110 280 Z" />
+    </g>
+
+    <!-- Archway Inner Cutout -->
+    <path d="M 155 270 C 155 210, 175 195, 200 195 C 225 195, 245 210, 245 270 Z" fill="#0A1026" />
+
+    <!-- Connected Students -->
+    <g fill="#B9A9FF">
+      <circle cx="180" cy="225" r="13" />
+      <path d="M 158 270 C 158 248, 170 242, 180 242 C 190 242, 198 248, 198 270 Z" />
+    </g>
+    <g fill="#8875FF">
+      <circle cx="220" cy="225" r="13" />
+      <path d="M 202 270 C 202 248, 210 242, 220 242 C 230 242, 242 248, 242 270 Z" />
+    </g>
+
+    <!-- Sweeping Horizon Arc -->
+    <path d="M 50 305 Q 200 270 350 305 C 330 308, 70 308, 50 305 Z" fill="url(#primaryHorizonGrad)" />
+  </g>
+
+  <!-- Wordmark -->
+  <text x="250" y="400" text-anchor="middle" font-family="'Sora', sans-serif" font-weight="800" font-size="54" letter-spacing="-1">
+    <tspan fill="#F6F5FF">TKM</tspan><tspan fill="#8875FF">ingle</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="250" y="445" text-anchor="middle" font-family="'Sora', sans-serif" font-weight="500" font-size="20" fill="#A5A9BC" letter-spacing="0.5">
+    Your campus. Your people. Your connections.
+  </text>
+</svg>

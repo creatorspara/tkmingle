@@ -1,0 +1,46 @@
+# Git ignore for TKMingle Monorepo
+
+# Binaries & Large Archives
+*.apk
+*.exe
+*.rar
+*.zip
+*.bin
+*.dill
+tkmingle.apk
+shared/tkmingle.apk
+mobile/android/app/*.exe
+mobile/android/app/*.rar
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Dependencies & Build Outputs
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Flutter & Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/build/
+
+# IDE & OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
