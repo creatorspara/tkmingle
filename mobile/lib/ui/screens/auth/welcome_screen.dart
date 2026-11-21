@@ -127,41 +127,7 @@ class WelcomeScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  // Demo Switcher Pill
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.secondaryBackground : AppColors.lightElevated,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isDark ? AppColors.border : AppColors.lightBorder,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.flash_on_rounded, size: 16, color: AppColors.accentTeal),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Demo Mode: Sample student profiles ready',
-                            style: AppTypography.metadata(
-                              isDark ? AppColors.mutedText : AppColors.lightTextSecondary,
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () => _showQuickDemoModal(context, ref),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text('Try Demo', style: TextStyle(color: AppColors.accentTeal, fontWeight: FontWeight.w600, fontSize: 12)),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 16),
 
                   // Primary Button ("Get Started ->" as shown on brand board)
                   TKMinglePrimaryButton(
@@ -182,72 +148,6 @@ class WelcomeScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-
-  void _showQuickDemoModal(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDark ? AppColors.cardBackground : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Select a Demo Account',
-                  style: AppTypography.headlineMedium(
-                    isDark ? AppColors.primaryText : AppColors.lightTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Switch immediately to experience discovery or administrative moderation:',
-                  style: AppTypography.bodyMedium(
-                    isDark ? AppColors.mutedText : AppColors.lightTextSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: SeedData.sampleUsers.map((user) {
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: user.profileImage.isNotEmpty ? NetworkImage(user.profileImage) : null,
-                          backgroundColor: AppColors.tkmPurple,
-                          child: user.profileImage.isEmpty ? Text(user.name[0]) : null,
-                        ),
-                        title: Text(user.name, style: AppTypography.titleMedium(isDark ? AppColors.primaryText : AppColors.lightTextPrimary)),
-                        subtitle: Text('${user.department} • ${user.role.toUpperCase()}', style: AppTypography.metadata(AppColors.mutedText)),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.mutedText),
-                        onTap: () async {
-                          Navigator.pop(ctx);
-                          await ref.read(authProvider.notifier).switchUser(user);
-                          if (context.mounted) {
-                            if (user.isAdmin) {
-                              context.go('/admin');
-                            } else {
-                              context.go('/discover');
-                            }
-                          }
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

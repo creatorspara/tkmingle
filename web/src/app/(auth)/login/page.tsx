@@ -22,17 +22,22 @@ export default function LoginPage() {
     try {
       if (isLiveSupabaseConfigured()) {
         const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: email.trim().toLowerCase(),
           password,
         });
         if (error) throw error;
       } else {
-        // Mock session mode
         await new Promise((r) => setTimeout(r, 600));
       }
       router.push("/app/discover");
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to sign in");
+      let msg = err instanceof Error ? err.message : "Failed to sign in";
+      if (msg.includes("Invalid login credentials") || msg.includes("invalid_credentials")) {
+        msg = "Invalid email or password. Please check your credentials or register if you do not have an account.";
+      } else if (msg.toLowerCase().includes("email not confirmed")) {
+        msg = "Your college email has not been confirmed yet. Please check your inbox for the verification link.";
+      }
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
@@ -47,7 +52,7 @@ export default function LoginPage() {
     try {
       if (isLiveSupabaseConfigured()) {
         const { error } = await supabase.auth.signInWithPassword({
-          email: demoEmail.trim(),
+          email: demoEmail.trim().toLowerCase(),
           password: "TKMingleDemo#2026",
         });
         if (error) {
@@ -168,46 +173,48 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick Demo Switcher */}
-          <div className="pt-4 border-t border-brand-border/60 space-y-2">
-            <span className="text-[11px] font-semibold text-brand-muted uppercase tracking-wider block text-center">
-              Quick Demo Access
-            </span>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin("arjun.k@tkmce.ac.in")}
-                className="p-2 rounded-lg bg-brand-navyCard border border-brand-border hover:border-brand-purple text-left transition-colors"
-              >
-                <div className="font-semibold text-white">Arjun K.</div>
-                <div className="text-[10px] text-brand-muted">CSE • 3rd Year</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin("sneha.varma@tkmce.ac.in")}
-                className="p-2 rounded-lg bg-brand-navyCard border border-brand-border hover:border-brand-teal text-left transition-colors"
-              >
-                <div className="font-semibold text-white">Sneha V.</div>
-                <div className="text-[10px] text-brand-muted">ECE • 3rd Year</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin("rahul.menon@tkmce.ac.in")}
-                className="p-2 rounded-lg bg-brand-navyCard border border-brand-border hover:border-brand-purple text-left transition-colors"
-              >
-                <div className="font-semibold text-white">Rahul M.</div>
-                <div className="text-[10px] text-brand-muted">ME • 4th Year</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin("admin@tkmce.ac.in")}
-                className="p-2 rounded-lg bg-brand-navyCard border border-brand-border hover:border-brand-accentWarm text-left transition-colors"
-              >
-                <div className="font-semibold text-white">Campus Admin</div>
-                <div className="text-[10px] text-brand-muted">Staff • Affairs</div>
-              </button>
+          {/* Quick Demo Access (strictly gated to development environments) */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="pt-4 border-t border-brand-border/60 space-y-2">
+              <span className="text-[11px] font-semibold text-brand-muted uppercase tracking-wider block text-center">
+                [Dev Mode] Quick Demo Access
+              </span>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin("arjun.k@tkmce.ac.in")}
+                  className="p-2 rounded-lg bg-brand-navyCard border border-brand-border hover:border-brand-purple text-left transition-colors"
+                >
+                  <div className="font-semibold text-white">Arjun K.</div>
+                  <div className="text-[10px] text-brand-muted">CSE • 3rd Year</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin("sneha.p@tkmce.ac.in")}
+                  className="p-2 rounded-lg bg-brand-navyCard border border-brand-border hover:border-brand-teal text-left transition-colors"
+                >
+                  <div className="font-semibold text-white">Sneha P.</div>
+                  <div className="text-[10px] text-brand-muted">ECE • 3rd Year</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin("rahul.m@tkmce.ac.in")}
+                  className="p-2 rounded-lg bg-brand-navyCard border border-brand-border hover:border-brand-purple text-left transition-colors"
+                >
+                  <div className="font-semibold text-white">Rahul M.</div>
+                  <div className="text-[10px] text-brand-muted">ME • 4th Year</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin("admin@tkmce.ac.in")}
+                  className="p-2 rounded-lg bg-brand-navyCard border border-brand-border hover:border-brand-accentWarm text-left transition-colors"
+                >
+                  <div className="font-semibold text-white">Campus Admin</div>
+                  <div className="text-[10px] text-brand-muted">Staff • Affairs</div>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="text-center text-xs text-brand-muted pt-2">
             New to TKMCE campus?{" "}

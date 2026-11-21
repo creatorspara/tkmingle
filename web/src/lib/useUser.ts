@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
 import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
-import { StudentProfile, MOCK_STUDENTS } from "@/lib/mockData";
+import { StudentProfile } from "@/lib/mockData";
 
 export interface CurrentUserData {
   user: User | null;
@@ -30,7 +30,7 @@ export function useCurrentUser(): CurrentUserData {
           .maybeSingle();
 
         if (error) {
-          console.warn("Could not query profiles table:", error.message);
+          console.warn("Notice querying profiles table:", error.message);
         }
 
         if (data) {
@@ -51,9 +51,31 @@ export function useCurrentUser(): CurrentUserData {
           });
           return;
         }
+
+        // If profile row doesn't exist yet, self-heal in public.profiles table
+        const initialName = authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "TKM Student";
+        const initialDept = authUser.user_metadata?.department || "General";
+        const initialYear = authUser.user_metadata?.academic_year || "1st Year";
+        const rawPrefix = authUser.email?.split("@")[0] || "student";
+        const initialUsername = `${rawPrefix.replace(/[^a-zA-Z0-9_]/g, "_")}_${authUser.id.slice(0, 4)}`;
+
+        try {
+          await supabase.from("profiles").upsert({
+            id: authUser.id,
+            full_name: initialName,
+            username: initialUsername,
+            email: authUser.email || "",
+            department: initialDept,
+            academic_year: initialYear,
+            verification_status: authUser.email_confirmed_at ? "verified" : "pending",
+            role: "student",
+          });
+        } catch (healErr) {
+          console.warn("Notice on self-heal profile record:", healErr);
+        }
       }
 
-      // If profile row does not exist yet, build from user auth metadata (NEVER fall back to Arjun Krishna)
+      // Build profile representation strictly from authenticated user metadata
       setProfile({
         id: authUser.id,
         full_name: authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "TKM Student",
@@ -89,7 +111,6 @@ export function useCurrentUser(): CurrentUserData {
     async function initSession() {
       try {
         if (!isLiveSupabaseConfigured()) {
-          // If Supabase credentials are not configured, use null (do not mock Arjun)
           if (mounted) {
             setUser(null);
             setProfile(null);
@@ -125,7 +146,7 @@ export function useCurrentUser(): CurrentUserData {
 
     initSession();
 
-    // Listen to real-time auth changes (Sign in, Sign out, Token refresh)
+    // Listen to real-time auth changes (Sign in, Sign out, Token refresh, User update)
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;

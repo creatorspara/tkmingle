@@ -6,9 +6,12 @@ import 'auth_repository.dart';
 class SupabaseAuthRepository implements AuthRepository {
   final SupabaseClient _client = Supabase.instance.client;
 
+  /// Stream of live authentication state changes
+  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
+
   @override
   Future<UserModel?> getCurrentUser() async {
-    final user = _client.auth.currentUser;
+    final user = _client.auth.currentUser ?? _client.auth.currentSession?.user;
     if (user == null) return null;
 
     try {
@@ -21,10 +24,10 @@ class SupabaseAuthRepository implements AuthRepository {
       if (res != null) {
         return UserModel(
           uid: res['id'] as String,
-          name: res['full_name'] as String? ?? 'Student',
+          name: res['full_name'] as String? ?? user.userMetadata?['full_name'] ?? 'Student',
           email: res['email'] as String? ?? user.email ?? '',
-          department: res['department'] as String? ?? 'General',
-          academicYear: res['academic_year'] as String? ?? '1st Year',
+          department: res['department'] as String? ?? user.userMetadata?['department'] ?? 'General',
+          academicYear: res['academic_year'] as String? ?? user.userMetadata?['academic_year'] ?? '1st Year',
           bio: res['bio'] as String? ?? '',
           profileImage: res['profile_image'] as String? ?? '',
           interests: List<String>.from(res['interests'] ?? []),
@@ -32,7 +35,7 @@ class SupabaseAuthRepository implements AuthRepository {
           languages: List<String>.from(res['languages'] ?? []),
           socialAvailability: res['availability'] as String? ?? 'Available to mingle',
           discoverable: res['discoverable'] as bool? ?? true,
-          verified: res['verification_status'] == 'verified',
+          verified: res['verification_status'] == 'verified' || user.emailConfirmedAt != null,
           verificationMethod: res['verification_method'] as String? ?? 'email_otp',
           role: res['role'] as String? ?? 'student',
         );
@@ -41,9 +44,32 @@ class SupabaseAuthRepository implements AuthRepository {
       debugPrint('Error fetching current profile: $e');
     }
 
+    // Self-heal profile row for newly authenticated student if trigger was delayed
+    try {
+      final defaultName = (user.userMetadata?['full_name'] as String?)?.trim().isNotEmpty == true
+          ? user.userMetadata!['full_name'] as String
+          : user.email?.split('@').first ?? 'TKM Student';
+      final defaultDept = user.userMetadata?['department'] as String? ?? 'General';
+      final defaultYear = user.userMetadata?['academic_year'] as String? ?? '1st Year';
+      final username = '${user.email?.split('@').first.replaceAll('.', '_') ?? 'user'}_${user.id.substring(0, 4)}';
+
+      await _client.from('profiles').upsert({
+        'id': user.id,
+        'full_name': defaultName,
+        'username': username,
+        'email': user.email ?? '',
+        'department': defaultDept,
+        'academic_year': defaultYear,
+        'verification_status': user.emailConfirmedAt != null ? 'verified' : 'pending',
+        'role': 'student',
+      });
+    } catch (e) {
+      debugPrint('Notice on profile self-heal: $e');
+    }
+
     return UserModel(
       uid: user.id,
-      name: user.userMetadata?['full_name'] ?? 'TKM Student',
+      name: user.userMetadata?['full_name'] ?? user.email?.split('@').first ?? 'TKM Student',
       email: user.email ?? '',
       department: user.userMetadata?['department'] ?? 'General',
       academicYear: user.userMetadata?['academic_year'] ?? '1st Year',
@@ -54,26 +80,46 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<UserModel> login(String email, String password) async {
-    final response = await _client.auth.signInWithPassword(
-      email: email.trim(),
-      password: password,
-    );
+    final normalizedEmail = email.trim().toLowerCase();
+    try {
+      final response = await _client.auth.signInWithPassword(
+        email: normalizedEmail,
+        password: password,
+      );
 
-    final user = response.user;
-    if (user == null) throw Exception('Authentication failed');
+      final user = response.user;
+      if (user == null) {
+        throw const AuthException('Authentication failed. No user record returned.');
+      }
 
-    final profile = await getCurrentUser();
-    if (profile != null) return profile;
+      final profile = await getCurrentUser();
+      if (profile != null) return profile;
 
-    return UserModel(
-      uid: user.id,
-      name: email.split('@').first,
-      email: email,
-      department: 'Engineering',
-      academicYear: '1st Year',
-      verified: true,
-      role: 'student',
-    );
+      return UserModel(
+        uid: user.id,
+        name: user.userMetadata?['full_name'] ?? normalizedEmail.split('@').first,
+        email: normalizedEmail,
+        department: user.userMetadata?['department'] ?? 'Engineering',
+        academicYear: user.userMetadata?['academic_year'] ?? '1st Year',
+        verified: user.emailConfirmedAt != null,
+        role: 'student',
+      );
+    } on AuthException catch (e) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('invalid login credentials') || e.statusCode == '400') {
+        throw const AuthException(
+          'Invalid email or password. Please verify your credentials or register a new student account.',
+        );
+      } else if (msg.contains('email not confirmed')) {
+        throw const AuthException(
+          'Your college email has not been confirmed yet. Please check your inbox for the verification link.',
+        );
+      } else {
+        throw AuthException(e.message);
+      }
+    } catch (e) {
+      throw Exception('Login failed: ${e.toString()}');
+    }
   }
 
   @override
@@ -84,11 +130,14 @@ class SupabaseAuthRepository implements AuthRepository {
     required String department,
     required String academicYear,
   }) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    final trimmedName = name.trim();
+
     final response = await _client.auth.signUp(
-      email: email.trim(),
+      email: normalizedEmail,
       password: password,
       data: {
-        'full_name': name.trim(),
+        'full_name': trimmedName,
         'department': department,
         'academic_year': academicYear,
       },
@@ -99,12 +148,12 @@ class SupabaseAuthRepository implements AuthRepository {
 
     // Create profile row in profiles table
     try {
-      final username = '${email.split('@').first.replaceAll('.', '_')}_${user.id.substring(0, 4)}';
+      final username = '${normalizedEmail.split('@').first.replaceAll('.', '_')}_${user.id.substring(0, 4)}';
       await _client.from('profiles').upsert({
         'id': user.id,
-        'full_name': name.trim(),
+        'full_name': trimmedName,
         'username': username,
-        'email': email.trim().toLowerCase(),
+        'email': normalizedEmail,
         'department': department,
         'academic_year': academicYear,
         'verification_status': 'pending',
@@ -116,8 +165,8 @@ class SupabaseAuthRepository implements AuthRepository {
 
     return UserModel(
       uid: user.id,
-      name: name,
-      email: email,
+      name: trimmedName,
+      email: normalizedEmail,
       department: department,
       academicYear: academicYear,
       verified: false,
@@ -127,18 +176,18 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<bool> verifyEmailOtp(String email, String otp) async {
+    final normalizedEmail = email.trim().toLowerCase();
     try {
       final res = await _client.auth.verifyOTP(
         type: OtpType.signup,
-        email: email.trim(),
+        email: normalizedEmail,
         token: otp.trim(),
       );
       if (res.session != null) return true;
 
-      // Also try email OTP type
       final resEmail = await _client.auth.verifyOTP(
         type: OtpType.email,
-        email: email.trim(),
+        email: normalizedEmail,
         token: otp.trim(),
       );
       return resEmail.session != null;
@@ -163,7 +212,7 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> sendEmailOtp(String email) async {
     await _client.auth.resend(
       type: OtpType.signup,
-      email: email,
+      email: email.trim().toLowerCase(),
     );
   }
 
@@ -174,7 +223,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> resetPassword(String email) async {
-    await _client.auth.resetPasswordForEmail(email);
+    await _client.auth.resetPasswordForEmail(email.trim().toLowerCase());
   }
 
   @override

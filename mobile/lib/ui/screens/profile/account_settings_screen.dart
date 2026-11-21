@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/seed_data.dart';
 import '../../../state/auth_provider.dart';
 import '../../../state/theme_provider.dart';
 
@@ -170,52 +169,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  void _showAccountSwitcher(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Switch Active Demo Account', style: AppTypography.headlineMedium(Colors.white)),
-                const SizedBox(height: 14),
-                ...SeedData.sampleUsers.map((user) {
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: user.profileImage.isNotEmpty ? NetworkImage(user.profileImage) : null,
-                      child: user.profileImage.isEmpty ? Text(user.name[0]) : null,
-                    ),
-                    title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('${user.department} • ${user.role.toUpperCase()}'),
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      await ref.read(authProvider.notifier).switchUser(user);
-                      if (context.mounted) {
-                        if (user.isAdmin) {
-                          context.go('/admin');
-                        } else {
-                          context.go('/discover');
-                        }
-                      }
-                    },
-                  );
-                }),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 

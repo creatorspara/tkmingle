@@ -30,15 +30,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { label: "Settings", href: "/app/settings", icon: Settings },
   ];
 
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
+
   const handleLogout = async () => {
     await logout();
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen bg-brand-navy flex flex-col items-center justify-center text-white">
         <Loader2 className="w-8 h-8 animate-spin text-brand-purple mb-3" />
-        <p className="text-xs text-brand-muted">Loading campus profile...</p>
+        <p className="text-xs text-brand-muted">Loading campus portal...</p>
       </div>
     );
   }

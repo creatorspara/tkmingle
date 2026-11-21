@@ -77,7 +77,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="p-8 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-brand-purple mb-2" />

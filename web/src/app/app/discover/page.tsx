@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Search,
   Filter,
@@ -20,7 +21,7 @@ import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
 
 export default function DiscoverPage() {
   const { user } = useCurrentUser();
-  const [students, setStudents] = useState<StudentProfile[]>(MOCK_STUDENTS);
+  const [students, setStudents] = useState<StudentProfile[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDept, setSelectedDept] = useState("All Departments");
@@ -33,7 +34,7 @@ export default function DiscoverPage() {
   useEffect(() => {
     async function fetchProfiles() {
       if (!isLiveSupabaseConfigured()) {
-        setStudents(MOCK_STUDENTS);
+        setStudents([]);
         setLoadingStudents(false);
         return;
       }
@@ -51,7 +52,7 @@ export default function DiscoverPage() {
             username: p.username || "student",
             department: p.department || "General",
             academic_year: p.academic_year || "1st Year",
-            bio: p.bio || "TKMCE student",
+            bio: p.bio || "",
             profile_image: p.profile_image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80",
             interests: p.interests || [],
             skills: p.skills || [],
@@ -62,11 +63,11 @@ export default function DiscoverPage() {
           }));
           setStudents(liveList);
         } else {
-          setStudents(MOCK_STUDENTS);
+          setStudents([]);
         }
       } catch (err) {
-        console.warn("Could not query profiles table, using fallback:", err);
-        setStudents(MOCK_STUDENTS);
+        console.warn("Could not query profiles table:", err);
+        setStudents([]);
       } finally {
         setLoadingStudents(false);
       }
@@ -340,6 +341,13 @@ export default function DiscoverPage() {
               >
                 {requestedIds.includes(selectedStudent.id) ? "Request Pending" : "Send Connection Request"}
               </button>
+              <Link
+                href={`/app/messages?to=${selectedStudent.id}`}
+                className="px-4 py-2.5 rounded-tk-btn bg-brand-navyCard border border-brand-teal/40 hover:border-brand-teal text-brand-teal text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                Message
+              </Link>
             </div>
           </div>
         </div>

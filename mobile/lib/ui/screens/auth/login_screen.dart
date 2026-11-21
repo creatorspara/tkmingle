@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../state/auth_provider.dart';
@@ -16,8 +18,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'abhiram.v@tkmce.ac.in');
-  final _passwordController = TextEditingController(text: 'Password123!');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -48,10 +50,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           context.go('/discover');
         }
       }
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.message;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceAll('Exception:', '').trim();
-      });
+      var msg = e.toString().replaceAll('Exception:', '').replaceAll('AuthApiException:', '').trim();
+      if (msg.contains('invalid_credentials') || msg.contains('Invalid login credentials')) {
+        msg = 'Invalid email or password. Please verify your credentials or register a new student account.';
+      }
+      if (mounted) {
+        setState(() {
+          _errorMessage = msg;
+        });
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -194,61 +208,64 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   variant: ButtonVariant.primary,
                 ),
                 const SizedBox(height: 28),
-                // Demo Quick Fill section
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                // Demo Quick Fill section (strictly gated to developer debug builds)
+                if (kDebugMode) ...[
+                  const SizedBox(height: 28),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.developer_mode, size: 18, color: AppColors.highlight),
+                            const SizedBox(width: 6),
+                            Text(
+                              '[Dev Mode] Demo Accounts',
+                              style: AppTypography.titleMedium(
+                                isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            OutlinedButton(
+                              onPressed: () => _quickFill('arjun.k@tkmce.ac.in'),
+                              child: const Text('Arjun (CSE)'),
+                            ),
+                            OutlinedButton(
+                              onPressed: () => _quickFill('sneha.p@tkmce.ac.in'),
+                              child: const Text('Sneha (ECE)'),
+                            ),
+                            OutlinedButton(
+                              onPressed: () => _quickFill('rahul.m@tkmce.ac.in'),
+                              child: const Text('Rahul (ME)'),
+                            ),
+                            OutlinedButton(
+                              onPressed: () => _quickFill('admin@tkmce.ac.in'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.highlightWarm,
+                                side: const BorderSide(color: AppColors.highlightWarm),
+                              ),
+                              child: const Text('Campus Admin'),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.bolt, size: 18, color: AppColors.highlight),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Quick Demo Accounts',
-                            style: AppTypography.titleMedium(
-                              isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          OutlinedButton(
-                            onPressed: () => _quickFill('arjun.k@tkmce.ac.in'),
-                            child: const Text('Arjun (CSE)'),
-                          ),
-                          OutlinedButton(
-                            onPressed: () => _quickFill('sneha.varma@tkmce.ac.in'),
-                            child: const Text('Sneha (ECE)'),
-                          ),
-                          OutlinedButton(
-                            onPressed: () => _quickFill('rahul.menon@tkmce.ac.in'),
-                            child: const Text('Rahul (ME)'),
-                          ),
-                          OutlinedButton(
-                            onPressed: () => _quickFill('admin@tkmce.ac.in'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.highlightWarm,
-                              side: const BorderSide(color: AppColors.highlightWarm),
-                            ),
-                            child: const Text('Campus Admin'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                ],
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

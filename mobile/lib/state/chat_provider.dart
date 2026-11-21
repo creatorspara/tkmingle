@@ -1,12 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/constants/app_constants.dart';
 import '../data/models/conversation_model.dart';
 import '../data/models/message_model.dart';
 import '../data/repositories/message_repository.dart';
+import '../data/repositories/supabase_message_repository.dart';
 import 'user_provider.dart';
 import 'auth_provider.dart';
 
 final messageRepositoryProvider = Provider<MessageRepository>((ref) {
   final userRepo = ref.watch(userRepositoryProvider);
+  if (AppConstants.isSupabaseConfigured) {
+    return SupabaseMessageRepository(userRepository: userRepo);
+  }
   return LocalMessageRepository(userRepository: userRepo);
 });
 

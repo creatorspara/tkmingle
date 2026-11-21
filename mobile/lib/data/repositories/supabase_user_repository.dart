@@ -3,12 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import '../models/report_model.dart';
-import '../mock/seed_data.dart';
 import 'user_repository.dart';
 
 class SupabaseUserRepository implements UserRepository {
   final SupabaseClient _client = Supabase.instance.client;
-  final List<UserModel> _fallbackUsers = List.from(SeedData.sampleUsers);
 
   UserModel _mapProfileToUser(Map<String, dynamic> row) {
     return UserModel(
@@ -80,12 +78,7 @@ class SupabaseUserRepository implements UserRepository {
       debugPrint('Notice on Supabase profiles discovery: $e');
     }
 
-    // Fallback if profiles table is empty or offline, strictly excluding current user
-    return _fallbackUsers.where((user) {
-      if (currentUserId != null && user.uid == currentUserId) return false;
-      if (user.isAdmin || user.isSuspended || !user.discoverable) return false;
-      return true;
-    }).toList();
+    return [];
   }
 
   @override
@@ -99,11 +92,7 @@ class SupabaseUserRepository implements UserRepository {
       debugPrint('Error getting user by id: $e');
     }
 
-    try {
-      return _fallbackUsers.firstWhere((u) => u.uid == uid);
-    } catch (_) {
-      return null;
-    }
+    return null;
   }
 
   @override

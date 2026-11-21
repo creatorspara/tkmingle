@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants/app_constants.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/auth_repository.dart';
@@ -13,6 +15,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 class AuthStateNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   final AuthRepository _repository;
+  StreamSubscription<AuthState>? _authSubscription;
 
   AuthStateNotifier(this._repository) : super(const AsyncValue.loading()) {
     init();
@@ -25,12 +28,33 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
+
+    // Subscribe to live auth events from Supabase Auth
+    if (_repository is SupabaseAuthRepository) {
+      _authSubscription = (_repository as SupabaseAuthRepository)
+          .authStateChanges
+          .listen((data) async {
+        final event = data.event;
+        if (event == AuthChangeEvent.signedOut) {
+          state = const AsyncValue.data(null);
+        } else if (event == AuthChangeEvent.signedIn ||
+            event == AuthChangeEvent.tokenRefreshed ||
+            event == AuthChangeEvent.userUpdated) {
+          try {
+            final user = await _repository.getCurrentUser();
+            state = AsyncValue.data(user);
+          } catch (e, st) {
+            state = AsyncValue.error(e, st);
+          }
+        }
+      });
+    }
   }
 
   Future<void> login(String email, String password) async {
     state = const AsyncValue.loading();
     try {
-      final user = await _repository.login(email, password);
+      final user = await _repository.login(email.trim(), password);
       state = AsyncValue.data(user);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -76,14 +100,15 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     state = AsyncValue.data(updated);
   }
 
-  Future<void> switchUser(UserModel user) async {
-    await _repository.updateCurrentUser(user);
-    state = AsyncValue.data(user);
-  }
-
   Future<void> logout() async {
     await _repository.logout();
     state = const AsyncValue.data(null);
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 }
 
