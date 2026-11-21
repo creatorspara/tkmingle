@@ -462,7 +462,7 @@ BEGIN
         INSERT INTO public.circle_posts (id, circle_id, author_id, title, content, likes_count, comments_count)
         VALUES 
         (
-            'p1111111-1111-1111-1111-111111111111',
+            'fa111111-1111-1111-1111-111111111111',
             cid_coding,
             uid_arjun,
             'HackTKM 2026 Announcement!',
@@ -471,7 +471,7 @@ BEGIN
             8
         ),
         (
-            'p2222222-2222-2222-2222-222222222222',
+            'fa222222-2222-2222-2222-222222222222',
             cid_iedc,
             uid_arjun,
             'Grant Pitching Session Next Thursday',
@@ -486,7 +486,7 @@ BEGIN
         INSERT INTO public.circle_posts (id, circle_id, author_id, title, content, likes_count, comments_count)
         VALUES 
         (
-            'p3333333-3333-3333-3333-333333333333',
+            'fa333333-3333-3333-3333-333333333333',
             cid_robotics,
             uid_rahul,
             'Line Follower & Combat Bot Workshop',
@@ -521,10 +521,10 @@ BEGIN
 
         INSERT INTO public.messages (id, conversation_id, sender_id, content, created_at)
         VALUES 
-        ('m1111111-1111-1111-1111-111111111111', conv_id1, uid_sneha, 'Hey Arjun! Saw your post about the campus hackathon.', NOW() - INTERVAL '2 hours'),
-        ('m2222222-2222-2222-2222-222222222222', conv_id1, uid_arjun, 'Hey Sneha! Yes, we need someone with IoT/hardware skills for the smart campus track.', NOW() - INTERVAL '1 hour 45 minutes'),
-        ('m3333333-3333-3333-3333-333333333333', conv_id1, uid_sneha, 'That sounds awesome! I have been working with ESP32 sensors all semester.', NOW() - INTERVAL '1 hour 30 minutes'),
-        ('m4444444-4444-4444-4444-444444444444', conv_id1, uid_arjun, 'Sounds like a plan! Let’s meet at the Amphi after 4:30.', NOW() - INTERVAL '1 hour')
+        ('ea111111-1111-1111-1111-111111111111', conv_id1, uid_sneha, 'Hey Arjun! Saw your post about the campus hackathon.', NOW() - INTERVAL '2 hours'),
+        ('ea222222-2222-2222-2222-222222222222', conv_id1, uid_arjun, 'Hey Sneha! Yes, we need someone with IoT/hardware skills for the smart campus track.', NOW() - INTERVAL '1 hour 45 minutes'),
+        ('ea333333-3333-3333-3333-333333333333', conv_id1, uid_sneha, 'That sounds awesome! I have been working with ESP32 sensors all semester.', NOW() - INTERVAL '1 hour 30 minutes'),
+        ('ea444444-4444-4444-4444-444444444444', conv_id1, uid_arjun, 'Sounds like a plan! Let’s meet at the Amphi after 4:30.', NOW() - INTERVAL '1 hour')
         ON CONFLICT (id) DO NOTHING;
     END IF;
 
