@@ -17,6 +17,11 @@ mobile/android/app/*.rar
 .env.local
 .env.*.local
 *.env
+web/.env
+web/.env.local
+web/.env.*.local
+mobile/.env
+mobile/.env.local
 
 # Dependencies & Build Outputs
 node_modules/
