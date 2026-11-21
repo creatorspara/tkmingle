@@ -22,7 +22,7 @@ class SupabaseMessageRepository implements MessageRepository {
           .select('conversation_id, last_read_at')
           .eq('user_id', currentUserId);
 
-      if (memberRows is! List || memberRows.isEmpty) {
+      if (memberRows.isEmpty) {
         return [];
       }
 
@@ -37,7 +37,7 @@ class SupabaseMessageRepository implements MessageRepository {
           .inFilter('id', convIds)
           .order('last_message_at', ascending: false);
 
-      if (convRows is! List) return [];
+      if (convRows.isEmpty) return [];
 
       final List<ConversationModel> result = [];
 
@@ -76,9 +76,7 @@ class SupabaseMessageRepository implements MessageRepository {
               .eq('conversation_id', convId)
               .neq('sender_id', currentUserId)
               .gt('created_at', lastReadAt.toIso8601String());
-          if (countRes is List) {
-            unreadCount = countRes.length;
-          }
+          unreadCount = countRes.length;
         } catch (_) {}
 
         final lastMsgAtStr = conv['last_message_at'] as String?;
@@ -131,9 +129,9 @@ class SupabaseMessageRepository implements MessageRepository {
           .eq('conversation_id', conversationId)
           .order('created_at', ascending: true);
 
-      if (rows is! List) return [];
+      if (rows.isEmpty) return [];
 
-      return rows.map((r) => _mapRowToMessage(r as Map<String, dynamic>)).toList();
+      return rows.map((r) => _mapRowToMessage(r)).toList();
     } catch (e) {
       debugPrint('Error getting messages: $e');
       return [];

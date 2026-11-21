@@ -31,7 +31,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<UserModel?>> {
 
     // Subscribe to live auth events from Supabase Auth
     if (_repository is SupabaseAuthRepository) {
-      _authSubscription = (_repository as SupabaseAuthRepository)
+      _authSubscription = _repository
           .authStateChanges
           .listen((data) async {
         final event = data.event;

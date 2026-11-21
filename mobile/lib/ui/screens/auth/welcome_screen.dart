@@ -5,8 +5,6 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/seed_data.dart';
-import '../../../state/auth_provider.dart';
 import '../../components/tkmingle_components.dart';
 
 class WelcomeScreen extends ConsumerWidget {
@@ -105,19 +103,19 @@ class WelcomeScreen extends ConsumerWidget {
                   Expanded(
                     child: ListView(
                       physics: const BouncingScrollPhysics(),
-                      children: [
+                      children: const [
                         _FeatureTile(
                           icon: Icons.alt_route_rounded,
                           title: 'Beyond Your Department',
                           subtitle: 'Break the branch silo. Connect with ME, EC, CS, Civil, and Arch students.',
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         _FeatureTile(
                           icon: Icons.bubble_chart_rounded,
                           title: 'Shared Interests & Passions',
                           subtitle: 'Discover campus friends who love coding, robotics, acoustic jams, or anime.',
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         _FeatureTile(
                           icon: Icons.shield_outlined,
                           title: 'Private & Verified Community',

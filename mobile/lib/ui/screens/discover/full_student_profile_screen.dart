@@ -368,7 +368,7 @@ class _FullStudentProfileScreenState extends ConsumerState<FullStudentProfileScr
     }
 
     if (connStatus == 'pending_sent') {
-      return CustomButton(
+      return const CustomButton(
         text: 'Connection Request Pending',
         icon: Icons.hourglass_top_rounded,
         width: double.infinity,

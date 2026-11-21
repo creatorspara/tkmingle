@@ -23,7 +23,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final themeMode = ref.watch(themeModeProvider);
-    final currentUser = ref.watch(authProvider).value;
 
     return Scaffold(
       appBar: AppBar(
@@ -100,28 +99,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     onChanged: (val) => setState(() => _notifCircles = val),
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Quick Demo Switcher Section
-            Text(
-              'Demo & Testing Switcher',
-              style: AppTypography.titleMedium(AppColors.secondaryAccent),
-            ),
-            const SizedBox(height: 10),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                ),
-              ),
-              child: ListTile(
-                leading: const Icon(Icons.swap_horiz_rounded, color: AppColors.highlight),
-                title: const Text('Switch Demo Profile'),
-                subtitle: Text('Current: ${currentUser?.name ?? "None"} (${currentUser?.department ?? ""})'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                onTap: () => _showAccountSwitcher(context),
               ),
             ),
             const SizedBox(height: 24),

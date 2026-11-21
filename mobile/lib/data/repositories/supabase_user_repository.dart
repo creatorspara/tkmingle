@@ -56,8 +56,8 @@ class SupabaseUserRepository implements UserRepository {
       }
 
       final rows = await query;
-      if (rows is List && rows.isNotEmpty) {
-        var list = rows.map((r) => _mapProfileToUser(r as Map<String, dynamic>)).toList();
+      if (rows.isNotEmpty) {
+        var list = rows.map((r) => _mapProfileToUser(r)).toList();
 
         // Exclude admin or suspended accounts
         list = list.where((u) => !u.isAdmin && !u.isSuspended).toList();
@@ -156,13 +156,13 @@ class SupabaseUserRepository implements UserRepository {
   Future<List<UserModel>> getAllStudentsForAdmin() async {
     try {
       final rows = await _client.from('profiles').select();
-      if (rows is List && rows.isNotEmpty) {
-        return rows.map((r) => _mapProfileToUser(r as Map<String, dynamic>)).toList();
+      if (rows.isNotEmpty) {
+        return rows.map((r) => _mapProfileToUser(r)).toList();
       }
     } catch (e) {
       debugPrint('Admin fetch profiles note: $e');
     }
-    return _fallbackUsers;
+    return [];
   }
 
   @override

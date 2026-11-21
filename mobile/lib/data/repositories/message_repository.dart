@@ -26,7 +26,7 @@ class LocalMessageRepository implements MessageRepository {
 
   LocalMessageRepository({required this.userRepository}) {
     // Seed initial conversation with Ananya
-    final convId = 'conv_ananya_current';
+    const convId = 'conv_ananya_current';
     _conversations.add(
       ConversationModel(
         conversationId: convId,
