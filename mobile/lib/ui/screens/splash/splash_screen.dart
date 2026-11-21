@@ -120,30 +120,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         children: [
                           // Architectural Brand Emblem with glow
                           Container(
-                            width: 140,
-                            height: 140,
+                            width: 120,
+                            height: 120,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(32),
-                              color: AppColors.secondaryBackground,
-                              border: Border.all(color: AppColors.border, width: 1.2),
+                              borderRadius: BorderRadius.circular(28),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.tkmPurple.withOpacity(0.40),
-                                  blurRadius: 40,
+                                  color: AppColors.tkmPurple.withOpacity(0.45),
+                                  blurRadius: 36,
                                   spreadRadius: 2,
-                                  offset: const Offset(0, 10),
+                                  offset: const Offset(0, 8),
                                 ),
                               ],
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(28),
                               child: Image.asset(
                                 AppAssets.appIcon,
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 24),
 
                           // Wordmark: TKM (white) + ingle (purple)
                           Row(

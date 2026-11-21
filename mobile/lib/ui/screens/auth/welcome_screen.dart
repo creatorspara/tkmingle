@@ -50,12 +50,10 @@ class WelcomeScreen extends ConsumerWidget {
                   Hero(
                     tag: 'app_logo',
                     child: Container(
-                      width: 110,
-                      height: 110,
+                      width: 96,
+                      height: 96,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(26),
-                        color: AppColors.secondaryBackground,
-                        border: Border.all(color: AppColors.border, width: 1),
+                        borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.tkmPurple.withOpacity(0.35),
@@ -65,10 +63,10 @@ class WelcomeScreen extends ConsumerWidget {
                         ],
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(25),
+                        borderRadius: BorderRadius.circular(24),
                         child: Image.asset(
                           AppAssets.appIcon,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
