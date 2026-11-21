@@ -38,13 +38,32 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickDemoLogin = (demoEmail: string) => {
+  const handleQuickDemoLogin = async (demoEmail: string) => {
     setEmail(demoEmail);
-    setPassword("tkmce2026");
+    setPassword("TKMingleDemo#2026");
     setLoading(true);
-    setTimeout(() => {
+    setErrorMsg(null);
+
+    try {
+      if (isLiveSupabaseConfigured()) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: demoEmail.trim(),
+          password: "TKMingleDemo#2026",
+        });
+        if (error) {
+          throw new Error(
+            `Demo sign in failed. Ensure Supabase seed has been executed: ${error.message}`
+          );
+        }
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+      }
       router.push("/app/discover");
-    }, 500);
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to sign in with demo account");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -170,6 +189,22 @@ export default function LoginPage() {
               >
                 <div className="font-semibold text-white">Sneha V.</div>
                 <div className="text-[10px] text-brand-muted">ECE • 3rd Year</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickDemoLogin("rahul.menon@tkmce.ac.in")}
+                className="p-2 rounded-lg bg-brand-navyCard border border-brand-border hover:border-brand-purple text-left transition-colors"
+              >
+                <div className="font-semibold text-white">Rahul M.</div>
+                <div className="text-[10px] text-brand-muted">ME • 4th Year</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickDemoLogin("admin@tkmce.ac.in")}
+                className="p-2 rounded-lg bg-brand-navyCard border border-brand-border hover:border-brand-accentWarm text-left transition-colors"
+              >
+                <div className="font-semibold text-white">Campus Admin</div>
+                <div className="text-[10px] text-brand-muted">Staff • Affairs</div>
               </button>
             </div>
           </div>

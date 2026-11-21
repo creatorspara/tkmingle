@@ -60,7 +60,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _quickFill(String email) {
     setState(() {
       _emailController.text = email;
-      _passwordController.text = 'Password123!';
+      _passwordController.text = 'TKMingleDemo#2026';
       _errorMessage = null;
     });
   }
@@ -225,15 +225,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         runSpacing: 8,
                         children: [
                           OutlinedButton(
-                            onPressed: () => _quickFill('abhiram.v@tkmce.ac.in'),
-                            child: const Text('Abhiram (CSE)'),
+                            onPressed: () => _quickFill('arjun.k@tkmce.ac.in'),
+                            child: const Text('Arjun (CSE)'),
                           ),
                           OutlinedButton(
-                            onPressed: () => _quickFill('ananya.k@tkmce.ac.in'),
-                            child: const Text('Ananya (CSE)'),
+                            onPressed: () => _quickFill('sneha.varma@tkmce.ac.in'),
+                            child: const Text('Sneha (ECE)'),
                           ),
                           OutlinedButton(
-                            onPressed: () => _quickFill('rahul.pillai@tkmce.ac.in'),
+                            onPressed: () => _quickFill('rahul.menon@tkmce.ac.in'),
                             child: const Text('Rahul (ME)'),
                           ),
                           OutlinedButton(
