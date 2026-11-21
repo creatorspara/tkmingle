@@ -5,9 +5,10 @@
 --              posts, connections, and conversations).
 -- 
 -- PREREQUISITE:
---   Before executing this seed file, ensure the corresponding Auth users have been
---   provisioned via the Supabase Admin API:
---     $env:SUPABASE_SERVICE_ROLE_KEY="your-key"; node supabase/seed_demo_users.js
+--   1. You MUST first execute the database migration in the Supabase SQL Editor:
+--        supabase/migrations/20261121000001_initial_schema.sql
+--   2. Ensure the corresponding Auth users have been provisioned via the Supabase Admin API:
+--        $env:SUPABASE_SERVICE_ROLE_KEY="your-key"; node supabase/seed_demo_users.js
 --
 -- SECURITY COMPLIANCE:
 --   - Does NOT directly insert or modify auth.users or auth.identities.
@@ -16,6 +17,17 @@
 --     remain unprivileged until explicitly configured in public.admin_roles by the project owner.
 --   - Fully idempotent: Safe to execute multiple times without data duplication.
 -- ==============================================================================
+
+-- 0. Safety Guard: Verify that the schema migration has been executed
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'system_settings'
+    ) THEN
+        RAISE EXCEPTION 'Database schema missing! Please run "supabase/migrations/20261121000001_initial_schema.sql" in the Supabase SQL Editor BEFORE running seed.sql.';
+    END IF;
+END $$;
 
 -- 1. Initialize Global System Settings for TKMCE
 INSERT INTO public.system_settings (

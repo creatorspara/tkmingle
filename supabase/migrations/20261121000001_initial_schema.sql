@@ -60,6 +60,13 @@ CREATE INDEX IF NOT EXISTS idx_profiles_verification_status ON public.profiles(v
 CREATE INDEX IF NOT EXISTS idx_profiles_interests ON public.profiles USING GIN(interests);
 CREATE INDEX IF NOT EXISTS idx_profiles_skills ON public.profiles USING GIN(skills);
 
+-- Admin Roles table (declared right after profiles for trigger reference integrity)
+CREATE TABLE IF NOT EXISTS public.admin_roles (
+    user_id UUID PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
+    role TEXT NOT NULL CHECK (role IN ('moderator', 'admin', 'super_admin')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ==============================================================================
 -- 4. REGISTRATION CAP & AUDIT TRIGGER
 -- ==============================================================================
