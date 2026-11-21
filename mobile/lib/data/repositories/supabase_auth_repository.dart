@@ -130,13 +130,32 @@ class SupabaseAuthRepository implements AuthRepository {
     try {
       final res = await _client.auth.verifyOTP(
         type: OtpType.signup,
-        email: email,
-        token: otp,
+        email: email.trim(),
+        token: otp.trim(),
       );
-      return res.session != null;
+      if (res.session != null) return true;
+
+      // Also try email OTP type
+      final resEmail = await _client.auth.verifyOTP(
+        type: OtpType.email,
+        email: email.trim(),
+        token: otp.trim(),
+      );
+      return resEmail.session != null;
     } catch (e) {
-      debugPrint('OTP verification note: $e');
-      return true; // Fallback for testing
+      debugPrint('OTP verification error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> checkEmailConfirmed() async {
+    try {
+      final res = await _client.auth.refreshSession();
+      final user = res.user ?? _client.auth.currentUser;
+      return user?.emailConfirmedAt != null;
+    } catch (e) {
+      debugPrint('Session refresh check notice: $e');
+      return false;
     }
   }
 

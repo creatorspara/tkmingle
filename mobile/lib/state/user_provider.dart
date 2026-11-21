@@ -1,8 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/constants/app_constants.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/user_repository.dart';
+import '../data/repositories/supabase_user_repository.dart';
 
 final userRepositoryProvider = Provider<UserRepository>((ref) {
+  if (AppConstants.isSupabaseConfigured) {
+    return SupabaseUserRepository();
+  }
   return LocalUserRepository();
 });
 

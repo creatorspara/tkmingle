@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../state/auth_provider.dart';
@@ -17,7 +19,9 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
   final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isVerifying = false;
+  bool _isResending = false;
   String? _errorMessage;
+  String? _statusMessage;
 
   @override
   void dispose() {
@@ -35,13 +39,14 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
   Future<void> _handleVerify() async {
     final otp = _currentOtp;
     if (otp.length != 6) {
-      setState(() => _errorMessage = 'Please enter all 6 digits of the OTP.');
+      setState(() => _errorMessage = 'Please enter all 6 digits of the verification code.');
       return;
     }
 
     setState(() {
       _isVerifying = true;
       _errorMessage = null;
+      _statusMessage = null;
     });
 
     try {
@@ -49,7 +54,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
       if (success && mounted) {
         context.push('/profile-creation');
       } else {
-        setState(() => _errorMessage = 'Invalid OTP. For demo mode, enter any 6 digits (e.g. 123456).');
+        setState(() => _errorMessage = 'Invalid or expired code. Please enter the 6-digit code from your email.');
       }
     } catch (e) {
       setState(() => _errorMessage = 'Verification error: ${e.toString()}');
@@ -58,11 +63,69 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
     }
   }
 
-  void _fillDemoOtp() {
-    for (int i = 0; i < 6; i++) {
-      _controllers[i].text = '${i + 1}';
+  Future<void> _checkEmailLinkStatus() async {
+    setState(() {
+      _isVerifying = true;
+      _errorMessage = null;
+      _statusMessage = null;
+    });
+
+    try {
+      if (AppConstants.isSupabaseConfigured) {
+        final res = await Supabase.instance.client.auth.refreshSession();
+        final user = res.user ?? Supabase.instance.client.auth.currentUser;
+        if (user != null && user.emailConfirmedAt != null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Email confirmed successfully! Welcome to TKMingle.'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+            context.push('/profile-creation');
+            return;
+          }
+        } else {
+          setState(() {
+            _errorMessage = 'Email not confirmed yet. Please click the link sent to your college inbox, or enter the 6-digit code.';
+          });
+        }
+      } else {
+        context.push('/profile-creation');
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Could not verify status: $e');
+    } finally {
+      if (mounted) setState(() => _isVerifying = false);
     }
-    setState(() => _errorMessage = null);
+  }
+
+  Future<void> _handleResend() async {
+    final user = ref.read(authProvider).value;
+    final email = user?.email ?? '';
+    if (email.isEmpty) {
+      setState(() => _errorMessage = 'No email address found for resending.');
+      return;
+    }
+
+    setState(() {
+      _isResending = true;
+      _errorMessage = null;
+      _statusMessage = null;
+    });
+
+    try {
+      await ref.read(authRepositoryProvider).sendEmailOtp(email);
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'A new confirmation email has been dispatched to $email.';
+        });
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Failed to resend code: $e');
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
   }
 
   @override
@@ -96,20 +159,20 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
               ),
               const SizedBox(height: 24),
               Text(
-                'Student Verification Code',
+                'Student Verification',
                 style: AppTypography.headlineLarge(
                   isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                 ),
               ),
               const SizedBox(height: 10),
               Text(
-                'We sent a 6-digit verification code to:\n$email',
+                'We sent a confirmation link & 6-digit code to:\n$email\n\nClick the link in your email or enter the 6-digit code below to activate your student account.',
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyMedium(
                   isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               if (_errorMessage != null) ...[
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -124,7 +187,23 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                     style: AppTypography.bodyMedium(AppColors.error),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
+              ],
+              if (_statusMessage != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.success),
+                  ),
+                  child: Text(
+                    _statusMessage!,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyMedium(AppColors.success),
+                  ),
+                ),
+                const SizedBox(height: 16),
               ],
               // 6 Digit OTP fields
               Row(
@@ -163,29 +242,31 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                   );
                 }),
               ),
-              const SizedBox(height: 20),
-              // Demo autofill chip
-              ActionChip(
-                avatar: const Icon(Icons.flash_on, size: 16, color: AppColors.highlight),
-                label: const Text('Auto-fill Demo Code (123456)'),
-                onPressed: _fillDemoOtp,
-              ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               CustomButton(
-                text: 'Verify & Continue',
+                text: 'Verify Code & Continue',
                 width: double.infinity,
                 isLoading: _isVerifying,
                 onPressed: _handleVerify,
                 variant: ButtonVariant.primary,
               ),
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('I clicked the email link — Check Status'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: _isVerifying ? null : _checkEmailLinkStatus,
+              ),
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('A new 6-digit code has been sent to your email.')),
-                  );
-                },
-                child: const Text('Resend Verification Code'),
+              TextButton.icon(
+                icon: _isResending
+                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.send_outlined, size: 16),
+                label: Text(_isResending ? 'Resending...' : 'Resend Verification Email'),
+                onPressed: _isResending ? null : _handleResend,
               ),
               const SizedBox(height: 8),
               TextButton.icon(

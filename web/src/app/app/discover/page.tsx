@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Search,
@@ -12,10 +12,16 @@ import {
   Heart,
   X,
   MessageSquare,
+  Loader2,
 } from "lucide-react";
 import { MOCK_STUDENTS, TKMCE_DEPARTMENTS, StudentProfile } from "@/lib/mockData";
+import { useCurrentUser } from "@/lib/useUser";
+import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
 
 export default function DiscoverPage() {
+  const { user } = useCurrentUser();
+  const [students, setStudents] = useState<StudentProfile[]>(MOCK_STUDENTS);
+  const [loadingStudents, setLoadingStudents] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDept, setSelectedDept] = useState("All Departments");
   const [selectedYear, setSelectedYear] = useState("All Years");
@@ -24,9 +30,54 @@ export default function DiscoverPage() {
 
   const years = ["All Years", "1st Year", "2nd Year", "3rd Year", "4th Year"];
 
-  // Filter out self (Arjun) and match search query and department
-  const filteredStudents = MOCK_STUDENTS.filter((student) => {
-    if (student.id === MOCK_STUDENTS[0].id) return false; // exclude self
+  useEffect(() => {
+    async function fetchProfiles() {
+      if (!isLiveSupabaseConfigured()) {
+        setStudents(MOCK_STUDENTS);
+        setLoadingStudents(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("discoverable", true);
+
+        if (!error && data && data.length > 0) {
+          const liveList: StudentProfile[] = data.map((p) => ({
+            id: p.id,
+            full_name: p.full_name || "TKM Student",
+            username: p.username || "student",
+            department: p.department || "General",
+            academic_year: p.academic_year || "1st Year",
+            bio: p.bio || "TKMCE student",
+            profile_image: p.profile_image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80",
+            interests: p.interests || [],
+            skills: p.skills || [],
+            languages: p.languages || ["English", "Malayalam"],
+            availability: p.availability || "Available to mingle",
+            discoverable: p.discoverable ?? true,
+            verification_status: p.verification_status || "verified",
+          }));
+          setStudents(liveList);
+        } else {
+          setStudents(MOCK_STUDENTS);
+        }
+      } catch (err) {
+        console.warn("Could not query profiles table, using fallback:", err);
+        setStudents(MOCK_STUDENTS);
+      } finally {
+        setLoadingStudents(false);
+      }
+    }
+
+    fetchProfiles();
+  }, []);
+
+  // Filter out self (current authenticated user) and match search query and department
+  const filteredStudents = students.filter((student) => {
+    if (user && student.id === user.id) return false; // exclude self
     const matchesSearch =
       student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.interests.some((i) => i.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -120,84 +171,91 @@ export default function DiscoverPage() {
       </div>
 
       {/* Student Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredStudents.map((student) => {
-          const isRequested = requestedIds.includes(student.id);
-          return (
-            <div
-              key={student.id}
-              className="glass-panel glass-panel-hover rounded-tk-card p-5 flex flex-col justify-between space-y-4"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    onClick={() => setSelectedStudent(student)}
-                    className="relative w-14 h-14 rounded-2xl overflow-hidden border border-brand-border cursor-pointer hover:border-brand-purple transition-colors"
-                  >
-                    <Image
-                      src={student.profile_image}
-                      alt={student.full_name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3
+      {loadingStudents ? (
+        <div className="py-12 flex flex-col items-center justify-center text-white">
+          <Loader2 className="w-8 h-8 animate-spin text-brand-purple mb-2" />
+          <p className="text-xs text-brand-muted">Loading verified students from campus directory...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredStudents.map((student) => {
+            const isRequested = requestedIds.includes(student.id);
+            return (
+              <div
+                key={student.id}
+                className="glass-panel glass-panel-hover rounded-tk-card p-5 flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div
                       onClick={() => setSelectedStudent(student)}
-                      className="font-bold text-base text-white hover:text-brand-lavender cursor-pointer truncate flex items-center gap-1.5"
+                      className="relative w-14 h-14 rounded-2xl overflow-hidden border border-brand-border cursor-pointer hover:border-brand-purple transition-colors"
                     >
-                      {student.full_name}
-                      <CheckCircle2 className="w-3.5 h-3.5 text-brand-teal flex-shrink-0" />
-                    </h3>
-                    <p className="text-xs text-brand-muted truncate">
-                      {student.department}
-                    </p>
-                    <span className="text-[10px] text-brand-lavender font-medium">
-                      {student.academic_year}
-                    </span>
+                      <Image
+                        src={student.profile_image}
+                        alt={student.full_name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3
+                        onClick={() => setSelectedStudent(student)}
+                        className="font-bold text-base text-white hover:text-brand-lavender cursor-pointer truncate flex items-center gap-1.5"
+                      >
+                        {student.full_name}
+                        <CheckCircle2 className="w-3.5 h-3.5 text-brand-teal flex-shrink-0" />
+                      </h3>
+                      <p className="text-xs text-brand-muted truncate">
+                        {student.department}
+                      </p>
+                      <span className="text-[10px] text-brand-lavender font-medium">
+                        {student.academic_year}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-brand-text/90 line-clamp-2 leading-relaxed">
+                    {student.bio}
+                  </p>
+
+                  {/* Interest badges */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {student.interests.map((interest) => (
+                      <span
+                        key={interest}
+                        className="text-[10px] px-2 py-0.5 rounded-md bg-brand-navySecondary border border-brand-border text-brand-lavender font-medium"
+                      >
+                        {interest}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
-                <p className="text-xs text-brand-text/90 line-clamp-2 leading-relaxed">
-                  {student.bio}
-                </p>
+                {/* Card Footer */}
+                <div className="pt-3 border-t border-brand-border/50 space-y-2">
+                  <div className="text-[11px] text-brand-muted flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 text-brand-teal" />
+                    <span className="truncate">{student.availability}</span>
+                  </div>
 
-                {/* Interest badges */}
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {student.interests.map((interest) => (
-                    <span
-                      key={interest}
-                      className="text-[10px] px-2 py-0.5 rounded-md bg-brand-navySecondary border border-brand-border text-brand-lavender font-medium"
-                    >
-                      {interest}
-                    </span>
-                  ))}
+                  <button
+                    onClick={() => handleToggleConnect(student.id)}
+                    className={`w-full py-2 rounded-tk-btn text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                      isRequested
+                        ? "bg-brand-navySecondary border border-brand-teal text-brand-teal"
+                        : "bg-brand-purple hover:bg-brand-purple/90 text-white shadow-purple-glow"
+                    }`}
+                  >
+                    <Users2 className="w-3.5 h-3.5" />
+                    {isRequested ? "Request Sent" : "Connect"}
+                  </button>
                 </div>
               </div>
-
-              {/* Card Footer */}
-              <div className="pt-3 border-t border-brand-border/50 space-y-2">
-                <div className="text-[11px] text-brand-muted flex items-center gap-1.5">
-                  <GraduationCap className="w-3.5 h-3.5 text-brand-teal" />
-                  <span className="truncate">{student.availability}</span>
-                </div>
-
-                <button
-                  onClick={() => handleToggleConnect(student.id)}
-                  className={`w-full py-2 rounded-tk-btn text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                    isRequested
-                      ? "bg-brand-navySecondary border border-brand-teal text-brand-teal"
-                      : "bg-brand-purple hover:bg-brand-purple/90 text-white shadow-purple-glow"
-                  }`}
-                >
-                  <Users2 className="w-3.5 h-3.5" />
-                  {isRequested ? "Request Sent" : "Connect"}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Student Profile Modal */}
       {selectedStudent && (

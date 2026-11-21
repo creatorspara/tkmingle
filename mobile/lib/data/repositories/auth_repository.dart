@@ -27,8 +27,10 @@ class LocalAuthRepository implements AuthRepository {
   UserModel? _currentUser;
   final List<UserModel> _allUsers = List.from(SeedData.sampleUsers);
 
-  LocalAuthRepository() {
-    _currentUser = _allUsers.firstWhere((u) => u.uid == 'user_current');
+  LocalAuthRepository({bool seedInitialUser = true}) {
+    if (seedInitialUser) {
+      _currentUser = _allUsers.firstWhere((u) => u.uid == 'user_current');
+    }
   }
 
   @override
@@ -38,10 +40,9 @@ class LocalAuthRepository implements AuthRepository {
     final jsonStr = prefs.getString(_userKey);
     if (jsonStr != null) {
       _currentUser = UserModel.fromJson(jsonDecode(jsonStr));
-    } else {
-      _currentUser = _allUsers.firstWhere((u) => u.uid == 'user_current');
+      return _currentUser;
     }
-    return _currentUser;
+    return null;
   }
 
   @override

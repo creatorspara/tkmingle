@@ -130,6 +130,56 @@ CREATE TRIGGER trg_protect_profile_privileges
     FOR EACH ROW
     EXECUTE FUNCTION public.protect_profile_privileges();
 
+-- Trigger to automatically create and synchronize public.profiles whenever an auth.user is created
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_full_name TEXT;
+    v_department TEXT;
+    v_academic_year TEXT;
+    v_username TEXT;
+BEGIN
+    v_full_name := COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1));
+    v_department := COALESCE(NEW.raw_user_meta_data->>'department', 'General');
+    v_academic_year := COALESCE(NEW.raw_user_meta_data->>'academic_year', '1st Year');
+    v_username := lower(regexp_replace(split_part(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g')) || '_' || substr(NEW.id::text, 1, 4);
+
+    INSERT INTO public.profiles (
+        id,
+        full_name,
+        username,
+        email,
+        department,
+        academic_year,
+        verification_status,
+        verification_method,
+        role
+    ) VALUES (
+        NEW.id,
+        v_full_name,
+        v_username,
+        NEW.email,
+        v_department,
+        v_academic_year,
+        CASE WHEN NEW.email_confirmed_at IS NOT NULL THEN 'verified' ELSE 'pending' END,
+        'email_otp',
+        'student'
+    ) ON CONFLICT (id) DO UPDATE SET
+        full_name = EXCLUDED.full_name,
+        department = EXCLUDED.department,
+        academic_year = EXCLUDED.academic_year,
+        verification_status = CASE WHEN NEW.email_confirmed_at IS NOT NULL THEN 'verified' ELSE public.profiles.verification_status END,
+        updated_at = NOW();
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT OR UPDATE OF email_confirmed_at ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 -- ==============================================================================
 -- 5. CONNECTIONS & CONNECTION REQUESTS
 -- ==============================================================================

@@ -27,12 +27,14 @@ export default function RegisterPage() {
 
     try {
       if (isLiveSupabaseConfigured()) {
+        const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://tkmingle.vercel.app";
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
+            emailRedirectTo: `${siteUrl}/verify-email`,
             data: {
-              full_name: fullName,
+              full_name: fullName.trim(),
               department,
               academic_year: academicYear,
             },

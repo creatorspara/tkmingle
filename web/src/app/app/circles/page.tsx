@@ -13,8 +13,10 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { MOCK_CIRCLES, MOCK_POSTS, CirclePostItem } from "@/lib/mockData";
+import { useCurrentUser } from "@/lib/useUser";
 
 export default function CirclesPage() {
+  const { user, profile } = useCurrentUser();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [joinedCircleIds, setJoinedCircleIds] = useState<string[]>([
     MOCK_CIRCLES[1].id,
@@ -46,8 +48,8 @@ export default function CirclesPage() {
     const newPost: CirclePostItem = {
       id: "p_" + Date.now(),
       circle_id: MOCK_CIRCLES[2].id,
-      author_name: "Arjun Krishna",
-      author_image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80",
+      author_name: profile?.full_name || user?.user_metadata?.full_name || "TKM Student",
+      author_image: profile?.profile_image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80",
       title: newPostTitle.trim() || "Campus Update",
       content: newPostContent.trim(),
       likes_count: 1,

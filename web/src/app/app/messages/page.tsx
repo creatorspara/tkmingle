@@ -12,8 +12,10 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { MOCK_STUDENTS, MOCK_MESSAGES, ChatMessage } from "@/lib/mockData";
+import { useCurrentUser } from "@/lib/useUser";
 
 export default function MessagesPage() {
+  const { user, profile } = useCurrentUser();
   const [messages, setMessages] = useState<ChatMessage[]>(MOCK_MESSAGES);
   const [inputText, setInputText] = useState("");
   const activeStudent = MOCK_STUDENTS[1]; // Sneha Varma
@@ -33,8 +35,8 @@ export default function MessagesPage() {
 
     const newMsg: ChatMessage = {
       id: "msg_" + Date.now(),
-      sender_id: "11111111-1111-1111-1111-111111111111",
-      sender_name: "Arjun Krishna",
+      sender_id: user?.id || "current_user",
+      sender_name: profile?.full_name || user?.user_metadata?.full_name || "Me",
       content: inputText.trim(),
       created_at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       is_mine: true,

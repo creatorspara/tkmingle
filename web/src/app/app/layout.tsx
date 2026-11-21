@@ -13,13 +13,14 @@ import {
   LogOut,
   Bell,
   Sparkles,
+  Loader2,
 } from "lucide-react";
-import { MOCK_STUDENTS } from "@/lib/mockData";
+import { useCurrentUser } from "@/lib/useUser";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const currentUser = MOCK_STUDENTS[0]; // Arjun Krishna (Demo user)
+  const { user, profile, loading, logout } = useCurrentUser();
 
   const navItems = [
     { label: "Discover", href: "/app/discover", icon: Compass },
@@ -29,9 +30,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { label: "Settings", href: "/app/settings", icon: Settings },
   ];
 
-  const handleLogout = () => {
-    router.push("/");
+  const handleLogout = async () => {
+    await logout();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-brand-navy flex flex-col items-center justify-center text-white">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-purple mb-3" />
+        <p className="text-xs text-brand-muted">Loading campus profile...</p>
+      </div>
+    );
+  }
+
+  // Fallback display if profile still syncing
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Student";
+  const displayDept = profile?.department || user?.user_metadata?.department || "TKMCE";
+  const displayImage = profile?.profile_image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80";
 
   return (
     <div className="min-h-screen bg-brand-navy flex flex-col md:flex-row text-brand-text">
@@ -86,18 +101,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3 px-2">
             <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-brand-purple/50">
               <Image
-                src={currentUser.profile_image}
-                alt={currentUser.full_name}
+                src={displayImage}
+                alt={displayName}
                 fill
                 className="object-cover"
               />
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-bold text-xs text-white truncate">
-                {currentUser.full_name}
+                {displayName}
               </div>
               <div className="text-[10px] text-brand-teal truncate font-medium">
-                Verified • CSE
+                {profile?.verification_status === "verified" ? "Verified" : "Student"} • {displayDept}
               </div>
             </div>
           </div>
@@ -130,8 +145,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           className="relative w-8 h-8 rounded-full overflow-hidden border border-brand-purple"
         >
           <Image
-            src={currentUser.profile_image}
-            alt={currentUser.full_name}
+            src={displayImage}
+            alt={displayName}
             fill
             className="object-cover"
           />

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tkmingle/data/repositories/auth_repository.dart';
 import 'package:tkmingle/data/repositories/user_repository.dart';
 import 'package:tkmingle/data/repositories/connection_repository.dart';
@@ -6,6 +7,9 @@ import 'package:tkmingle/data/repositories/circle_repository.dart';
 import 'package:tkmingle/data/repositories/message_repository.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
+
   group('TKMingle Core Engine Tests', () {
     late LocalUserRepository userRepo;
     late LocalConnectionRepository connRepo;
@@ -100,6 +104,48 @@ void main() {
 
       final msgs = await msgRepo.getMessages(conv.conversationId);
       expect(msgs.any((m) => m.id == msg.id), isTrue);
+    });
+
+    test('User isolation: Account A and Account B load their own distinct profiles and logout clears session', () async {
+      // 1. Register Account A (Sneha)
+      final accountA = await authRepo.register(
+        name: 'Sneha Varma',
+        email: 'sneha.ece@tkmce.ac.in',
+        password: 'Password123!',
+        department: 'Electronics & Communication Engineering',
+        academicYear: '3rd Year',
+      );
+      expect(accountA.name, equals('Sneha Varma'));
+      expect(accountA.email, equals('sneha.ece@tkmce.ac.in'));
+
+      // Verify and load profile
+      await authRepo.verifyEmailOtp(accountA.email, '654321');
+      final currentA = await authRepo.getCurrentUser();
+      expect(currentA, isNotNull);
+      expect(currentA!.name, equals('Sneha Varma'));
+      expect(currentA.uid, equals(accountA.uid));
+
+      // 2. Log out
+      await authRepo.logout();
+      final loggedOutUser = await authRepo.getCurrentUser();
+      expect(loggedOutUser, isNull, reason: 'Logout must clear session and not fall back to Arjun Krishna');
+
+      // 3. Log in using Account B (Rahul)
+      final accountB = await authRepo.login('rahul.me@tkmce.ac.in', 'Password123!');
+      expect(accountB.name, isNot(equals('Sneha Varma')));
+      expect(accountB.name, isNot(equals('Arjun Krishna')));
+      expect(accountB.email, equals('rahul.me@tkmce.ac.in'));
+
+      // 4. Confirm Account B sees its own profile, not Account A's
+      final currentB = await authRepo.getCurrentUser();
+      expect(currentB, isNotNull);
+      expect(currentB!.email, equals('rahul.me@tkmce.ac.in'));
+      expect(currentB.uid, equals(accountB.uid));
+      expect(currentB.name, isNot(equals(accountA.name)));
+
+      // 5. Clean logout
+      await authRepo.logout();
+      expect(await authRepo.getCurrentUser(), isNull);
     });
   });
 }
