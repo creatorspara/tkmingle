@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -11,7 +10,6 @@ import {
   Loader2,
   MessageSquare,
   ShieldCheck,
-  User,
   Compass,
 } from "lucide-react";
 import { StudentProfile } from "@/lib/mockData";
@@ -50,17 +48,27 @@ export default function MessagesPage() {
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const activeConvIdRef = useRef<string | null>(null);
+  activeConvIdRef.current = activeConvId;
+
+  const conversationsRef = useRef<LiveConversation[]>([]);
+  conversationsRef.current = conversations;
+
+  const scrollToBottom = useCallback((smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+  }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    scrollToBottom(false);
+  }, [activeConvId, scrollToBottom]);
 
-  // Load conversations
+  useEffect(() => {
+    scrollToBottom(true);
+  }, [messages, scrollToBottom]);
+
+  // Load conversations once on mount or when user authenticates
   const loadConversations = useCallback(async () => {
     if (!user || !isLiveSupabaseConfigured()) {
       setLoadingConvs(false);
@@ -162,8 +170,8 @@ export default function MessagesPage() {
 
       setConversations(populated);
 
-      // Auto-select conversation: either targeted from ?to= or the first one
-      if (populated.length > 0 && !activeConvId) {
+      // Select first conversation if none selected yet
+      if (populated.length > 0 && !activeConvIdRef.current) {
         setActiveConvId(populated[0].id);
       }
     } catch (err) {
@@ -171,83 +179,96 @@ export default function MessagesPage() {
     } finally {
       setLoadingConvs(false);
     }
-  }, [user, activeConvId]);
+  }, [user]);
+
+  // Initial load
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
 
   // Handle ?to=<userId> parameter from Discovery
   useEffect(() => {
+    let isCancelled = false;
     async function handleTargetUser() {
       if (!toUserId || !user || !isLiveSupabaseConfigured()) return;
       try {
         const { data: convId, error } = await supabase.rpc("get_or_create_conversation", {
           p_other_user_id: toUserId,
         });
-        if (!error && convId) {
+        if (!error && convId && !isCancelled) {
           setActiveConvId(convId);
-          await loadConversations();
+          loadConversations();
         }
       } catch (e) {
         console.error("Failed to start conversation with student:", e);
       }
     }
     handleTargetUser();
+    return () => {
+      isCancelled = true;
+    };
   }, [toUserId, user, loadConversations]);
 
+  // Load messages and establish Realtime subscription when activeConvId changes
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
-
-  // Load messages for active conversation
-  const loadActiveMessages = useCallback(async (convId: string) => {
-    if (!user || !isLiveSupabaseConfigured()) return;
-    setLoadingMessages(true);
-    try {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", convId)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("Error loading conversation messages:", error.message);
-        setMessages([]);
-        return;
-      }
-
-      const activeConv = conversations.find((c) => c.id === convId);
-      const otherName = activeConv?.otherUser?.full_name || "Student";
-
-      const formatted: LiveChatMessage[] = (data || []).map((m) => ({
-        id: m.id,
-        sender_id: m.sender_id,
-        sender_name: m.sender_id === user.id ? (profile?.full_name || "Me") : otherName,
-        content: m.content,
-        created_at: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        is_mine: m.sender_id === user.id,
-      }));
-
-      setMessages(formatted);
-
-      // Mark conversation as read
-      await supabase
-        .from("conversation_members")
-        .update({ last_read_at: new Date().toISOString() })
-        .match({ conversation_id: convId, user_id: user.id });
-    } catch (err) {
-      console.error("Error fetching messages:", err);
-    } finally {
-      setLoadingMessages(false);
+    if (!activeConvId || !user || !isLiveSupabaseConfigured()) {
+      setMessages([]);
+      return;
     }
-  }, [user, profile, conversations]);
 
-  // Effect to load messages and set up Realtime subscription when activeConvId changes
-  useEffect(() => {
-    if (!activeConvId || !user || !isLiveSupabaseConfigured()) return;
+    let isCurrent = true;
+    setLoadingMessages(true);
 
-    loadActiveMessages(activeConvId);
+    const fetchMessages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("messages")
+          .select("*")
+          .eq("conversation_id", activeConvId)
+          .order("created_at", { ascending: true });
 
-    // Subscribe to Realtime Postgres Changes on messages table for this conversation
+        if (!isCurrent || activeConvIdRef.current !== activeConvId) return;
+
+        if (error) {
+          console.error("Error loading conversation messages:", error.message);
+          setMessages([]);
+        } else {
+          const activeConv = conversationsRef.current.find((c) => c.id === activeConvId);
+          const otherName = activeConv?.otherUser?.full_name || "Student";
+
+          const formatted: LiveChatMessage[] = (data || []).map((m) => ({
+            id: m.id,
+            sender_id: m.sender_id,
+            sender_name: m.sender_id === user.id ? (profile?.full_name || "Me") : otherName,
+            content: m.content,
+            created_at: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            is_mine: m.sender_id === user.id,
+          }));
+
+          setMessages(formatted);
+
+          // Mark conversation as read asynchronously
+          supabase
+            .from("conversation_members")
+            .update({ last_read_at: new Date().toISOString() })
+            .match({ conversation_id: activeConvId, user_id: user.id })
+            .then();
+        }
+      } catch (err) {
+        if (isCurrent) console.error("Error fetching messages:", err);
+      } finally {
+        if (isCurrent && activeConvIdRef.current === activeConvId) {
+          setLoadingMessages(false);
+        }
+      }
+    };
+
+    fetchMessages();
+
+    // Setup Realtime channel
+    const channelName = `realtime_chat_${activeConvId}_${Date.now()}`;
     const channel = supabase
-      .channel(`realtime:messages:${activeConvId}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -257,6 +278,8 @@ export default function MessagesPage() {
           filter: `conversation_id=eq.${activeConvId}`,
         },
         (payload) => {
+          if (!isCurrent || activeConvIdRef.current !== activeConvId) return;
+
           const newRow = payload.new as {
             id: string;
             conversation_id: string;
@@ -265,7 +288,7 @@ export default function MessagesPage() {
             created_at: string;
           };
 
-          const activeConv = conversations.find((c) => c.id === activeConvId);
+          const activeConv = conversationsRef.current.find((c) => c.id === activeConvId);
           const otherName = activeConv?.otherUser?.full_name || "Student";
 
           setMessages((prev) => {
@@ -283,7 +306,7 @@ export default function MessagesPage() {
             ];
           });
 
-          // Update conversation list preview
+          // Update preview in conversation list
           setConversations((prev) =>
             prev.map((c) =>
               c.id === activeConvId
@@ -296,9 +319,18 @@ export default function MessagesPage() {
       .subscribe();
 
     return () => {
+      isCurrent = false;
       supabase.removeChannel(channel);
     };
-  }, [activeConvId, user, loadActiveMessages, conversations, profile]);
+  }, [activeConvId, user?.id, profile?.full_name]);
+
+  const handleSelectConv = (convId: string) => {
+    if (convId === activeConvId) return;
+    setActiveConvId(convId);
+    setConversations((prev) =>
+      prev.map((c) => (c.id === convId ? { ...c, unreadCount: 0 } : c))
+    );
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -373,7 +405,7 @@ export default function MessagesPage() {
               return (
                 <div
                   key={conv.id}
-                  onClick={() => setActiveConvId(conv.id)}
+                  onClick={() => handleSelectConv(conv.id)}
                   className={`flex items-center gap-3 p-3 rounded-tk-card border transition-all cursor-pointer ${
                     isSelected
                       ? "bg-brand-navyCard border-brand-purple/60 shadow-sm"

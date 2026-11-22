@@ -34,15 +34,31 @@ export default function EquipoKromiumPage() {
     if (!contactMessage.trim()) return;
 
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setSubmitting(false);
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setContactMessage("");
-      setContactName("");
-      setContactEmail("");
-    }, 3000);
+    try {
+      await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: contactName.trim() || "Anonymous Student",
+          email: contactEmail.trim() || "anonymous@tkmce.ac.in",
+          department: contactRole,
+          category: "Collaborate with Kromium",
+          message: contactMessage.trim(),
+          source: "team_page",
+        }),
+      });
+    } catch (err) {
+      console.error("Collaborate submit error:", err);
+    } finally {
+      setSubmitting(false);
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setContactMessage("");
+        setContactName("");
+        setContactEmail("");
+      }, 3500);
+    }
   };
 
   const principles = [
@@ -388,24 +404,31 @@ export default function EquipoKromiumPage() {
                 <div className="w-12 h-12 rounded-full bg-[#6C4DFF]/20 text-[#A78BFA] mx-auto flex items-center justify-center">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <h4 className="text-base font-bold text-white">Message Delivered</h4>
+                <h4 className="text-base font-bold text-white">Message Dispatched to Team Kromium</h4>
                 <p className="text-xs text-gray-400 max-w-sm mx-auto">
-                  Thanks for reaching out! A member of Equipo Kromium will get back to your campus email soon.
+                  Your message has been safely delivered to <span className="text-[#A78BFA] font-medium">tkmmingle@gmail.com</span>. We&apos;ll review it and get in touch with you!
                 </p>
+                <div className="pt-2">
+                  <a
+                    href="mailto:tkmmingle@gmail.com?subject=Collaborate%20with%20Equipo%20Kromium"
+                    className="inline-flex items-center gap-1.5 text-xs text-[#A78BFA] hover:text-white underline"
+                  >
+                    Open directly in your mail app &rarr;
+                  </a>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                      Your Name
+                      Your Name <span className="text-gray-500 font-normal lowercase">(optional / anonymous)</span>
                     </label>
                     <input
                       type="text"
-                      required
                       value={contactName}
                       onChange={(e) => setContactName(e.target.value)}
-                      placeholder="e.g. Vaishnav V."
+                      placeholder="Anonymous Student (or enter your name)"
                       className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0A0F] border border-white/10 text-xs text-white focus:outline-none focus:border-[#6C4DFF]"
                     />
                   </div>

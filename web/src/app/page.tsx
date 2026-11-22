@@ -20,6 +20,15 @@ import {
   Mail,
   AlertCircle,
   LogIn,
+  Download,
+  Smartphone,
+  ShieldCheck,
+  Copy,
+  Check,
+  ExternalLink,
+  Layers,
+  Cpu,
+  Code2,
 } from "lucide-react";
 import { MOCK_CIRCLES } from "@/lib/mockData";
 import UserAvatar from "@/components/UserAvatar";
@@ -36,6 +45,24 @@ interface DisplayStudent {
   interests: string[];
   availability: string;
 }
+
+interface AppRelease {
+  version_name: string;
+  version_code: number;
+  download_url: string;
+  changelog: string;
+  sha256_checksum: string;
+  published_at: string;
+}
+
+const DEFAULT_RELEASE: AppRelease = {
+  version_name: "v1.0.7-k1",
+  version_code: 11,
+  download_url: "https://github.com/creatorspara/tkmingle/releases/download/v1.0.7-k1/tkmmingle-k1-release.apk",
+  changelog: "Push notification recipient isolation, account mismatch suppression, and active chat in-conversation silence.",
+  sha256_checksum: "57E805E9C59E4F3D2EA8FAB706E78B7D5507BC7BA7C82EA75B10D860B26DA4A8",
+  published_at: "2026-11-22T10:41:26.073Z",
+};
 
 const DEFAULT_STUDENTS: DisplayStudent[] = [
   {
@@ -90,6 +117,10 @@ export default function LandingPage() {
   const [sessionUser, setSessionUser] = useState<any>(null);
   const [students, setStudents] = useState<DisplayStudent[]>(DEFAULT_STUDENTS);
 
+  // Dynamic Latest Release State (Auto-updates with new builds)
+  const [latestRelease, setLatestRelease] = useState<AppRelease>(DEFAULT_RELEASE);
+  const [copiedHash, setCopiedHash] = useState(false);
+
   // Contact Modal State
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [contactCategory, setContactCategory] = useState("Suggestions & Feedback");
@@ -99,9 +130,11 @@ export default function LandingPage() {
   const [contactMessage, setContactMessage] = useState("");
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const [contactSuccess, setContactSuccess] = useState(false);
+  const [contactMailto, setContactMailto] = useState("");
 
-  // Check auth session and optionally fetch live active student profiles from Supabase
+  // Check auth session, fetch active student profiles, and query latest release dynamically
   useEffect(() => {
+    // 1. Auth session listener
     if (isLiveSupabaseConfigured()) {
       supabase.auth.getSession().then(({ data }) => {
         if (data?.session?.user) {
@@ -113,7 +146,7 @@ export default function LandingPage() {
         setSessionUser(session?.user ?? null);
       });
 
-      // Try fetching live discoverable profiles to showcase authentic students
+      // 2. Fetch live discoverable profiles
       const loadLiveProfiles = async () => {
         try {
           const { data, error } = await supabase
@@ -142,8 +175,50 @@ export default function LandingPage() {
           // Keep default clean profiles
         }
       };
-
       loadLiveProfiles();
+
+      // 3. Dynamic Auto-Updating Release Fetch (Always selects the highest version_code)
+      const fetchLatestRelease = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("app_releases")
+            .select("version_name, version_code, download_url, changelog, sha256_checksum, published_at")
+            .eq("platform", "android")
+            .order("version_code", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!error && data && data.download_url) {
+            setLatestRelease({
+              version_name: data.version_name,
+              version_code: data.version_code,
+              download_url: data.download_url,
+              changelog: data.changelog || DEFAULT_RELEASE.changelog,
+              sha256_checksum: data.sha256_checksum || DEFAULT_RELEASE.sha256_checksum,
+              published_at: data.published_at || DEFAULT_RELEASE.published_at,
+            });
+            return;
+          }
+
+          // Fallback to GitHub Releases API if Supabase query yields nothing
+          const ghRes = await fetch("https://api.github.com/repos/creatorspara/tkmingle/releases/latest");
+          if (ghRes.ok) {
+            const ghData = await ghRes.json();
+            const apkAsset = ghData.assets?.find((a: any) => a.name.endsWith(".apk"));
+            if (apkAsset) {
+              setLatestRelease((prev) => ({
+                ...prev,
+                version_name: ghData.tag_name || prev.version_name,
+                download_url: apkAsset.browser_download_url,
+                changelog: ghData.body || prev.changelog,
+              }));
+            }
+          }
+        } catch (e) {
+          console.warn("Release sync notification:", e);
+        }
+      };
+      fetchLatestRelease();
 
       return () => {
         authListener?.subscription.unsubscribe();
@@ -151,20 +226,49 @@ export default function LandingPage() {
     }
   }, []);
 
+  const copyChecksum = () => {
+    if (latestRelease.sha256_checksum) {
+      navigator.clipboard.writeText(latestRelease.sha256_checksum);
+      setCopiedHash(true);
+      setTimeout(() => setCopiedHash(false), 2200);
+    }
+  };
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactMessage.trim()) return;
 
     setContactSubmitting(true);
-    // Transmit message cleanly to Team Kromium
-    await new Promise((r) => setTimeout(r, 600));
-    setContactSubmitting(false);
-    setContactSuccess(true);
-    setTimeout(() => {
-      setContactSuccess(false);
-      setContactModalOpen(false);
-      setContactMessage("");
-    }, 2200);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: contactName.trim() || "Anonymous Student",
+          email: contactEmail.trim() || "anonymous@tkmce.ac.in",
+          department: contactDept.trim() || "TKMCE Campus",
+          category: contactCategory,
+          message: contactMessage.trim(),
+          source: "landing_modal",
+        }),
+      });
+      const data = await res.json();
+      if (data?.mailtoUrl) {
+        setContactMailto(data.mailtoUrl);
+      }
+    } catch (err) {
+      console.error("Contact inquiry dispatch notice:", err);
+    } finally {
+      setContactSubmitting(false);
+      setContactSuccess(true);
+      setTimeout(() => {
+        setContactSuccess(false);
+        setContactModalOpen(false);
+        setContactMessage("");
+        setContactName("");
+        setContactEmail("");
+      }, 3800);
+    }
   };
 
   const faqs = [
@@ -173,12 +277,20 @@ export default function LandingPage() {
       a: "TKMingle is a student platform built exclusively for TKM College of Engineering (TKMCE), Kollam. It helps students discover peers from other departments based on shared interests, projects, and activities.",
     },
     {
+      q: "How do I get the mobile app on Android?",
+      a: `You can download the single latest verified release (${latestRelease.version_name}) directly from the Download section on this website or GitHub Releases. It requires Android 8.0 or higher.`,
+    },
+    {
+      q: "Will the app notify me about new updates automatically?",
+      a: "Yes! The TKMingle Android app includes an automated update checking service. Whenever a new release is deployed, you receive an in-app prompt with changelog highlights and 24-hour snooze control.",
+    },
+    {
       q: "Who can join TKMingle?",
-      a: "Access is limited to students and members of TKM College of Engineering. Accounts are verified using institutional credentials.",
+      a: "Access is limited to verified students and community members of TKM College of Engineering. Accounts are authenticated using institutional credentials.",
     },
     {
       q: "How do student connections work?",
-      a: "Connections are based on mutual consent. You can send a connection request with a brief message. Direct 1:1 messaging opens only when both students accept.",
+      a: "Connections are based on mutual consent. You can send a connection request with a brief message. Direct 1:1 messaging opens only when both students accept, with Instagram-style reminders and resends.",
     },
     {
       q: "Can I control my profile visibility?",
@@ -186,7 +298,7 @@ export default function LandingPage() {
     },
     {
       q: "What are Campus Circles?",
-      a: "Circles are campus communities for clubs, technical teams, sports, and interests where students post updates and organize activities.",
+      a: "Circles are campus communities for clubs, technical teams, sports, and interests where students post updates, announce workshops, and organize activities.",
     },
   ];
 
@@ -218,9 +330,13 @@ export default function LandingPage() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-brand-muted">
+          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-brand-muted">
             <a href="#discover" className="hover:text-white transition-colors">
               Discover
+            </a>
+            <a href="#download" className="hover:text-white transition-colors flex items-center gap-1.5 text-brand-teal font-semibold">
+              <Download className="w-3.5 h-3.5" />
+              Download APK
             </a>
             <a href="#circles" className="hover:text-white transition-colors">
               Campus Circles
@@ -228,16 +344,27 @@ export default function LandingPage() {
             <a href="#connect" className="hover:text-white transition-colors">
               Connect &amp; Chat
             </a>
+            <a href="#kromium" className="hover:text-white transition-colors flex items-center gap-1 text-brand-lavender font-semibold">
+              Equipo Kromium
+            </a>
             <a href="#faq" className="hover:text-white transition-colors">
               FAQ
             </a>
-            <Link href="/team" className="text-brand-lavender hover:text-white transition-colors font-semibold flex items-center gap-1">
-              Equipo Kromium
-            </Link>
           </nav>
 
           {/* Action CTAs */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Direct download CTA in header */}
+            <a
+              href={latestRelease.download_url}
+              download
+              className="px-3.5 py-2 text-xs font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-teal transition-colors flex items-center gap-1.5"
+              title={`Download APK (${latestRelease.version_name})`}
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>APK {latestRelease.version_name}</span>
+            </a>
+
             {sessionUser ? (
               <Link
                 href="/app/discover"
@@ -250,7 +377,7 @@ export default function LandingPage() {
               <>
                 <Link
                   href="/login"
-                  className="px-4 py-2 text-sm font-semibold text-brand-text hover:text-white transition-colors"
+                  className="px-3.5 py-2 text-sm font-semibold text-brand-text hover:text-white transition-colors"
                 >
                   Sign In
                 </Link>
@@ -267,7 +394,7 @@ export default function LandingPage() {
           {/* Mobile menu toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-brand-muted hover:text-white"
+            className="lg:hidden p-2 text-brand-muted hover:text-white"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -276,13 +403,20 @@ export default function LandingPage() {
 
         {/* Mobile menu dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-brand-navySecondary border-b border-brand-border px-4 py-5 space-y-3">
+          <div className="lg:hidden bg-brand-navySecondary border-b border-brand-border px-4 py-5 space-y-3">
             <a
               href="#discover"
               onClick={() => setMobileMenuOpen(false)}
               className="block text-sm font-medium text-brand-muted hover:text-white"
             >
-              Discover
+              Discover Students
+            </a>
+            <a
+              href="#download"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm font-semibold text-brand-teal hover:text-white flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" /> Download APK ({latestRelease.version_name})
             </a>
             <a
               href="#circles"
@@ -299,20 +433,30 @@ export default function LandingPage() {
               Connect &amp; Chat
             </a>
             <a
+              href="#kromium"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm font-semibold text-brand-lavender hover:text-white"
+            >
+              Equipo Kromium
+            </a>
+            <a
               href="#faq"
               onClick={() => setMobileMenuOpen(false)}
               className="block text-sm font-medium text-brand-muted hover:text-white"
             >
               FAQ
             </a>
-            <Link
-              href="/team"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-sm font-semibold text-brand-lavender hover:text-white"
-            >
-              Meet Equipo Kromium &rarr;
-            </Link>
             <div className="pt-3 border-t border-brand-border/60 flex flex-col gap-2">
+              <a
+                href={latestRelease.download_url}
+                download
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-2.5 text-xs font-semibold rounded-tk-btn bg-brand-navyCard border border-brand-border text-brand-teal flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Direct Download APK ({latestRelease.version_name})
+              </a>
+
               {sessionUser ? (
                 <Link
                   href="/app/discover"
@@ -346,7 +490,7 @@ export default function LandingPage() {
       </header>
 
       {/* 2. HERO SECTION */}
-      <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 border-b border-brand-border/60">
+      <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 border-b border-brand-border/60 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             {/* Left Content */}
@@ -364,11 +508,22 @@ export default function LandingPage() {
                 Meet students from other engineering departments, find partners for hackathons and projects, join campus circles, and connect across TKMCE.
               </p>
 
+              {/* Primary Action Buttons */}
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
+                {/* Download Latest Release Button */}
+                <a
+                  href={latestRelease.download_url}
+                  download
+                  className="w-full sm:w-auto px-6 py-3 text-sm font-bold rounded-tk-btn bg-gradient-to-r from-brand-purple to-purple-600 hover:opacity-95 text-white transition-all flex items-center justify-center gap-2.5 shadow-purple-glow"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download APK ({latestRelease.version_name})</span>
+                </a>
+
                 {sessionUser ? (
                   <Link
                     href="/app/discover"
-                    className="w-full sm:w-auto px-6 py-3 text-sm font-semibold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors flex items-center justify-center gap-2 shadow-purple-glow"
+                    className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white transition-colors flex items-center justify-center gap-2"
                   >
                     Enter Campus Portal
                     <ArrowRight className="w-4 h-4" />
@@ -376,18 +531,32 @@ export default function LandingPage() {
                 ) : (
                   <Link
                     href="/register"
-                    className="w-full sm:w-auto px-6 py-3 text-sm font-semibold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-text transition-colors flex items-center justify-center gap-2"
                   >
-                    Join TKMingle
+                    Join Web Portal
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 )}
+
                 <a
-                  href="#discover"
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-text transition-colors flex items-center justify-center"
+                  href="#download"
+                  className="w-full sm:w-auto px-4 py-3 text-xs font-medium text-brand-muted hover:text-white transition-colors flex items-center justify-center gap-1"
                 >
-                  Browse Campus Profiles
+                  <Smartphone className="w-3.5 h-3.5 text-brand-teal" />
+                  Release Details
                 </a>
+              </div>
+
+              {/* Live Version Tag & Checksum Preview */}
+              <div className="pt-1 flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs text-brand-muted">
+                <span className="inline-flex items-center gap-1 text-[11px] text-brand-teal font-medium">
+                  <span className="w-2 h-2 rounded-full bg-brand-teal animate-pulse" />
+                  Latest Build {latestRelease.version_code} • Android 8.0+
+                </span>
+                <span className="text-brand-border">|</span>
+                <span className="text-[11px] text-brand-muted truncate max-w-xs">
+                  SHA-256: {latestRelease.sha256_checksum.substring(0, 12)}...
+                </span>
               </div>
 
               {/* Department representation */}
@@ -466,7 +635,208 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. DISCOVER PEOPLE SECTION */}
+      {/* 3. DEDICATED DOWNLOAD SECTION (AUTO-UPDATING SINGLE LATEST RELEASE) */}
+      <section id="download" className="py-20 bg-[#090C15] border-b border-brand-border/60 relative overflow-hidden">
+        {/* Glow backdrop accent */}
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-brand-purple/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-brand-teal/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
+          {/* Section Header */}
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-navyCard border border-brand-border text-xs font-semibold text-brand-teal">
+              <Smartphone className="w-3.5 h-3.5 text-brand-teal" />
+              <span>Android Official Release • Universal APK</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Get TKMingle on your Android device
+            </h2>
+            <p className="text-sm text-brand-muted leading-relaxed">
+              Experience instantaneous push notifications, campus circles, and direct peer messaging on your mobile device.
+            </p>
+          </div>
+
+          {/* Release Card & Feature Specs Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            {/* Primary Download Card */}
+            <div className="lg:col-span-7 glass-panel rounded-2xl border border-brand-border/90 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-2xl relative">
+              <div className="space-y-5">
+                {/* Release Status Banner */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border/60">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-brand-purple/15 border border-brand-purple/40 flex items-center justify-center text-brand-lavender">
+                      <Smartphone className="w-6 h-6 text-brand-purple" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-lg text-white">
+                          TKMingle Android
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-brand-purple/20 text-brand-lavender text-xs font-bold border border-brand-purple/40">
+                          {latestRelease.version_name}
+                        </span>
+                      </div>
+                      <span className="text-xs text-brand-muted">
+                        Build Code {latestRelease.version_code} • Universal APK
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-teal/10 border border-brand-teal/30 text-brand-teal text-[11px] font-medium">
+                    <span className="w-2 h-2 rounded-full bg-brand-teal animate-pulse" />
+                    Latest Active Release
+                  </div>
+                </div>
+
+                {/* Single Release Guarantee Notice */}
+                <div className="p-3.5 rounded-xl bg-brand-navySecondary/80 border border-brand-border/60 text-xs text-brand-muted leading-relaxed flex items-start gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-brand-teal flex-shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">Strict Single Latest Release:</strong> This download automatically reflects the newest verified APK released by Equipo Kromium. Older builds are retired to protect campus communication security and ensure update compatibility.
+                  </span>
+                </div>
+
+                {/* Primary Download Action Button */}
+                <div className="space-y-2 pt-1">
+                  <a
+                    href={latestRelease.download_url}
+                    download
+                    className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-brand-purple via-purple-600 to-indigo-600 hover:opacity-95 text-white font-bold text-base flex items-center justify-center gap-3 shadow-lg shadow-purple-900/40 transition-all hover:scale-[1.01]"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Download Latest APK ({latestRelease.version_name})</span>
+                  </a>
+                  <p className="text-[11px] text-center text-brand-muted">
+                    Universal APK • Compatible with Android 8.0, 9, 10, 11, 12, 13, 14, and 15
+                  </p>
+                </div>
+
+                {/* Release Highlights / Changelog */}
+                <div className="space-y-2 pt-2">
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">
+                    What&apos;s New in {latestRelease.version_name}:
+                  </span>
+                  <div className="p-3.5 rounded-xl bg-brand-navyCard border border-brand-border text-xs text-brand-text/90 leading-relaxed font-mono">
+                    {latestRelease.changelog}
+                  </div>
+                </div>
+
+                {/* Integrity SHA-256 Checksum */}
+                <div className="space-y-1.5 pt-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
+                      SHA-256 Integrity Hash
+                    </span>
+                    <button
+                      onClick={copyChecksum}
+                      className="inline-flex items-center gap-1 text-[11px] text-brand-teal hover:underline font-medium"
+                    >
+                      {copiedHash ? (
+                        <>
+                          <Check className="w-3 h-3" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy Hash</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-brand-border/60 text-[11px] font-mono text-brand-lavender break-all select-all">
+                    {latestRelease.sha256_checksum}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer link to source release */}
+              <div className="pt-4 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
+                <span>Direct GitHub CDN Delivery</span>
+                <a
+                  href="https://github.com/creatorspara/tkmingle/releases"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-brand-lavender hover:text-white transition-colors flex items-center gap-1 font-medium"
+                >
+                  GitHub Release Page <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+
+            {/* Right Guide & Features Column */}
+            <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
+              {/* Feature Highlights Card */}
+              <div className="glass-panel rounded-2xl border border-brand-border/80 p-6 space-y-4 shadow-lg">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-brand-purple" />
+                  Mobile App Highlights
+                </h3>
+
+                <div className="space-y-3.5 pt-1">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-brand-purple/20 text-brand-purple flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <MessageSquare className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">Instant Heads-Up Popups</h4>
+                      <p className="text-xs text-brand-muted leading-relaxed">
+                        WhatsApp-style push notifications appear when receiving chat messages or connection pings.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-brand-teal/20 text-brand-teal flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Users2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">Instagram-Style Reminders</h4>
+                      <p className="text-xs text-brand-muted leading-relaxed">
+                        Easily resend connection reminders or cancel pending requests with smooth UI feedback.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-brand-lavender/20 text-brand-lavender flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">Automated In-App Updates</h4>
+                      <p className="text-xs text-brand-muted leading-relaxed">
+                        The app queries Supabase directly on launch. New builds prompt seamless 1-tap in-app downloads.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3-Step Installation Guide */}
+              <div className="glass-panel rounded-2xl border border-brand-border/80 p-6 space-y-4 shadow-lg">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-brand-teal" />
+                  Quick Installation (3 Steps)
+                </h3>
+
+                <ol className="space-y-3 text-xs text-brand-muted list-decimal list-inside leading-relaxed pt-1">
+                  <li className="text-brand-text">
+                    <strong className="text-white">Download the APK:</strong> Click the download button to save <code className="text-brand-lavender bg-black/30 px-1 py-0.5 rounded">tkmmingle-k1-release.apk</code> to your device.
+                  </li>
+                  <li className="text-brand-text">
+                    <strong className="text-white">Open &amp; Install:</strong> Tap the file in your downloads. If Android asks, enable &quot;Allow installation from this source&quot; for your browser.
+                  </li>
+                  <li className="text-brand-text">
+                    <strong className="text-white">Sign In &amp; Mingle:</strong> Log in using your verified TKMCE institutional email to access your branch and circles!
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. DISCOVER PEOPLE SECTION */}
       <section id="discover" className="py-16 bg-brand-navySecondary/40 border-b border-brand-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-3">
@@ -552,7 +922,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. CAMPUS CIRCLES SECTION */}
+      {/* 5. CAMPUS CIRCLES SECTION */}
       <section id="circles" className="py-16 bg-brand-navy border-b border-brand-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-3">
@@ -605,7 +975,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5. CONNECT AND CHAT SECTION */}
+      {/* 6. CONNECT AND CHAT SECTION */}
       <section id="connect" className="py-16 bg-brand-navySecondary/40 border-b border-brand-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
@@ -703,7 +1073,98 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 6. FAQ SECTION */}
+      {/* 7. EQUIPO KROMIUM BRAND INTEGRATION SECTION */}
+      <section id="kromium" className="py-20 bg-gradient-to-b from-[#090C15] to-brand-navy border-b border-brand-border/60 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          {/* Section Header */}
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1C1C28] border border-white/10 text-xs font-semibold text-brand-lavender">
+              <Code2 className="w-3.5 h-3.5 text-brand-purple" />
+              <span>Engineering &amp; Product Collective • TKMCE</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Designed &amp; Engineered by Equipo Kromium
+            </h2>
+            <p className="text-sm text-brand-muted leading-relaxed">
+              Equipo Kromium is an engineering and design collective born inside TKM College of Engineering, dedicated to crafting open-source, high-performance software for the student community.
+            </p>
+          </div>
+
+          {/* Kromium Hero Visual Banner */}
+          <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative bg-[#0D0E1A]">
+            <Image
+              src="/images/kromium/kromium_hero_banner_2x.png"
+              alt="Equipo Kromium - Build Open Share"
+              width={1600}
+              height={500}
+              className="w-full h-auto object-cover"
+              priority
+            />
+          </div>
+
+          {/* Kromium Core Pillars */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-purple/20 border border-brand-purple/40 flex items-center justify-center text-brand-lavender">
+                <Code2 className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">Open-Source First</h3>
+              <p className="text-xs text-brand-muted leading-relaxed">
+                Full transparency with public repositories, clean modular architecture, and continuous community contributions.
+              </p>
+            </div>
+
+            <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-teal/20 border border-brand-teal/40 flex items-center justify-center text-brand-teal">
+                <Cpu className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">High-Performance Stack</h3>
+              <p className="text-xs text-brand-muted leading-relaxed">
+                Native Flutter mobile application, Next.js 14 Web Portal, Supabase Postgres, and Edge Functions.
+              </p>
+            </div>
+
+            <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-lavender/20 border border-brand-lavender/40 flex items-center justify-center text-brand-lavender">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">Campus Privacy by Design</h3>
+              <p className="text-xs text-brand-muted leading-relaxed">
+                Zero unsolicited spam, end-to-end access rules, and verified TKMCE institutional authentication.
+              </p>
+            </div>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="text-center pt-2 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/team"
+              className="px-6 py-3 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white font-semibold text-xs flex items-center gap-2 shadow-purple-glow transition-all"
+            >
+              Meet Equipo Kromium <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <button
+              onClick={() => {
+                setContactCategory("Collaborate with Kromium");
+                setContactModalOpen(true);
+              }}
+              className="px-6 py-3 rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white font-semibold text-xs transition-all"
+            >
+              Collaborate with Us
+            </button>
+            <a
+              href="https://github.com/creatorspara/tkmingle"
+              target="_blank"
+              rel="noreferrer"
+              className="px-5 py-3 rounded-tk-btn border border-brand-border/70 hover:border-white/30 text-brand-muted hover:text-white font-semibold text-xs flex items-center gap-1.5 transition-colors"
+            >
+              GitHub Repository <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. FAQ SECTION */}
       <section id="faq" className="py-16 bg-brand-navy border-b border-brand-border/50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="text-center space-y-2">
@@ -711,7 +1172,7 @@ export default function LandingPage() {
               Frequently Asked Questions
             </h2>
             <p className="text-xs text-brand-muted">
-              Common questions about joining and using TKMingle.
+              Common questions about joining, using, and downloading TKMingle.
             </p>
           </div>
 
@@ -746,12 +1207,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 7. BOTTOM COMMUNITY / TEAM KROMIUM SECTION */}
+      {/* 9. BOTTOM COMMUNITY / COLLABORATE SECTION */}
       <section className="py-16 bg-brand-navySecondary/60 border-b border-brand-border/60">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-navyCard border border-brand-border text-xs font-semibold text-brand-lavender">
             <Sparkles className="w-3.5 h-3.5 text-brand-purple" />
-            <span>Built by Team Kromium</span>
+            <span>Community Collaboration</span>
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
@@ -759,27 +1220,31 @@ export default function LandingPage() {
           </h2>
 
           <p className="text-sm text-brand-muted max-w-2xl mx-auto leading-relaxed">
-            TKMingle is built for the TKMCE student community by Team Kromium. Have suggestions, found an issue, or interested in contributing? Reach out directly to Team Kromium.
+            TKMingle is built for the TKMCE student community. Have suggestions, found an issue, or want to contribute code or design? You can write to us anonymously or with your campus handle.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <button
-              onClick={() => setContactModalOpen(true)}
+              onClick={() => {
+                setContactCategory("Collaborate with Kromium");
+                setContactModalOpen(true);
+              }}
               className="px-6 py-2.5 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-semibold shadow-purple-glow transition-all"
             >
               Contact Team Kromium
             </button>
-            <Link
-              href="/team"
+            <a
+              href="mailto:tkmmingle@gmail.com?subject=TKMingle%20Community%20Inquiry"
               className="px-6 py-2.5 rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white text-xs font-semibold transition-all flex items-center gap-1.5"
             >
-              Meet Equipo Kromium <ArrowRight className="w-3.5 h-3.5 text-brand-purple" />
-            </Link>
+              <Mail className="w-3.5 h-3.5 text-brand-purple" />
+              Email tkmmingle@gmail.com
+            </a>
           </div>
         </div>
       </section>
 
-      {/* 8. FOOTER */}
+      {/* 10. FOOTER */}
       <footer className="bg-brand-navy pt-12 pb-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -798,13 +1263,14 @@ export default function LandingPage() {
                 </span>
               </div>
               <p className="text-xs text-brand-muted max-w-sm leading-relaxed">
-                Campus social discovery platform for TKM College of Engineering, Kollam, Kerala. Designed &amp; Engineered with passion by Team Kromium.
+                Campus social discovery platform for TKM College of Engineering, Kollam, Kerala. Designed &amp; Engineered with passion by Equipo Kromium.
               </p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-white">Navigation</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white">Platform</h4>
               <ul className="space-y-1.5 text-xs text-brand-muted">
+                <li><a href="#download" className="text-brand-teal hover:underline flex items-center gap-1"><Download className="w-3 h-3" /> Android APK ({latestRelease.version_name})</a></li>
                 <li><a href="#discover" className="hover:text-white transition-colors">Discover Students</a></li>
                 <li><a href="#circles" className="hover:text-white transition-colors">Campus Circles</a></li>
                 <li><a href="#connect" className="hover:text-white transition-colors">Connect &amp; Chat</a></li>
@@ -813,34 +1279,31 @@ export default function LandingPage() {
                     {sessionUser ? "Campus Portal" : "Student Login"}
                   </Link>
                 </li>
-                <li>
-                  <Link href={sessionUser ? "/app/discover" : "/register"} className="hover:text-white transition-colors">
-                    {sessionUser ? "My Profile" : "Join TKMingle"}
-                  </Link>
-                </li>
               </ul>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-white">College &amp; Engineering</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white">Equipo Kromium</h4>
               <ul className="space-y-1.5 text-xs text-brand-muted">
-                <li><span className="text-brand-text">TKMCE, Karicode, Kollam</span></li>
-                <li><span className="text-brand-muted">Pin: 691005, Kerala</span></li>
                 <li>
                   <Link
                     href="/team"
                     className="text-brand-lavender hover:text-white transition-colors font-medium flex items-center gap-1"
                   >
-                    Equipo Kromium <ArrowRight className="w-3 h-3 text-brand-purple" />
+                    Meet the Team <ArrowRight className="w-3 h-3 text-brand-purple" />
                   </Link>
                 </li>
+                <li><span className="text-brand-muted">tkmmingle@gmail.com</span></li>
+                <li><span className="text-brand-text">TKMCE, Karicode, Kollam</span></li>
+                <li><span className="text-brand-muted">Kerala 691005</span></li>
               </ul>
             </div>
           </div>
 
           <div className="pt-6 border-t border-brand-border/60 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-muted gap-3">
-            <p>&copy; 2026 TKMingle &bull; Designed &amp; Engineered by Team Kromium &bull; TKM College of Engineering.</p>
+            <p>&copy; 2026 TKMingle &bull; Designed &amp; Engineered by Equipo Kromium &bull; TKM College of Engineering.</p>
             <div className="flex items-center gap-5">
+              <a href="#download" className="hover:text-white transition-colors">Download</a>
               <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
               <button
                 onClick={() => setContactModalOpen(true)}
@@ -853,9 +1316,9 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* CONTACT TEAM KROMIUM MODAL */}
+      {/* 11. ANONYMOUS CONTACT & COLLABORATE MODAL */}
       {contactModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-brand-navySecondary border border-brand-border rounded-2xl max-w-lg w-full p-6 space-y-4 relative shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             <button
               onClick={() => {
@@ -876,7 +1339,7 @@ export default function LandingPage() {
                 Contact Team Kromium
               </h3>
               <p className="text-xs text-brand-muted">
-                Send feedback, suggest ideas, report an issue, or collaborate directly with Team Kromium.
+                Your message is safely forwarded to <span className="text-brand-teal font-medium">tkmmingle@gmail.com</span>. You may submit anonymously or with your details.
               </p>
             </div>
 
@@ -885,10 +1348,19 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-full bg-brand-teal/20 text-brand-teal mx-auto flex items-center justify-center">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <h4 className="text-sm font-bold text-white">Thank you for reaching out!</h4>
-                <p className="text-xs text-brand-muted">
-                  Your message has been sent to Team Kromium. We&apos;ll get back to you shortly!
+                <h4 className="text-base font-bold text-white">Message Dispatched!</h4>
+                <p className="text-xs text-brand-muted max-w-sm mx-auto">
+                  Your inquiry has been forwarded directly to <span className="text-brand-lavender font-semibold">tkmmingle@gmail.com</span> and recorded in the team database.
                 </p>
+                <div className="pt-2 flex flex-col items-center gap-2">
+                  <a
+                    href={contactMailto || "mailto:tkmmingle@gmail.com"}
+                    className="text-xs text-brand-teal hover:underline flex items-center gap-1 font-medium"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    Open in your email client &rarr;
+                  </a>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleContactSubmit} className="space-y-3 pt-1">
@@ -904,35 +1376,33 @@ export default function LandingPage() {
                     <option value="Suggestions & Feedback">Suggestions &amp; Ideas</option>
                     <option value="Feature Request">Feature Request</option>
                     <option value="Report an Issue">Report an Issue / Bug</option>
-                    <option value="Collaborate with Kromium">Collaborate with Team Kromium</option>
+                    <option value="Collaborate with Kromium">Collaborate with Equipo Kromium</option>
                   </select>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-semibold text-brand-muted uppercase tracking-wider mb-1">
-                      Your Name
+                      Your Name <span className="text-brand-muted font-normal lowercase">(optional / anonymous)</span>
                     </label>
                     <input
                       type="text"
-                      required
                       value={contactName}
                       onChange={(e) => setContactName(e.target.value)}
-                      placeholder="e.g. Rahul M."
+                      placeholder="Anonymous Student (or enter name)"
                       className="w-full px-3 py-2 rounded-tk-btn bg-brand-navy border border-brand-border text-xs text-white focus:outline-none focus:border-brand-purple"
                     />
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-semibold text-brand-muted uppercase tracking-wider mb-1">
-                      Campus Email
+                      Email Address <span className="text-brand-muted font-normal lowercase">(optional)</span>
                     </label>
                     <input
                       type="email"
-                      required
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
-                      placeholder="name@tkmce.ac.in"
+                      placeholder="name@tkmce.ac.in (or contact email)"
                       className="w-full px-3 py-2 rounded-tk-btn bg-brand-navy border border-brand-border text-xs text-white focus:outline-none focus:border-brand-purple"
                     />
                   </div>
@@ -940,7 +1410,7 @@ export default function LandingPage() {
 
                 <div>
                   <label className="block text-[11px] font-semibold text-brand-muted uppercase tracking-wider mb-1">
-                    Department &amp; Year
+                    Department &amp; Year <span className="text-brand-muted font-normal lowercase">(optional)</span>
                   </label>
                   <input
                     type="text"
@@ -953,34 +1423,39 @@ export default function LandingPage() {
 
                 <div>
                   <label className="block text-[11px] font-semibold text-brand-muted uppercase tracking-wider mb-1">
-                    Message
+                    Message <span className="text-brand-purple font-semibold">*</span>
                   </label>
                   <textarea
                     rows={4}
                     required
                     value={contactMessage}
                     onChange={(e) => setContactMessage(e.target.value)}
-                    placeholder="Describe your idea, issue, or how you would like to collaborate with Team Kromium..."
+                    placeholder="Describe your idea, bug report, or how you would like to collaborate with Equipo Kromium..."
                     className="w-full p-3 rounded-tk-btn bg-brand-navy border border-brand-border text-xs text-white focus:outline-none focus:border-brand-purple"
                   />
                 </div>
 
-                <div className="pt-2 flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setContactModalOpen(false)}
-                    className="px-4 py-2 rounded-tk-btn border border-brand-border text-xs text-brand-muted hover:text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={contactSubmitting}
-                    className="px-5 py-2 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-semibold flex items-center gap-1.5"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    {contactSubmitting ? "Sending..." : "Submit Message"}
-                  </button>
+                <div className="pt-2 flex items-center justify-between">
+                  <span className="text-[10px] text-brand-muted">
+                    Forwarded to <code className="text-brand-lavender">tkmmingle@gmail.com</code>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setContactModalOpen(false)}
+                      className="px-4 py-2 rounded-tk-btn border border-brand-border text-xs text-brand-muted hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={contactSubmitting}
+                      className="px-5 py-2 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-semibold flex items-center gap-1.5 shadow-purple-glow"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      {contactSubmitting ? "Sending..." : "Submit Message"}
+                    </button>
+                  </div>
                 </div>
               </form>
             )}
