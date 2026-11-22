@@ -6,6 +6,7 @@ class AppTheme {
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Sora',
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.deepNavy,
       colorScheme: const ColorScheme.dark(
@@ -99,6 +100,7 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Sora',
       brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.lightBackground,
       colorScheme: const ColorScheme.light(
@@ -189,3 +191,4 @@ class AppTheme {
     );
   }
 }
+
