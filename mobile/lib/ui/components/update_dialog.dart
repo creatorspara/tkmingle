@@ -5,15 +5,22 @@ import '../../core/theme/app_typography.dart';
 
 class UpdateDialog extends StatefulWidget {
   final AppUpdateInfo updateInfo;
+  static bool _isShowing = false;
 
   const UpdateDialog({super.key, required this.updateInfo});
 
-  static Future<void> show(BuildContext context, AppUpdateInfo info) {
-    return showDialog(
-      context: context,
-      barrierDismissible: !info.isMandatory,
-      builder: (ctx) => UpdateDialog(updateInfo: info),
-    );
+  static Future<void> show(BuildContext context, AppUpdateInfo info) async {
+    if (_isShowing) return;
+    _isShowing = true;
+    try {
+      await showDialog(
+        context: context,
+        barrierDismissible: !info.isMandatory,
+        builder: (ctx) => UpdateDialog(updateInfo: info),
+      );
+    } finally {
+      _isShowing = false;
+    }
   }
 
   @override
@@ -179,7 +186,10 @@ class _UpdateDialogState extends State<UpdateDialog> {
         actions: [
           if (!widget.updateInfo.isMandatory && !_isDownloading)
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () async {
+                await UpdateService.dismissUpdate(widget.updateInfo.versionCode);
+                if (context.mounted) Navigator.of(context).pop();
+              },
               child: Text(
                 'Later',
                 style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),

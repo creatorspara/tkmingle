@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppUpdateInfo {
@@ -24,12 +25,41 @@ class AppUpdateInfo {
 }
 
 class UpdateService {
-  static const int currentVersionCode = 9;
-  static const String currentVersionName = "1.0.5";
+  static const int currentVersionCode = 10;
+  static const String currentVersionName = "1.0.6";
   static const MethodChannel _channel = MethodChannel("com.tkmingle.app/updater");
 
+  /// Dismisses an update notification for 24 hours so it does not loop
+  static Future<void> dismissUpdate(int versionCode) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('dismissed_update_version_code', versionCode);
+      await prefs.setInt('dismissed_update_timestamp', DateTime.now().millisecondsSinceEpoch);
+      debugPrint("Update v$versionCode dismissed for 24h");
+    } catch (e) {
+      debugPrint("Error recording update dismissal: $e");
+    }
+  }
+
+  /// Checks if an update was dismissed within the last 24 hours
+  static Future<bool> _isDismissedRecently(int remoteCode) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dismissedCode = prefs.getInt('dismissed_update_version_code') ?? 0;
+      final dismissedTime = prefs.getInt('dismissed_update_timestamp') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // 24 hours cooldown
+      if (remoteCode <= dismissedCode && (now - dismissedTime) < 24 * 60 * 60 * 1000) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint("Error reading update dismissal: $e");
+    }
+    return false;
+  }
+
   /// Checks Supabase `app_releases` table first, with fallback to GitHub Releases API.
-  static Future<AppUpdateInfo?> checkForUpdate() async {
+  static Future<AppUpdateInfo?> checkForUpdate({bool force = false}) async {
     // 1. Try Supabase `app_releases` table if configured
     try {
       final supabase = Supabase.instance.client;
@@ -44,13 +74,21 @@ class UpdateService {
       if (response != null) {
         final remoteCode = response['version_code'] as int? ?? 0;
         final remoteName = response['version_name'] as String? ?? "v$remoteCode";
-        if (remoteCode > currentVersionCode || _isRemoteNewer(remoteName, currentVersionName)) {
+        final isMandatory = response['is_mandatory'] as bool? ?? false;
+
+        if (remoteCode > currentVersionCode || _isRemoteNewer(remoteName)) {
+          // If update was dismissed by user in last 24 hours, do not loop-prompt unless forced or mandatory
+          if (!force && !isMandatory && await _isDismissedRecently(remoteCode)) {
+            debugPrint("Update v$remoteCode is snoozed by user; skipping prompt.");
+            return null;
+          }
+
           return AppUpdateInfo(
             versionName: remoteName,
             versionCode: remoteCode,
             downloadUrl: response['download_url'] as String? ?? "",
             changelog: response['changelog'] as String? ?? "Performance updates and bug fixes.",
-            isMandatory: response['is_mandatory'] as bool? ?? false,
+            isMandatory: isMandatory,
           );
         } else {
           // Installed app is equal to or newer than Supabase registry
@@ -96,12 +134,18 @@ class UpdateService {
         }
 
         if (apkDownloadUrl != null) {
-          // Strictly compare SemVer and Build Code to prevent update loops
-          final isNewer = _isRemoteNewer(tagName, releaseName);
+          final remoteCode = _extractVersionCode(tagName, releaseName);
+          final isNewer = (remoteCode > currentVersionCode) || _isRemoteNewer(tagName, releaseName);
+
           if (isNewer) {
+            if (!force && await _isDismissedRecently(remoteCode)) {
+              debugPrint("GitHub release $tagName is snoozed by user; skipping prompt.");
+              return null;
+            }
+
             return AppUpdateInfo(
               versionName: releaseName,
-              versionCode: _extractVersionCode(tagName, releaseName),
+              versionCode: remoteCode,
               downloadUrl: apkDownloadUrl,
               changelog: _cleanChangelog(bodyNotes),
               isMandatory: false,
@@ -171,11 +215,11 @@ class UpdateService {
     }
   }
 
-  /// Validates whether the remote release is strictly strictly newer than currently installed
-  static bool _isRemoteNewer(String remoteTag, String remoteName) {
+  /// Validates whether the remote release is strictly newer than currently installed
+  static bool _isRemoteNewer(String remoteTag, [String? remoteName]) {
     // 1. SemVer comparison: e.g. v1.0.2 vs v1.0.1
     final remoteMatch = RegExp(r'v?(\d+)\.(\d+)\.(\d+)').firstMatch(remoteTag) ??
-        RegExp(r'v?(\d+)\.(\d+)\.(\d+)').firstMatch(remoteName);
+        (remoteName != null ? RegExp(r'v?(\d+)\.(\d+)\.(\d+)').firstMatch(remoteName) : null);
     final currentMatch = RegExp(r'v?(\d+)\.(\d+)\.(\d+)').firstMatch(currentVersionName);
 
     if (remoteMatch != null && currentMatch != null) {
@@ -196,7 +240,8 @@ class UpdateService {
     }
 
     // 2. Build / Version code suffix check (+6 > +5)
-    final rCodeMatch = RegExp(r'\+(\d+)').firstMatch(remoteTag) ?? RegExp(r'\+(\d+)').firstMatch(remoteName);
+    final rCodeMatch = RegExp(r'\+(\d+)').firstMatch(remoteTag) ??
+        (remoteName != null ? RegExp(r'\+(\d+)').firstMatch(remoteName) : null);
     if (rCodeMatch != null) {
       final rCode = int.tryParse(rCodeMatch.group(1)!) ?? currentVersionCode;
       return rCode > currentVersionCode;

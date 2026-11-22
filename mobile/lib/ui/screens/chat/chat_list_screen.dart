@@ -24,15 +24,16 @@ class ChatListScreen extends ConsumerWidget {
               width: 30,
               height: 30,
               margin: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.all(2),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(9),
-                color: AppColors.secondaryBackground,
-                border: Border.all(color: AppColors.border, width: 1),
+                color: isDark ? AppColors.tkmPurple.withOpacity(0.12) : AppColors.tkmPurple.withOpacity(0.08),
+                border: Border.all(
+                  color: isDark ? AppColors.tkmPurple.withOpacity(0.3) : AppColors.tkmPurple.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset('assets/images/app_icon.png', fit: BoxFit.cover),
-              ),
+              child: Image.asset('assets/images/app_icon.png', fit: BoxFit.contain),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

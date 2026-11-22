@@ -34,7 +34,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     );
 
     try {
-      final update = await UpdateService.checkForUpdate();
+      final update = await UpdateService.checkForUpdate(force: true);
       if (!context.mounted) return;
       if (update != null) {
         UpdateDialog.show(context, update);

@@ -1,5 +1,6 @@
 class AppAssets {
   static const String logo = 'assets/images/logo.jpg';
+  static const String logoPng = 'assets/images/logo.png';
   static const String appIcon = 'assets/images/app_icon.png';
   static const String splashLogo = 'assets/images/splash_logo.png';
   static const String logoPrimary = 'assets/images/logo_primary.svg';

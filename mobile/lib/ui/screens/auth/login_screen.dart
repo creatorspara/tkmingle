@@ -91,15 +91,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               width: 28,
               height: 28,
               margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.all(2),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                color: AppColors.secondaryBackground,
-                border: Border.all(color: AppColors.border, width: 1),
+                color: isDark ? AppColors.tkmPurple.withOpacity(0.12) : AppColors.tkmPurple.withOpacity(0.08),
+                border: Border.all(
+                  color: isDark ? AppColors.tkmPurple.withOpacity(0.3) : AppColors.tkmPurple.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(7),
-                child: Image.asset('assets/images/app_icon.png', fit: BoxFit.cover),
-              ),
+              child: Image.asset('assets/images/app_icon.png', fit: BoxFit.contain),
             ),
             const Text('Login to TKMingle'),
           ],

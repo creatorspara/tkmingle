@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/tk_avatars.dart';
-import '../../../core/services/update_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/user_model.dart';
@@ -19,7 +18,6 @@ import '../../components/interest_chip.dart';
 import '../../components/profile_avatar.dart';
 import '../../components/skeleton_loader.dart';
 import '../../components/status_badge.dart';
-import '../../components/update_dialog.dart';
 import 'discovery_filter_sheet.dart';
 
 class DiscoverScreen extends ConsumerStatefulWidget {
@@ -31,23 +29,6 @@ class DiscoverScreen extends ConsumerStatefulWidget {
 
 class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   final _searchController = TextEditingController();
-  static bool _hasCheckedUpdateThisSession = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (!_hasCheckedUpdateThisSession) {
-      _hasCheckedUpdateThisSession = true;
-      Future.delayed(const Duration(seconds: 3), () async {
-        try {
-          final update = await UpdateService.checkForUpdate();
-          if (mounted && update != null) {
-            UpdateDialog.show(context, update);
-          }
-        } catch (_) {}
-      });
-    }
-  }
 
   @override
   void dispose() {
@@ -174,15 +155,16 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   width: 30,
                   height: 30,
                   margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(9),
-                    color: AppColors.secondaryBackground,
-                    border: Border.all(color: AppColors.border, width: 1),
+                    color: isDark ? AppColors.tkmPurple.withOpacity(0.12) : AppColors.tkmPurple.withOpacity(0.08),
+                    border: Border.all(
+                      color: isDark ? AppColors.tkmPurple.withOpacity(0.3) : AppColors.tkmPurple.withOpacity(0.2),
+                      width: 1,
+                    ),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset('assets/images/app_icon.png', fit: BoxFit.cover),
-                  ),
+                  child: Image.asset('assets/images/app_icon.png', fit: BoxFit.contain),
                 ),
                 Text(
                   'TKM',

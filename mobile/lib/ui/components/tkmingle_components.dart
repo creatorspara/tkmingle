@@ -235,17 +235,18 @@ class TKMingleAppBar extends StatelessWidget implements PreferredSizeWidget {
             Container(
               width: 34,
               height: 34,
+              padding: const EdgeInsets.all(2),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: AppColors.secondaryBackground,
-                border: Border.all(color: AppColors.border, width: 1),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(9),
-                child: Image.asset(
-                  'assets/images/app_icon.png',
-                  fit: BoxFit.cover,
+                color: isDark ? AppColors.tkmPurple.withOpacity(0.12) : AppColors.tkmPurple.withOpacity(0.08),
+                border: Border.all(
+                  color: isDark ? AppColors.tkmPurple.withOpacity(0.3) : AppColors.tkmPurple.withOpacity(0.2),
+                  width: 1,
                 ),
+              ),
+              child: Image.asset(
+                'assets/images/app_icon.png',
+                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(width: 12),
