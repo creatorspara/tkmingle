@@ -13,14 +13,14 @@ export interface ProcessedAvatarResult {
 export const MAX_RAW_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
 /**
- * Strict maximum allowed size for processed upload to Supabase Storage (100 KB)
+ * Strict maximum allowed size for processed upload to Supabase Storage (300 KB)
  */
-export const MAX_PROCESSED_SIZE_BYTES = 100 * 1024;
+export const MAX_PROCESSED_SIZE_BYTES = 300 * 1024;
 
 /**
- * Target output dimensions (128x128 px)
+ * Target output dimensions (512x512 px for high-definition rendering)
  */
-export const AVATAR_OUTPUT_DIMENSION = 128;
+export const AVATAR_OUTPUT_DIMENSION = 512;
 
 /**
  * Reads a raw File, validates size, and returns an HTMLImageElement and aspect info.

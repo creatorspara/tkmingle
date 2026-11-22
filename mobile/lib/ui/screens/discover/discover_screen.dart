@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/tk_avatars.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -472,10 +473,25 @@ class _StudentDiscoveryCardState extends ConsumerState<_StudentDiscoveryCard> {
         );
       }
     } else if (effective.startsWith('http://') || effective.startsWith('https://')) {
-      return Image.network(
-        effective,
+      return CachedNetworkImage(
+        imageUrl: effective,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildInitialsHero(student),
+        filterQuality: FilterQuality.medium,
+        memCacheWidth: 800,
+        placeholder: (context, url) => Container(
+          color: AppColors.darkElevated,
+          child: const Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.tkmPurple,
+              ),
+            ),
+          ),
+        ),
+        errorWidget: (context, url, error) => _buildInitialsHero(student),
       );
     }
     return _buildInitialsHero(student);

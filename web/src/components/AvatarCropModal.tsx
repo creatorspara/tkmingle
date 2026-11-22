@@ -176,7 +176,7 @@ export default function AvatarCropModal({
               Square Crop & Preview
             </h3>
             <p className="text-xs text-brand-muted">
-              Adjust crop to 128×128 px • Optimized to &lt;100 KB
+              Adjust crop to 512×512 px (HD) • Compressed under 250 KB
             </p>
           </div>
           <button
