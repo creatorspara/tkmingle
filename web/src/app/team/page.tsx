@@ -313,7 +313,7 @@ export default function EquipoKromiumPage() {
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6C4DFF]/20 border border-[#6C4DFF]/40 text-xs font-medium text-[#D1C4FF]">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>v1.0.0-k1 Production Release</span>
+                    <span>v1.0.1-k1 Production Release</span>
                   </div>
                   <h3 className="text-2xl font-extrabold text-white">
                     TKMingle
@@ -329,7 +329,7 @@ export default function EquipoKromiumPage() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <a
-                    href="https://github.com/creatorspara/tkmingle/releases/tag/v1.0.0-k1"
+                    href="https://github.com/creatorspara/tkmingle/releases/tag/v1.0.1-k1"
                     target="_blank"
                     rel="noreferrer"
                     className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors"
