@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 655 200" fill="none">
+  <!-- Equipo Kromium Full Lockup (Light Theme / Transparent) -->
+  <!-- K Emblem -->
+  <g transform="translate(25, 20) scale(0.95)">
+    <path d="M63 11 H106 L10 107 V65 Z" fill="#6C4DFF" />
+    <path d="M147 10 H201 L63 144 H11 Z" fill="#6C4DFF" />
+    <path d="M138 86 L201 157 H153 L112 111 Z" fill="#6C4DFF" />
+  </g>
+  <!-- Vertical Divider -->
+  <line x1="245" y1="28" x2="245" y2="168" stroke="#0A0A0F" stroke-opacity="0.25" stroke-width="2" stroke-linecap="round" />
+  <!-- Typography -->
+  <text x="270" y="76" font-family="'Sora', 'Segoe UI', system-ui, sans-serif" font-size="38" font-weight="400" fill="#0A0A0F" letter-spacing="-0.5">Equipo</text>
+  <text x="270" y="132" font-family="'Sora', 'Segoe UI', system-ui, sans-serif" font-size="52" font-weight="800" fill="#0A0A0F" letter-spacing="-1">Kromium</text>
+  <text x="272" y="166" font-family="'Sora', 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600" fill="#6C4DFF" letter-spacing="4">BUILD · OPEN · SHARE</text>
+</svg>

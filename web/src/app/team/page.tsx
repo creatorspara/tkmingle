@@ -14,21 +14,42 @@ import {
   ArrowRight,
   ArrowLeft,
   CheckCircle2,
-  Mail,
   Send,
   Github,
-  Globe,
+  Download,
+  Copy,
+  Check,
   ExternalLink,
   Heart,
+  Layers,
+  ShieldCheck,
+  Cpu,
+  MonitorSmartphone,
 } from "lucide-react";
 
 export default function EquipoKromiumPage() {
+  const [copiedClone, setCopiedClone] = useState(false);
+  const [copiedAsset, setCopiedAsset] = useState<string | null>(null);
+
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactRole, setContactRole] = useState("Developer / Engineer");
   const [contactMessage, setContactMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const handleCopyClone = () => {
+    navigator.clipboard.writeText("git clone https://github.com/creatorspara/tkmingle.git");
+    setCopiedClone(true);
+    setTimeout(() => setCopiedClone(false), 2000);
+  };
+
+  const handleCopyLink = (path: string, label: string) => {
+    const fullUrl = `${window.location.origin}${path}`;
+    navigator.clipboard.writeText(fullUrl);
+    setCopiedAsset(label);
+    setTimeout(() => setCopiedAsset(null), 2000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +108,63 @@ export default function EquipoKromiumPage() {
     { name: "Pure Off-White", hex: "#F5F5F7", bg: "bg-[#F5F5F7]", text: "text-black" },
   ];
 
+  const officialAssets = [
+    {
+      title: "Primary Violet Symbol",
+      desc: "Isolated geometric 'K' symbol in vibrant violet (#6C4DFF) on 100% transparent background.",
+      previewBg: "bg-[#0A0A0F] border border-white/10",
+      pngPath: "/images/kromium/kromium_symbol_purple.png",
+      svgPath: "/images/kromium/kromium_symbol_purple.svg",
+      type: "symbol",
+      aspect: "square",
+    },
+    {
+      title: "Monochrome White Symbol",
+      desc: "Clean white geometric 'K' mark on 100% transparent background for high-contrast dark surfaces.",
+      previewBg: "bg-gradient-to-br from-[#1E1238] to-[#0E0E18] border border-[#6C4DFF]/30",
+      pngPath: "/images/kromium/kromium_symbol_white.png",
+      svgPath: "/images/kromium/kromium_symbol_white.svg",
+      type: "symbol",
+      aspect: "square",
+    },
+    {
+      title: "Full Lockup (Dark Theme)",
+      desc: "Violet K emblem + vertical divider + white 'Equipo Kromium' typography & motto.",
+      previewBg: "bg-[#0A0A0F] border border-white/10",
+      pngPath: "/images/kromium/kromium_lockup_dark.png",
+      svgPath: "/images/kromium/kromium_lockup_dark.svg",
+      type: "lockup",
+      aspect: "wide",
+    },
+    {
+      title: "Full Lockup (Light Theme)",
+      desc: "Violet K emblem + vertical divider + Obsidian #0A0A0F typography for light backgrounds.",
+      previewBg: "bg-[#F5F5F7] border border-gray-300",
+      pngPath: "/images/kromium/kromium_lockup_light.png",
+      svgPath: "/images/kromium/kromium_lockup_light.svg",
+      type: "lockup",
+      aspect: "wide",
+    },
+    {
+      title: "Wordmark (White)",
+      desc: "'Equipo Kromium' typography in crisp Sora bold on 100% transparent background.",
+      previewBg: "bg-[#0E0E1A] border border-white/10",
+      pngPath: "/images/kromium/kromium_wordmark_white.png",
+      svgPath: null,
+      type: "wordmark",
+      aspect: "compact",
+    },
+    {
+      title: "App Icon Squircle",
+      desc: "Official 512×512 squircle container with purple geometric emblem on obsidian black.",
+      previewBg: "bg-[#0A0A0F] border border-white/10",
+      pngPath: "/images/kromium/kromium_app_icon.png",
+      svgPath: null,
+      type: "icon",
+      aspect: "square",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-[#F5F5F7] flex flex-col selection:bg-[#6C4DFF] selection:text-white font-sans">
       {/* 1. STICKY HEADER */}
@@ -102,13 +180,13 @@ export default function EquipoKromiumPage() {
             </Link>
             <div className="h-4 w-px bg-white/20 hidden sm:block" />
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#6C4DFF]/10 border border-[#6C4DFF]/30 flex items-center justify-center p-1">
+              <div className="w-8 h-8 rounded-lg bg-[#6C4DFF]/15 border border-[#6C4DFF]/30 flex items-center justify-center p-1">
                 <Image
-                  src="/images/kromium/kromium_app_icon.png"
+                  src="/images/kromium/kromium_symbol_purple.png"
                   alt="Equipo Kromium"
                   width={24}
                   height={24}
-                  className="rounded"
+                  className="object-contain"
                 />
               </div>
               <span className="font-bold text-base text-white tracking-tight">
@@ -120,9 +198,10 @@ export default function EquipoKromiumPage() {
           <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-gray-400">
             <a href="#mission" className="hover:text-white transition-colors">Mission</a>
             <a href="#principles" className="hover:text-white transition-colors">Principles</a>
-            <a href="#projects" className="hover:text-white transition-colors">Flagship Projects</a>
-            <a href="#palette" className="hover:text-white transition-colors">Brand Identity</a>
-            <a href="#join" className="hover:text-white transition-colors">Join Us</a>
+            <a href="#projects" className="hover:text-white transition-colors">Flagship</a>
+            <a href="#brand-assets" className="hover:text-white transition-colors">Brand Assets</a>
+            <a href="#palette" className="hover:text-white transition-colors">Design System</a>
+            <a href="#join" className="hover:text-white transition-colors">Collaborate</a>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -136,23 +215,23 @@ export default function EquipoKromiumPage() {
               <span>GitHub</span>
             </a>
             <a
-              href="#join"
+              href="#brand-assets"
               className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#6C4DFF] hover:bg-[#6C4DFF]/90 text-white shadow-lg shadow-[#6C4DFF]/25 transition-all"
             >
-              Collaborate
+              Get Logos
             </a>
           </div>
         </div>
       </header>
 
       {/* 2. HERO SECTION */}
-      <section className="relative pt-16 pb-20 md:pt-24 md:pb-32 overflow-hidden border-b border-[#1C1C28]">
-        {/* Glow ambient effects */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-[#6C4DFF]/15 blur-[120px] rounded-full pointer-events-none" />
+      <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 overflow-hidden border-b border-[#1C1C28]">
+        {/* Glow ambient background aura */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[#6C4DFF]/15 blur-[140px] rounded-full pointer-events-none" />
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 relative z-10">
           {/* Brand Pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-[#A78BFA]">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-[#A78BFA] shadow-sm backdrop-blur-sm">
             <Sparkles className="w-3.5 h-3.5 text-[#6C4DFF]" />
             <span>Open Source Developer Collective • TKM College of Engineering</span>
           </div>
@@ -182,25 +261,100 @@ export default function EquipoKromiumPage() {
               <ArrowRight className="w-4 h-4" />
             </a>
             <a
-              href="#join"
+              href="#brand-assets"
               className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2"
             >
-              Join the Collective
+              <Download className="w-4 h-4 text-[#A78BFA]" />
+              Official Brand Assets (PNG &amp; SVG)
             </a>
           </div>
 
-          {/* Banner Graphic Preview */}
-          <div className="pt-10 max-w-4xl mx-auto">
-            <div className="rounded-2xl border border-white/15 overflow-hidden shadow-2xl shadow-[#6C4DFF]/10 relative group">
-              <Image
-                src="/images/kromium/kromium_hero_banner.png"
-                alt="Equipo Kromium Platform"
-                width={1200}
-                height={550}
-                className="w-full h-auto object-cover"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0F] via-transparent to-transparent opacity-40 pointer-events-none" />
+          {/* INTERACTIVE DEVELOPER CONSOLE (PURE CODE UI — NO MOCKUP PHOTOS) */}
+          <div className="pt-8 max-w-4xl mx-auto text-left">
+            <div className="rounded-2xl border border-white/15 bg-[#10101C]/90 shadow-2xl backdrop-blur-md overflow-hidden">
+              {/* Terminal Window Header */}
+              <div className="px-4 py-3 bg-[#171727] border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
+                  <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+                  <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
+                  <span className="ml-2 font-mono text-xs text-gray-400">
+                    equipo-kromium ~ collective-init.sh
+                  </span>
+                </div>
+                <button
+                  onClick={handleCopyClone}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-mono text-gray-300 hover:text-white transition-colors"
+                >
+                  {copiedClone ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      <span className="text-emerald-400">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>git clone</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Terminal Body */}
+              <div className="p-5 sm:p-6 font-mono text-xs space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                  {/* Left Column: Official Transparent Logo Display */}
+                  <div className="md:col-span-5 flex flex-col items-center justify-center p-6 rounded-xl bg-[#0A0A0F]/80 border border-white/5 relative group">
+                    <div className="relative w-44 h-24 flex items-center justify-center">
+                      <Image
+                        src="/images/kromium/kromium_lockup_dark.png"
+                        alt="Equipo Kromium Logo"
+                        width={220}
+                        height={68}
+                        className="object-contain drop-shadow-[0_0_20px_rgba(108,77,255,0.4)]"
+                        priority
+                      />
+                    </div>
+                    <div className="mt-3 text-[11px] text-gray-400 font-sans text-center">
+                      Official Lockup • Transparent RGBA
+                    </div>
+                  </div>
+
+                  {/* Right Column: Collective Manifest Code */}
+                  <div className="md:col-span-7 space-y-2 text-gray-300">
+                    <div>
+                      <span className="text-[#6C4DFF]">$</span>{" "}
+                      <span className="text-emerald-400">npx kromium-collective --info</span>
+                    </div>
+                    <div className="text-gray-400 pl-3 border-l-2 border-[#6C4DFF]/50 space-y-1">
+                      <p>
+                        <span className="text-[#A78BFA]">organization:</span>{" "}
+                        <span className="text-white">&quot;Equipo Kromium&quot;</span>
+                      </p>
+                      <p>
+                        <span className="text-[#A78BFA]">motto:</span>{" "}
+                        <span className="text-white">&quot;Build · Open · Share&quot;</span>
+                      </p>
+                      <p>
+                        <span className="text-[#A78BFA]">base:</span>{" "}
+                        <span className="text-gray-300">&quot;TKM College of Engineering, Kollam&quot;</span>
+                      </p>
+                      <p>
+                        <span className="text-[#A78BFA]">license:</span>{" "}
+                        <span className="text-emerald-400">&quot;100% Free &amp; Open Source&quot;</span>
+                      </p>
+                      <p>
+                        <span className="text-[#A78BFA]">flagship:</span>{" "}
+                        <span className="text-white">&quot;TKMingle Campus Discovery Platform&quot;</span>
+                      </p>
+                      <p>
+                        <span className="text-[#A78BFA]">status:</span>{" "}
+                        <span className="text-emerald-400">● Active &amp; Shipping (v1.0.0-k1)</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -324,7 +478,7 @@ export default function EquipoKromiumPage() {
         </div>
       </section>
 
-      {/* 5. FLAGSHIP PROJECT: TKMINGLE */}
+      {/* 5. FLAGSHIP PROJECT: TKMINGLE (PURE CODE DASHBOARD — NO MOCKUPS) */}
       <section id="projects" className="py-20 bg-[#0E0E17] border-b border-[#1C1C28]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-3">
@@ -343,13 +497,14 @@ export default function EquipoKromiumPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-7 space-y-4">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6C4DFF]/20 border border-[#6C4DFF]/40 text-xs font-medium text-[#D1C4FF]">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Flagship Production Release • v1.0.0 (k1)</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
                   TKMingle — Campus Social Discovery
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                  TKMingle breaks down department silos at TKM College of Engineering. Built from scratch with Flutter for Android/iOS, Next.js 14 for the web, Supabase for authentication and PostgreSQL data storage, and Brevo SMTP for secure email verification.
+                  TKMingle breaks down department silos at TKM College of Engineering. Built from scratch with Flutter for Android/iOS, Next.js 14 for the web, Supabase for authentication and PostgreSQL data storage, and Brevo SMTP for secure email OTP verification.
                 </p>
 
                 <div className="pt-2 flex flex-wrap gap-2 text-xs">
@@ -380,15 +535,67 @@ export default function EquipoKromiumPage() {
                 </div>
               </div>
 
-              <div className="lg:col-span-5 flex justify-center">
-                <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-black/40 p-2 max-w-sm w-full">
-                  <Image
-                    src="/images/kromium/kromium_social_card.png"
-                    alt="Equipo Kromium Social Card"
-                    width={500}
-                    height={350}
-                    className="w-full h-auto rounded-xl object-cover"
-                  />
+              {/* Real Interactive Tech & Architecture Console (Replaced Mockup Image) */}
+              <div className="lg:col-span-5">
+                <div className="rounded-2xl border border-white/10 bg-[#121222] p-5 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-[#6C4DFF]/20 flex items-center justify-center">
+                        <Image
+                          src="/images/kromium/kromium_symbol_purple.png"
+                          alt="Kromium Emblem"
+                          width={20}
+                          height={20}
+                          className="object-contain"
+                        />
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-white">TKMingle Architecture</div>
+                        <div className="text-[10px] text-gray-400">Maintained by Equipo Kromium</div>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      STABLE
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                      <div className="text-gray-400 text-[10px] uppercase font-mono flex items-center gap-1">
+                        <MonitorSmartphone className="w-3 h-3 text-[#A78BFA]" />
+                        <span>Client Apps</span>
+                      </div>
+                      <div className="font-semibold text-white">Flutter &amp; Next.js</div>
+                      <div className="text-[10px] text-gray-400">Android APK &amp; Responsive Web</div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                      <div className="text-gray-400 text-[10px] uppercase font-mono flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3 text-[#A78BFA]" />
+                        <span>Security</span>
+                      </div>
+                      <div className="font-semibold text-white">Row-Level Security</div>
+                      <div className="text-[10px] text-gray-400">Strict PostgreSQL RLS Policies</div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                      <div className="text-gray-400 text-[10px] uppercase font-mono flex items-center gap-1">
+                        <Layers className="w-3 h-3 text-[#A78BFA]" />
+                        <span>College Scope</span>
+                      </div>
+                      <div className="font-semibold text-white">9 Departments</div>
+                      <div className="text-[10px] text-gray-400">B.Tech &amp; B.Arch TKMCE</div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                      <div className="text-gray-400 text-[10px] uppercase font-mono flex items-center gap-1">
+                        <Cpu className="w-3 h-3 text-[#A78BFA]" />
+                        <span>Verification</span>
+                      </div>
+                      <div className="font-semibold text-white">Brevo SMTP</div>
+                      <div className="text-[10px] text-gray-400">6-Digit Campus Email OTP</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -396,12 +603,104 @@ export default function EquipoKromiumPage() {
         </div>
       </section>
 
-      {/* 6. BRAND PALETTE & IDENTITY */}
-      <section id="palette" className="py-20 bg-[#0A0A0F] border-b border-[#1C1C28]">
+      {/* 6. OFFICIAL BRAND ASSETS & LOGO DOWNLOADS (100% TRANSPARENT PNG & SVG) */}
+      <section id="brand-assets" className="py-20 bg-[#0A0A0F] border-b border-[#1C1C28]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="text-xs font-bold uppercase tracking-widest text-[#A78BFA]">
+              Official Identity Suite
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
+              Equipo Kromium Brand Assets
+            </h2>
+            <p className="text-sm text-gray-400">
+              Enhanced, ultra-sharp logo assets with 100% transparent backgrounds for light and dark surfaces. Zero background halos or artifacts.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {officialAssets.map((asset) => (
+              <div
+                key={asset.title}
+                className="rounded-2xl bg-[#12121E] border border-white/10 p-5 space-y-4 flex flex-col justify-between hover:border-[#6C4DFF]/40 transition-colors"
+              >
+                {/* Visual Preview Box */}
+                <div
+                  className={`w-full h-44 rounded-xl ${asset.previewBg} flex items-center justify-center p-4 relative overflow-hidden`}
+                  style={{
+                    backgroundImage:
+                      asset.previewBg.includes("#0A0A0F")
+                        ? "radial-gradient(#1C1C2C 1px, transparent 1px)"
+                        : "radial-gradient(#E2E8F0 1px, transparent 1px)",
+                    backgroundSize: "16px 16px",
+                  }}
+                >
+                  <div className="relative max-h-28 max-w-full flex items-center justify-center">
+                    <Image
+                      src={asset.pngPath}
+                      alt={asset.title}
+                      width={asset.aspect === "wide" ? 220 : 100}
+                      height={asset.aspect === "wide" ? 80 : 100}
+                      className="object-contain"
+                    />
+                  </div>
+                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded text-[9px] font-mono uppercase bg-black/60 text-gray-300 backdrop-blur-sm border border-white/10">
+                    Transparent
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="space-y-1.5">
+                  <h3 className="font-bold text-sm text-white">{asset.title}</h3>
+                  <p className="text-xs text-gray-400 leading-relaxed">{asset.desc}</p>
+                </div>
+
+                {/* Download Actions */}
+                <div className="pt-2 flex items-center gap-2 text-xs">
+                  <a
+                    href={asset.pngPath}
+                    download
+                    className="flex-1 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#A78BFA]" />
+                    <span>Download PNG</span>
+                  </a>
+
+                  {asset.svgPath ? (
+                    <a
+                      href={asset.svgPath}
+                      download
+                      className="py-2 px-3 rounded-lg bg-[#6C4DFF]/20 hover:bg-[#6C4DFF]/30 border border-[#6C4DFF]/30 text-[#D1C4FF] font-medium flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>SVG</span>
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => handleCopyLink(asset.pngPath, asset.title)}
+                      className="py-2 px-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white transition-colors"
+                      title="Copy URL"
+                    >
+                      {copiedAsset === asset.title ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 7. BRAND PALETTE & IDENTITY */}
+      <section id="palette" className="py-20 bg-[#0E0E17] border-b border-[#1C1C28]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <div className="text-xs font-bold uppercase tracking-widest text-[#A78BFA]">
-              Visual Identity
+              Design System
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
               Color Palette &amp; Typography
@@ -445,8 +744,8 @@ export default function EquipoKromiumPage() {
         </div>
       </section>
 
-      {/* 7. GET INVOLVED / COLLABORATE SECTION */}
-      <section id="join" className="py-20 bg-[#0E0E17]">
+      {/* 8. GET INVOLVED / COLLABORATE SECTION */}
+      <section id="join" className="py-20 bg-[#0A0A0F]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="text-center space-y-3">
             <div className="text-xs font-bold uppercase tracking-widest text-[#A78BFA]">
@@ -549,16 +848,16 @@ export default function EquipoKromiumPage() {
         </div>
       </section>
 
-      {/* 8. FOOTER */}
+      {/* 9. FOOTER */}
       <footer className="bg-[#0A0A0F] py-10 border-t border-[#1C1C28]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 gap-4">
           <div className="flex items-center gap-2.5">
             <Image
-              src="/images/kromium/kromium_app_icon.png"
+              src="/images/kromium/kromium_symbol_purple.png"
               alt="Kromium"
               width={20}
               height={20}
-              className="rounded"
+              className="object-contain"
             />
             <span className="font-bold text-white">Equipo Kromium</span>
             <span>• Build · Open · Share</span>
