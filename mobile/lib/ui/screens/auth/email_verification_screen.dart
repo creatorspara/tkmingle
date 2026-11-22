@@ -87,7 +87,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
           }
         } else {
           setState(() {
-            _errorMessage = 'Email not confirmed yet. Please click the link sent to your college inbox, or enter the 6-digit code.';
+            _errorMessage = 'Email not confirmed yet. Please click the link sent to your email inbox, or enter the 6-digit code.';
           });
         }
       } else {
@@ -102,7 +102,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
 
   Future<void> _handleResend() async {
     final user = ref.read(authProvider).value;
-    final email = user?.email ?? '';
+    final email = user?.email ?? (AppConstants.isSupabaseConfigured ? Supabase.instance.client.auth.currentUser?.email : null) ?? '';
     if (email.isEmpty) {
       setState(() => _errorMessage = 'No email address found for resending.');
       return;
@@ -132,11 +132,11 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = ref.watch(authProvider).value;
-    final email = user?.email ?? 'your college email';
+    final email = user?.email ?? (AppConstants.isSupabaseConfigured ? Supabase.instance.client.auth.currentUser?.email : null) ?? 'your email address';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verify Campus Email'),
+        title: const Text('Verify Email Address'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

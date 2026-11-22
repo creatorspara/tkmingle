@@ -54,14 +54,14 @@ class LocalAuthRepository implements AuthRepository {
     final existing = _allUsers.firstWhere(
       (u) => u.email.toLowerCase() == cleanEmail,
       orElse: () {
-        // Allow login with demo accounts or any @tkmce.ac.in email
+        // Allow login with demo accounts or any entered email
         return UserModel(
           uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
           name: cleanEmail.split('@').first.replaceAll('.', ' ').toUpperCase(),
           email: cleanEmail,
           department: CollegeData.departments.first,
           academicYear: '3rd Year',
-          verified: cleanEmail.endsWith('tkmce.ac.in'),
+          verified: false,
           role: cleanEmail.contains('admin') ? 'admin' : 'student',
         );
       },

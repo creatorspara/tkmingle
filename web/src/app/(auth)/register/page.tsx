@@ -29,12 +29,14 @@ export default function RegisterPage() {
     try {
       if (isLiveSupabaseConfigured()) {
         const emailRedirectTo = getAuthRedirectUrl("/verify-email");
+        const baseUsername = email.trim().split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_");
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
             emailRedirectTo,
             data: {
+              username: baseUsername,
               full_name: fullName.trim(),
               department,
               academic_year: academicYear,
@@ -120,7 +122,7 @@ export default function RegisterPage() {
 
             <div>
               <label className="block text-xs font-semibold text-brand-muted uppercase tracking-wider mb-1">
-                Campus Email
+                Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-brand-muted">
@@ -131,12 +133,12 @@ export default function RegisterPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name.dept@tkmce.ac.in"
+                  placeholder="student@gmail.com"
                   className="w-full pl-10 pr-3.5 py-2.5 rounded-tk-btn bg-brand-navySecondary border border-brand-border text-sm text-white focus:outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple"
                 />
               </div>
               <span className="text-[10px] text-brand-muted mt-1 block">
-                Official institutional email or verified student address
+                Your email address (Gmail, Outlook, College email, etc.)
               </span>
             </div>
 

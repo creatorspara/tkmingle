@@ -145,25 +145,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
                 CustomTextField(
                   controller: _emailController,
-                  label: 'College Email',
-                  hint: 'name@tkmce.ac.in',
+                  label: 'Email Address',
+                  hint: 'student@gmail.com',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'Enter your college email';
-                    if (!val.contains('@')) return 'Enter a valid email address';
+                    if (val == null || val.trim().isEmpty) return 'Enter your email address';
+                    if (!val.contains('@') || !val.contains('.')) return 'Enter a valid email address';
                     return null;
-                  },
-                ),
-                const SizedBox(height: 6),
-                ActionChip(
-                  label: const Text('Use @tkmce.ac.in domain'),
-                  onPressed: () {
-                    final cur = _emailController.text.trim();
-                    final prefix = cur.contains('@') ? cur.split('@').first : cur;
-                    if (prefix.isNotEmpty) {
-                      _emailController.text = '$prefix@tkmce.ac.in';
-                    }
                   },
                 ),
                 const SizedBox(height: 16),

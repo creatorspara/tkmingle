@@ -132,12 +132,14 @@ class SupabaseAuthRepository implements AuthRepository {
   }) async {
     final normalizedEmail = email.trim().toLowerCase();
     final trimmedName = name.trim();
+    final baseUsername = normalizedEmail.split('@').first.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
 
     final response = await _client.auth.signUp(
       email: normalizedEmail,
       password: password,
       emailRedirectTo: 'https://tkmingle.vercel.app/verify-email',
       data: {
+        'username': baseUsername,
         'full_name': trimmedName,
         'department': department,
         'academic_year': academicYear,
@@ -149,7 +151,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
     // Create profile row in profiles table
     try {
-      final username = '${normalizedEmail.split('@').first.replaceAll('.', '_')}_${user.id.substring(0, 4)}';
+      final username = '${baseUsername}_${user.id.substring(0, 4)}';
       await _client.from('profiles').upsert({
         'id': user.id,
         'full_name': trimmedName,
@@ -225,7 +227,10 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> resetPassword(String email) async {
-    await _client.auth.resetPasswordForEmail(email.trim().toLowerCase());
+    await _client.auth.resetPasswordForEmail(
+      email.trim().toLowerCase(),
+      redirectTo: 'https://tkmingle.vercel.app/auth/callback?next=/app/profile',
+    );
   }
 
   @override

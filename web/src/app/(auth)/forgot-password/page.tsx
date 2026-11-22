@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
           <div className="text-center space-y-2">
             <h2 className="text-xl font-bold text-white">Reset Password</h2>
             <p className="text-xs text-brand-muted">
-              Enter your college email address to receive password recovery instructions.
+              Enter your email address to receive password recovery instructions.
             </p>
           </div>
 
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-brand-muted uppercase tracking-wider mb-1">
-                  Campus Email
+                  Email Address
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-brand-muted">
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student@tkmce.ac.in"
+                    placeholder="student@gmail.com"
                     className="w-full pl-10 pr-3.5 py-2.5 rounded-tk-btn bg-brand-navySecondary border border-brand-border text-sm text-white focus:outline-none focus:border-brand-purple"
                   />
                 </div>

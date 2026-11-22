@@ -2,6 +2,7 @@
 
 # Binaries & Large Archives
 *.apk
+*.sha256
 *.exe
 *.rar
 *.zip

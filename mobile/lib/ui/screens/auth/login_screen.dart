@@ -152,8 +152,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
                 CustomTextField(
                   controller: _emailController,
-                  label: 'College / Institutional Email',
-                  hint: 'name@tkmce.ac.in',
+                  label: 'Email Address',
+                  hint: 'student@gmail.com',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: (val) {
@@ -161,22 +161,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (!val.contains('@')) return 'Enter a valid email address';
                     return null;
                   },
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    ActionChip(
-                      label: const Text('@tkmce.ac.in'),
-                      onPressed: () {
-                        final current = _emailController.text.trim();
-                        final prefix = current.contains('@') ? current.split('@').first : current;
-                        if (prefix.isNotEmpty) {
-                          _emailController.text = '$prefix@tkmce.ac.in';
-                        }
-                      },
-                    ),
-                  ],
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
@@ -300,12 +284,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Enter your college email address to receive password recovery instructions.'),
+              const Text('Enter your email address to receive password recovery instructions.'),
               const SizedBox(height: 16),
               CustomTextField(
                 controller: emailCtrl,
                 label: 'Email',
-                hint: 'name@tkmce.ac.in',
+                hint: 'student@gmail.com',
               ),
             ],
           ),
@@ -315,14 +299,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                final targetEmail = emailCtrl.text.trim();
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Password reset instructions sent to your college email.'),
-                    backgroundColor: AppColors.success,
-                  ),
-                );
+                if (targetEmail.isNotEmpty) {
+                  try {
+                    await ref.read(authRepositoryProvider).resetPassword(targetEmail);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Password reset instructions sent to $targetEmail.'),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to send reset link: ${e.toString().replaceAll("Exception: ", "")}'),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  }
+                }
               },
               child: const Text('Send Reset Link'),
             ),
