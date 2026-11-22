@@ -14,6 +14,7 @@ class AppColors {
   static const Color darkBackground = Color(0xFF0A1026);
   static const Color secondaryBackground = Color(0xFF141A32);
   static const Color cardBackground = Color(0xFF191E35);
+  static const Color surface = Color(0xFF141A32);
   static const Color darkSurface = Color(0xFF141A32);
   static const Color darkCard = Color(0xFF191E35);
   static const Color darkElevated = Color(0xFF1E2648);
@@ -29,6 +30,7 @@ class AppColors {
   static const Color lightBackground = Color(0xFFF8F9FD);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightCard = Color(0xFFFFFFFF);
+  static const Color lightCardBackground = Color(0xFFFFFFFF);
   static const Color lightElevated = Color(0xFFF0F2FA);
   static const Color lightBorder = Color(0xFFDFE3F0);
 

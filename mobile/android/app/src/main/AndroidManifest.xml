@@ -29,11 +29,18 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <!-- Deep linking for authentication, email verification & password recovery -->
+            <!-- 1. Web App Links (HTTPS with autoVerify) -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="tkmingle.vercel.app" android:pathPrefix="/reset-password" />
+            </intent-filter>
+            <!-- 2. Custom Scheme Deep Link (tkmingle://) separated to ensure valid manifest parsing -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tkmingle" android:host="reset-password" />
             </intent-filter>
         </activity>

@@ -242,12 +242,14 @@ class NotificationsScreen extends ConsumerWidget {
                   ),
                 );
               },
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
-    );
+    ],
+  ),
+),
+);
   }
 
   IconData _getIcon(String type) {

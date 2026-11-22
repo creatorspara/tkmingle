@@ -45,6 +45,12 @@ class AppTypography {
     color: color,
   );
 
+  static TextStyle titleSmall(Color color) => TextStyle(fontFamily: 'Sora',
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: color,
+  );
+
   // Body Text: Sora Regular (w400)
   static TextStyle bodyLarge(Color color) => TextStyle(fontFamily: 'Sora', 
     fontSize: 14,
@@ -58,6 +64,13 @@ class AppTypography {
     fontWeight: FontWeight.w400,
     color: color,
     height: 1.4,
+  );
+
+  static TextStyle bodySmall(Color color) => TextStyle(fontFamily: 'Sora',
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: color,
+    height: 1.35,
   );
 
   // Buttons: Sora SemiBold (w600)
