@@ -231,6 +231,9 @@ export default function LandingPage() {
             <a href="#faq" className="hover:text-white transition-colors">
               FAQ
             </a>
+            <Link href="/team" className="text-brand-lavender hover:text-white transition-colors font-semibold flex items-center gap-1">
+              Equipo Kromium
+            </Link>
           </nav>
 
           {/* Action CTAs */}
@@ -302,6 +305,13 @@ export default function LandingPage() {
             >
               FAQ
             </a>
+            <Link
+              href="/team"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm font-semibold text-brand-lavender hover:text-white"
+            >
+              Meet Equipo Kromium &rarr;
+            </Link>
             <div className="pt-3 border-t border-brand-border/60 flex flex-col gap-2">
               {sessionUser ? (
                 <Link
@@ -752,13 +762,19 @@ export default function LandingPage() {
             TKMingle is built for the TKMCE student community by Team Kromium. Have suggestions, found an issue, or interested in contributing? Reach out directly to Team Kromium.
           </p>
 
-          <div className="pt-2">
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => setContactModalOpen(true)}
               className="px-6 py-2.5 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-semibold shadow-purple-glow transition-all"
             >
               Contact Team Kromium
             </button>
+            <Link
+              href="/team"
+              className="px-6 py-2.5 rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white text-xs font-semibold transition-all flex items-center gap-1.5"
+            >
+              Meet Equipo Kromium <ArrowRight className="w-3.5 h-3.5 text-brand-purple" />
+            </Link>
           </div>
         </div>
       </section>
@@ -811,12 +827,12 @@ export default function LandingPage() {
                 <li><span className="text-brand-text">TKMCE, Karicode, Kollam</span></li>
                 <li><span className="text-brand-muted">Pin: 691005, Kerala</span></li>
                 <li>
-                  <button
-                    onClick={() => setContactModalOpen(true)}
-                    className="text-brand-lavender hover:text-white transition-colors font-medium"
+                  <Link
+                    href="/team"
+                    className="text-brand-lavender hover:text-white transition-colors font-medium flex items-center gap-1"
                   >
-                    Team Kromium
-                  </button>
+                    Equipo Kromium <ArrowRight className="w-3 h-3 text-brand-purple" />
+                  </Link>
                 </li>
               </ul>
             </div>

@@ -1,12 +1,36 @@
 # TKMingle — Campus Social Discovery Platform
 
-> *"Your campus. Your people. Your connections."*
+> *"Your campus. Your people. Your connections."*  
+> **Engineered & Maintained by Equipo Kromium** • *Build · Open · Share*
 
+[![Equipo Kromium](https://img.shields.io/badge/Equipo-Kromium-6C4DFF?style=flat-square&logo=github)](https://tkmingle.vercel.app/team)
 [![TKMCE](https://img.shields.io/badge/TKMCE-Kollam%2C%20Kerala-8875FF?style=flat-square)](https://tkmce.ac.in)
 [![Next.js](https://img.shields.io/badge/Next.js-14.2%20App%20Router-0A1026?style=flat-square&logo=next.js)](https://nextjs.org)
 [![Flutter](https://img.shields.io/badge/Flutter-3.24-02569B?style=flat-square&logo=flutter)](https://flutter.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20%2B%20RLS-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com)
 [![Vercel](https://img.shields.io/badge/Vercel-Deployment%20Ready-000000?style=flat-square&logo=vercel)](https://vercel.com)
+
+---
+
+## ⚡ Built by Equipo Kromium
+
+**Build · Open · Share**
+
+**Equipo Kromium** is a student-led developer collective dedicated to building, maintaining, and contributing to open-source software.
+
+We believe technology should be accessible, collaborative, and built for everyone. Our team brings together curious minds, developers, and creators to turn ideas into practical software solutions.
+
+From experimenting with new technologies to developing real-world applications, we learn by building, grow by collaborating, and give back by sharing our work with the open-source community.
+
+### Our Principles
+- **Open-source first.**
+- **Build things that matter.**
+- **Learn through collaboration.**
+- **Share knowledge and innovation.**
+- **Technology without boundaries.**
+
+*Built by students. Open to everyone.*  
+🌐 Meet the team & explore our work: [https://tkmingle.vercel.app/team](https://tkmingle.vercel.app/team)
 
 ---
 
