@@ -1,36 +1,21 @@
+License: MIT
 Categories:
   - Connectivity
   - Social
-License: Unverified # [MANUAL_CONFIRMATION_REQUIRED: Pending maintainer confirmation between LICENSE and README.md]
-AuthorName: TKMCE Student Community
-SourceCode: https://github.com/creatorspara/tkmingle
-IssueTracker: https://github.com/creatorspara/tkmingle/issues
-
 AutoName: TKMingle
 Summary: Campus social discovery platform for TKM College of Engineering
-Description: |-
-  TKMingle is a student collaboration and social discovery platform built 
-  for TKM College of Engineering (TKMCE), Kollam, Kerala.
+Description: |
+  TKMingle is a campus social discovery platform developed by students
+  of TKM College of Engineering.
 
-  Traditional campus life often leaves students isolated within their own 
-  academic branch. TKMingle facilitates cross-departmental fellowship, campus 
-  circles, and mutual-consent peer discovery.
-
-  Features:
-  * Cross-department student networking (breaking branch silos)
-  * Campus Circles for IEEE, IEDC, Coding Club, and RoboTKM
-  * Real-time peer direct messaging powered by open Supabase infrastructure
-  * Verified collegiate profiles
-
+  An independent student community initiative, not an official
+  administrative release or trademark of the TKM College Trust.
 RepoType: git
 Repo: https://github.com/creatorspara/tkmingle.git
-
 Builds:
-  - versionName: 1.0.0
-    versionCode: 1
-    # [MANUAL_CONFIRMATION_REQUIRED]: Set to the exact Git tag (e.g., v1.0.0) once created,
-    # or the verified commit SHA.
-    commit: [MANUAL_CONFIRMATION_REQUIRED - e.g. v1.0.0]
+  - versionName: 1.0.1
+    versionCode: 2
+    commit: v1.0.1
     subdir: mobile
     output: build/app/outputs/flutter-apk/app-release.apk
     srclibs:
@@ -40,8 +25,7 @@ Builds:
       - flutter config --no-analytics
       - flutter pub get
       - flutter build apk --release
-
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 1.0.0
-CurrentVersionCode: 1
+CurrentVersion: 1.0.1
+CurrentVersionCode: 2

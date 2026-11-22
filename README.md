@@ -128,4 +128,4 @@ TKMingle is built by students, for students. Please see [CONTRIBUTING.md](file:/
 ---
 
 ## 📄 License
-Pending maintainer confirmation. See [LICENSE](file:///V:/Tkm%20Conenct/LICENSE).
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

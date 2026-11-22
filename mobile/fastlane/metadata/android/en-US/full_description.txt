@@ -1,7 +1,9 @@
 TKMingle is a student collaboration and social discovery platform built exclusively for TKM College of Engineering (TKMCE), Kollam.
 
+An independent student community initiative, not an official administrative release or trademark of the TKM College Trust.
+
 Features:
 - Cross-department student networking (breaking branch silos)
-- Campus Circles for coding, robotics, arts, and clubs
+- Campus Circles for IEEE, IEDC, Coding Club, and RoboTKM
 - Real-time peer direct messaging powered by open Supabase infrastructure
 - Verified student profiles
