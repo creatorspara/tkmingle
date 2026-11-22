@@ -1,33 +1,39 @@
 -- ==============================================================================
 -- TKMingle v1.5 — Unified Profile Picture & Avatar Management System
 -- Migration: 20261122000003_profile_avatars_system.sql
+-- Review: Pre-execution verified, idempotent, and production-safe
 -- ==============================================================================
 
 -- -----------------------------------------------------------------------------
--- 1. Profiles Table Extension
+-- 1. Profiles Table Extension & Non-destructive Backfill
 -- -----------------------------------------------------------------------------
+
+-- 1.1 Add avatar classification columns if not already present
 ALTER TABLE public.profiles
 ADD COLUMN IF NOT EXISTS avatar_type TEXT NOT NULL DEFAULT 'initial'
     CHECK (avatar_type IN ('upload', 'preset', 'initial')),
 ADD COLUMN IF NOT EXISTS avatar_id TEXT;
 
--- Backfill legacy records to maintain seamless compatibility
+-- 1.2 Deterministic, atomic backfill of legacy profiles based on profile_image:
+--     - 'preset:<id>' -> avatar_type = 'preset', avatar_id = '<id>'
+--     - valid non-empty URL -> avatar_type = 'upload', avatar_id = NULL
+--     - empty or NULL -> avatar_type = 'initial', avatar_id = NULL
 UPDATE public.profiles
-SET avatar_type = CASE
-    WHEN profile_image IS NULL OR profile_image = '' THEN 'initial'
-    WHEN profile_image LIKE 'preset:%' THEN 'preset'
-    ELSE 'upload'
-END
-WHERE avatar_type IS NULL OR avatar_type = 'initial';
-
--- Populate avatar_id for existing presets if formatted as preset:id
-UPDATE public.profiles
-SET avatar_id = REPLACE(profile_image, 'preset:', '')
-WHERE profile_image LIKE 'preset:%' AND (avatar_id IS NULL OR avatar_id = '');
+SET 
+    avatar_type = CASE
+        WHEN profile_image IS NOT NULL AND profile_image LIKE 'preset:%' THEN 'preset'
+        WHEN profile_image IS NOT NULL AND TRIM(profile_image) <> '' THEN 'upload'
+        ELSE 'initial'
+    END,
+    avatar_id = CASE
+        WHEN profile_image IS NOT NULL AND profile_image LIKE 'preset:%' 
+            THEN NULLIF(SUBSTRING(profile_image FROM 8), '')
+        ELSE NULL
+    END;
 
 -- -----------------------------------------------------------------------------
 -- 2. Supabase Storage Bucket Configuration (profile-avatars)
--- Enforces 100 KB maximum object size and restricts MIME types
+-- Enforces 100 KB file limit and restricts MIME types strictly to WebP & JPEG
 -- -----------------------------------------------------------------------------
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
@@ -35,40 +41,63 @@ VALUES (
     'profile-avatars',
     true,
     102400, -- 100 KB maximum file size limit
-    ARRAY['image/webp', 'image/jpeg', 'image/png']
+    ARRAY['image/webp', 'image/jpeg']
 )
 ON CONFLICT (id) DO UPDATE SET
     public = true,
     file_size_limit = 102400,
-    allowed_mime_types = ARRAY['image/webp', 'image/jpeg', 'image/png'];
+    allowed_mime_types = ARRAY['image/webp', 'image/jpeg'];
 
 -- -----------------------------------------------------------------------------
--- 3. Storage Row Level Security (RLS) Policies
--- Enforces stable path structure: profile-avatars/{user_id}/avatar.webp
--- Prevents cross-user modifications and unauthorized deletions
+-- 3. Dynamic RLS Policy Cleanup & Re-creation for profile-avatars
+-- Safely removes all dashboard-created variants, template suffixes (e.g. 1okq1_0),
+-- and legacy policies for profile-avatars WITHOUT affecting other buckets.
 -- -----------------------------------------------------------------------------
 
--- Drop previous/dashboard policies if re-running
-DROP POLICY IF EXISTS "Anyone can view profile avatars" ON storage.objects;
-DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Users can update their own avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Users can delete their own avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Public read access for profile avatars" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated users can upload own avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated users can update own avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated users can delete own avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Allow authenticated users to upload avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Allow authenticated users to update avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Allow authenticated users to delete avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Give users access to own folder" ON storage.objects;
+DO $$
+DECLARE
+    pol RECORD;
+BEGIN
+    FOR pol IN
+        SELECT policyname
+        FROM pg_policies
+        WHERE schemaname = 'storage'
+          AND tablename = 'objects'
+          AND (
+              COALESCE(qual, '') LIKE '%profile-avatars%'
+              OR COALESCE(with_check, '') LIKE '%profile-avatars%'
+              OR LOWER(policyname) IN (
+                  'anyone can view profile avatars',
+                  'users can upload their own avatar',
+                  'users can update their own avatar',
+                  'users can delete their own avatar',
+                  'public read access for profile avatars',
+                  'authenticated users can upload own avatar',
+                  'authenticated users can update own avatar',
+                  'authenticated users can delete own avatar',
+                  'allow authenticated users to upload avatar',
+                  'allow authenticated users to update avatar',
+                  'allow authenticated users to delete avatar'
+              )
+          )
+    LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', pol.policyname);
+    END LOOP;
+END $$;
 
--- 3.1. Public Read: Any student can view avatars in profile-avatars bucket
-CREATE POLICY "Public read access for profile avatars"
+-- 3.1 Owner-Scoped SELECT: Authenticated user can read/list their own objects for upsert
+-- Note: Public bucket serving (/storage/v1/object/public/...) bypasses table-level RLS,
+-- so public avatar viewing works globally without opening directory listing to anonymous scrapers.
+CREATE POLICY "Users can select own avatar objects"
 ON storage.objects FOR SELECT
-USING (bucket_id = 'profile-avatars');
+TO authenticated
+USING (
+    bucket_id = 'profile-avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+);
 
--- 3.2. Authenticated Insert: User can only upload into their own user_id directory
-CREATE POLICY "Authenticated users can upload own avatar"
+-- 3.2 Authenticated INSERT: User can only upload into their own user_id directory
+CREATE POLICY "Users can upload own avatar"
 ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (
@@ -76,8 +105,8 @@ WITH CHECK (
     AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
--- 3.3. Authenticated Update: User can only update objects in their own directory
-CREATE POLICY "Authenticated users can update own avatar"
+-- 3.3 Authenticated UPDATE: Requires both USING and WITH CHECK for seamless 'upsert: true'
+CREATE POLICY "Users can update own avatar"
 ON storage.objects FOR UPDATE
 TO authenticated
 USING (
@@ -89,8 +118,8 @@ WITH CHECK (
     AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
--- 3.4. Authenticated Delete: User can only delete objects in their own directory
-CREATE POLICY "Authenticated users can delete own avatar"
+-- 3.4 Authenticated DELETE: User can only delete objects in their own directory
+CREATE POLICY "Users can delete own avatar"
 ON storage.objects FOR DELETE
 TO authenticated
 USING (
@@ -99,27 +128,34 @@ USING (
 );
 
 -- -----------------------------------------------------------------------------
--- 4. Audit & Profile Trigger Update
--- Ensures new user profiles initialize with avatar_type = 'initial'
+-- 4. Authentication Sync Trigger Update
+-- Modifies existing public.handle_new_user() with explicit search_path
+-- Preserves existing on_auth_user_created trigger on auth.users
 -- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.handle_new_user_profile()
-RETURNS TRIGGER AS $$
+
+-- Drop accidental draft function if created earlier
+DROP FUNCTION IF EXISTS public.handle_new_user_profile();
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public, pg_temp
+LANGUAGE plpgsql
+AS $$
 DECLARE
-    target_username TEXT;
-    target_name TEXT;
-    user_dept TEXT;
-    user_year TEXT;
-    base_user TEXT;
+    v_full_name TEXT;
+    v_department TEXT;
+    v_academic_year TEXT;
+    v_username TEXT;
 BEGIN
-    target_name := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'full_name'), ''), 'TKM Student');
-    user_dept := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'department'), ''), 'General');
-    user_year := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'academic_year'), ''), '1st Year');
+    v_full_name := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'full_name'), ''), split_part(NEW.email, '@', 1));
+    v_department := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'department'), ''), 'General');
+    v_academic_year := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'academic_year'), ''), '1st Year');
 
     IF NEW.raw_user_meta_data->>'username' IS NOT NULL AND TRIM(NEW.raw_user_meta_data->>'username') <> '' THEN
-        target_username := LOWER(TRIM(NEW.raw_user_meta_data->>'username'));
+        v_username := LOWER(TRIM(NEW.raw_user_meta_data->>'username'));
     ELSE
-        base_user := LOWER(REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g'));
-        target_username := base_user || '_' || SUBSTRING(NEW.id::text, 1, 4);
+        v_username := LOWER(REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g')) || '_' || SUBSTR(NEW.id::text, 1, 4);
     END IF;
 
     INSERT INTO public.profiles (
@@ -137,28 +173,39 @@ BEGIN
         role
     ) VALUES (
         NEW.id,
-        target_name,
-        target_username,
+        v_full_name,
+        v_username,
         NEW.email,
-        user_dept,
-        user_year,
+        v_department,
+        v_academic_year,
         '',
         'initial',
         NULL,
         CASE WHEN NEW.email_confirmed_at IS NOT NULL THEN 'verified' ELSE 'pending' END,
         'email_otp',
         'student'
-    )
-    ON CONFLICT (id) DO UPDATE SET
+    ) ON CONFLICT (id) DO UPDATE SET
         full_name = EXCLUDED.full_name,
         department = EXCLUDED.department,
         academic_year = EXCLUDED.academic_year,
-        verification_status = CASE
-            WHEN EXCLUDED.verification_status = 'verified' THEN 'verified'
-            ELSE profiles.verification_status
+        verification_status = CASE 
+            WHEN NEW.email_confirmed_at IS NOT NULL THEN 'verified' 
+            ELSE public.profiles.verification_status 
         END,
         updated_at = NOW();
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
+
+-- Ensure the existing trigger remains attached to public.handle_new_user
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created'
+    ) THEN
+        CREATE TRIGGER on_auth_user_created
+            AFTER INSERT OR UPDATE OF email_confirmed_at ON auth.users
+            FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+    END IF;
+END $$;
