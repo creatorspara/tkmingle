@@ -29,6 +29,11 @@ import {
   Layers,
   Cpu,
   Code2,
+  Apple,
+  Share,
+  PlusSquare,
+  Info,
+  Globe,
 } from "lucide-react";
 import { MOCK_CIRCLES } from "@/lib/mockData";
 import UserAvatar from "@/components/UserAvatar";
@@ -120,6 +125,8 @@ export default function LandingPage() {
   // Dynamic Latest Release State (Auto-updates with new builds)
   const [latestRelease, setLatestRelease] = useState<AppRelease>(DEFAULT_RELEASE);
   const [copiedHash, setCopiedHash] = useState(false);
+  const [copiedPwaUrl, setCopiedPwaUrl] = useState(false);
+  const [activePlatformTab, setActivePlatformTab] = useState<"android" | "ios">("android");
 
   // Contact Modal State
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -177,7 +184,7 @@ export default function LandingPage() {
       };
       loadLiveProfiles();
 
-      // 3. Dynamic Auto-Updating Release Fetch (Always selects the highest version_code)
+      // 3. Dynamic Auto-Updating Release Fetch (Always selects highest version_code)
       const fetchLatestRelease = async () => {
         try {
           const { data, error } = await supabase
@@ -234,6 +241,12 @@ export default function LandingPage() {
     }
   };
 
+  const copyPwaLink = () => {
+    navigator.clipboard.writeText("https://tkmingle.vercel.app");
+    setCopiedPwaUrl(true);
+    setTimeout(() => setCopiedPwaUrl(false), 2200);
+  };
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactMessage.trim()) return;
@@ -277,12 +290,16 @@ export default function LandingPage() {
       a: "TKMingle is a student platform built exclusively for TKM College of Engineering (TKMCE), Kollam. It helps students discover peers from other departments based on shared interests, projects, and activities.",
     },
     {
-      q: "How do I get the mobile app on Android?",
-      a: `You can download the single latest verified release (${latestRelease.version_name}) directly from the Download section on this website or GitHub Releases. It requires Android 8.0 or higher.`,
+      q: "How do I install TKMingle on Android?",
+      a: `Download the universal APK file (${latestRelease.version_name}) directly from the download section. Once downloaded, tap the file. When Android prompts 'Install unknown apps', enable 'Allow from this source', then tap Install. The app queries Supabase on launch and provides 1-tap in-app updates for future releases.`,
     },
     {
-      q: "Will the app notify me about new updates automatically?",
-      a: "Yes! The TKMingle Android app includes an automated update checking service. Whenever a new release is deployed, you receive an in-app prompt with changelog highlights and 24-hour snooze control.",
+      q: "How do I install TKMingle on an iPhone (iOS)?",
+      a: "Open https://tkmingle.vercel.app in Safari on your iPhone, tap the Share button (square with arrow at the bottom), and select 'Add to Home Screen'. TKMingle will install directly to your home screen and open in standalone app mode without browser bars.",
+    },
+    {
+      q: "Why isn't TKMingle on Google Play or the Apple App Store?",
+      a: "Our distribution strategy relies on direct Android APK releases via GitHub and iOS Progressive Web Apps (PWA) via Safari. This allows us to deliver TKMingle freely and immediately to all students without recurring commercial membership fees ($99/year Apple Developer Program, Play Console fees) or bureaucratic store approval delays.",
     },
     {
       q: "Who can join TKMingle?",
@@ -290,7 +307,7 @@ export default function LandingPage() {
     },
     {
       q: "How do student connections work?",
-      a: "Connections are based on mutual consent. You can send a connection request with a brief message. Direct 1:1 messaging opens only when both students accept, with Instagram-style reminders and resends.",
+      a: "Connections are based on mutual consent. You can send a connection request with a brief note. Direct 1:1 messaging opens only after both students accept. Pending requests can be resent or cancelled at any time.",
     },
     {
       q: "Can I control my profile visibility?",
@@ -336,7 +353,7 @@ export default function LandingPage() {
             </a>
             <a href="#download" className="hover:text-white transition-colors flex items-center gap-1.5 text-brand-teal font-semibold">
               <Download className="w-3.5 h-3.5" />
-              Download APK
+              Get App (Android &amp; iOS)
             </a>
             <a href="#circles" className="hover:text-white transition-colors">
               Campus Circles
@@ -356,13 +373,12 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center gap-3">
             {/* Direct download CTA in header */}
             <a
-              href={latestRelease.download_url}
-              download
+              href="#download"
               className="px-3.5 py-2 text-xs font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-teal transition-colors flex items-center gap-1.5"
-              title={`Download APK (${latestRelease.version_name})`}
+              title="Install for Android & iOS"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>APK {latestRelease.version_name}</span>
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>Get TKMingle</span>
             </a>
 
             {sessionUser ? (
@@ -416,7 +432,7 @@ export default function LandingPage() {
               onClick={() => setMobileMenuOpen(false)}
               className="block text-sm font-semibold text-brand-teal hover:text-white flex items-center gap-2"
             >
-              <Download className="w-4 h-4" /> Download APK ({latestRelease.version_name})
+              <Smartphone className="w-4 h-4" /> Get App (Android APK &amp; iOS PWA)
             </a>
             <a
               href="#circles"
@@ -510,52 +526,53 @@ export default function LandingPage() {
 
               {/* Primary Action Buttons */}
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-                {/* Download Latest Release Button */}
+                {/* Android APK Button */}
                 <a
                   href={latestRelease.download_url}
                   download
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-bold rounded-tk-btn bg-gradient-to-r from-brand-purple to-purple-600 hover:opacity-95 text-white transition-all flex items-center justify-center gap-2.5 shadow-purple-glow"
+                  className="w-full sm:w-auto px-5 py-3 text-sm font-bold rounded-tk-btn bg-gradient-to-r from-brand-purple to-purple-600 hover:opacity-95 text-white transition-all flex items-center justify-center gap-2 shadow-purple-glow"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Download APK ({latestRelease.version_name})</span>
+                  <span>Download APK (Android)</span>
+                </a>
+
+                {/* iOS Safari Web App CTA */}
+                <a
+                  href="#download"
+                  onClick={() => setActivePlatformTab("ios")}
+                  className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white transition-colors flex items-center justify-center gap-2"
+                >
+                  <Apple className="w-4 h-4 text-brand-lavender" />
+                  <span>iOS Safari PWA</span>
                 </a>
 
                 {sessionUser ? (
                   <Link
                     href="/app/discover"
-                    className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white transition-colors flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn border border-brand-border/60 hover:border-brand-purple text-brand-text transition-colors flex items-center justify-center gap-2"
                   >
-                    Enter Campus Portal
+                    Enter Portal
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 ) : (
                   <Link
-                    href="/register"
-                    className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-text transition-colors flex items-center justify-center gap-2"
+                    href="/login"
+                    className="w-full sm:w-auto px-4 py-3 text-sm font-semibold text-brand-muted hover:text-white transition-colors flex items-center justify-center gap-1"
                   >
-                    Join Web Portal
-                    <ArrowRight className="w-4 h-4" />
+                    Sign In &rarr;
                   </Link>
                 )}
-
-                <a
-                  href="#download"
-                  className="w-full sm:w-auto px-4 py-3 text-xs font-medium text-brand-muted hover:text-white transition-colors flex items-center justify-center gap-1"
-                >
-                  <Smartphone className="w-3.5 h-3.5 text-brand-teal" />
-                  Release Details
-                </a>
               </div>
 
               {/* Live Version Tag & Checksum Preview */}
               <div className="pt-1 flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs text-brand-muted">
                 <span className="inline-flex items-center gap-1 text-[11px] text-brand-teal font-medium">
                   <span className="w-2 h-2 rounded-full bg-brand-teal animate-pulse" />
-                  Latest Build {latestRelease.version_code} • Android 8.0+
+                  Latest APK {latestRelease.version_name} (Build {latestRelease.version_code})
                 </span>
                 <span className="text-brand-border">|</span>
-                <span className="text-[11px] text-brand-muted truncate max-w-xs">
-                  SHA-256: {latestRelease.sha256_checksum.substring(0, 12)}...
+                <span className="text-[11px] text-brand-muted">
+                  iOS: Safari Add to Home Screen PWA
                 </span>
               </div>
 
@@ -635,7 +652,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. DEDICATED DOWNLOAD SECTION (AUTO-UPDATING SINGLE LATEST RELEASE) */}
+      {/* 3. RELEASE STRATEGY & INSTALLATION GUIDANCE (ANDROID APK & IOS PWA) */}
       <section id="download" className="py-20 bg-[#090C15] border-b border-brand-border/60 relative overflow-hidden">
         {/* Glow backdrop accent */}
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-brand-purple/10 rounded-full blur-3xl pointer-events-none" />
@@ -646,192 +663,410 @@ export default function LandingPage() {
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-navyCard border border-brand-border text-xs font-semibold text-brand-teal">
               <Smartphone className="w-3.5 h-3.5 text-brand-teal" />
-              <span>Android Official Release • Universal APK</span>
+              <span>Release Strategy • Android APK &amp; iOS PWA</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Get TKMingle on your Android device
+              Get TKMingle on Android &amp; iOS
             </h2>
             <p className="text-sm text-brand-muted leading-relaxed">
-              Experience instantaneous push notifications, campus circles, and direct peer messaging on your mobile device.
+              Direct campus distribution built by students for students — free, open, and without commercial store paywalls.
             </p>
           </div>
 
-          {/* Release Card & Feature Specs Grid */}
+          {/* Release Strategy Context Card */}
+          <div className="max-w-4xl mx-auto p-5 rounded-2xl bg-brand-navySecondary/60 border border-brand-border/80 text-xs text-brand-muted leading-relaxed flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-brand-lavender flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-white block mb-0.5">Why this release strategy?</span>
+                <span>
+                  To deliver TKMingle to all TKMCE students freely and immediately without waiting for commercial app store memberships ($99/year Apple Developer Program, Play Console fees) or bureaucratic store approval delays. Direct APK + Safari PWA gives our student engineering team the freedom to ship updates in real time. Official store releases will be evaluated later.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Platform Switcher Tabs */}
+          <div className="flex justify-center">
+            <div className="inline-flex p-1 rounded-xl bg-brand-navySecondary border border-brand-border/80">
+              <button
+                onClick={() => setActivePlatformTab("android")}
+                className={`px-5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                  activePlatformTab === "android"
+                    ? "bg-brand-purple text-white shadow-purple-glow"
+                    : "text-brand-muted hover:text-white"
+                }`}
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>Android (Universal APK)</span>
+              </button>
+              <button
+                onClick={() => setActivePlatformTab("ios")}
+                className={`px-5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                  activePlatformTab === "ios"
+                    ? "bg-brand-purple text-white shadow-purple-glow"
+                    : "text-brand-muted hover:text-white"
+                }`}
+              >
+                <Apple className="w-4 h-4" />
+                <span>iOS (Safari Web App)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Platform Setup Content */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {/* Primary Download Card */}
-            <div className="lg:col-span-7 glass-panel rounded-2xl border border-brand-border/90 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-2xl relative">
-              <div className="space-y-5">
-                {/* Release Status Banner */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border/60">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-brand-purple/15 border border-brand-purple/40 flex items-center justify-center text-brand-lavender">
-                      <Smartphone className="w-6 h-6 text-brand-purple" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-lg text-white">
-                          TKMingle Android
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded-full bg-brand-purple/20 text-brand-lavender text-xs font-bold border border-brand-purple/40">
-                          {latestRelease.version_name}
-                        </span>
+            {/* ANDROID SETUP */}
+            {activePlatformTab === "android" ? (
+              <>
+                {/* Android Primary Action Card */}
+                <div className="lg:col-span-7 glass-panel rounded-2xl border border-brand-border/90 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-2xl relative">
+                  <div className="space-y-5">
+                    {/* Status Banner */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border/60">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-brand-purple/15 border border-brand-purple/40 flex items-center justify-center text-brand-lavender">
+                          <Smartphone className="w-6 h-6 text-brand-purple" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-lg text-white">
+                              Android Universal APK
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-full bg-brand-purple/20 text-brand-lavender text-xs font-bold border border-brand-purple/40">
+                              {latestRelease.version_name}
+                            </span>
+                          </div>
+                          <span className="text-xs text-brand-muted">
+                            Build Code {latestRelease.version_code} • Free Direct Download
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-xs text-brand-muted">
-                        Build Code {latestRelease.version_code} • Universal APK
+
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-teal/10 border border-brand-teal/30 text-brand-teal text-[11px] font-medium">
+                        <span className="w-2 h-2 rounded-full bg-brand-teal animate-pulse" />
+                        Latest Active Build
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-brand-text/90 leading-relaxed">
+                      Distributed directly via GitHub Releases. The app connects to Supabase on launch to verify version status and provides 1-tap in-app downloads when new builds are published.
+                    </p>
+
+                    {/* Primary Download Button */}
+                    <div className="space-y-2 pt-1">
+                      <a
+                        href={latestRelease.download_url}
+                        download
+                        className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-brand-purple via-purple-600 to-indigo-600 hover:opacity-95 text-white font-bold text-base flex items-center justify-center gap-3 shadow-lg shadow-purple-900/40 transition-all hover:scale-[1.01]"
+                      >
+                        <Download className="w-5 h-5" />
+                        <span>Download APK ({latestRelease.version_name})</span>
+                      </a>
+                      <p className="text-[11px] text-center text-brand-muted">
+                        Universal APK (~61 MB) • Android 8.0 to Android 15
+                      </p>
+                    </div>
+
+                    {/* Release Notes */}
+                    <div className="space-y-2 pt-2">
+                      <span className="text-[11px] font-bold text-white uppercase tracking-wider block">
+                        Release Highlights:
+                      </span>
+                      <div className="p-3.5 rounded-xl bg-brand-navyCard border border-brand-border text-xs text-brand-text/90 leading-relaxed font-mono">
+                        {latestRelease.changelog}
+                      </div>
+                    </div>
+
+                    {/* SHA-256 Checksum */}
+                    <div className="space-y-1.5 pt-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
+                          SHA-256 Checksum
+                        </span>
+                        <button
+                          onClick={copyChecksum}
+                          className="inline-flex items-center gap-1 text-[11px] text-brand-teal hover:underline font-medium"
+                        >
+                          {copiedHash ? (
+                            <>
+                              <Check className="w-3 h-3" />
+                              <span>Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3" />
+                              <span>Copy Hash</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-black/40 border border-brand-border/60 text-[11px] font-mono text-brand-lavender break-all select-all">
+                        {latestRelease.sha256_checksum}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
+                    <span>Direct GitHub CDN Delivery</span>
+                    <a
+                      href="https://github.com/creatorspara/tkmingle/releases"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-brand-lavender hover:text-white transition-colors flex items-center gap-1 font-medium"
+                    >
+                      GitHub Releases <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Android Installation Instructions Card */}
+                <div className="lg:col-span-5 glass-panel rounded-2xl border border-brand-border/80 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-lg">
+                  <div className="space-y-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-brand-teal" />
+                      Android Installation Guide
+                    </h3>
+                    <p className="text-xs text-brand-muted leading-relaxed">
+                      Follow these 4 simple steps to install the APK file on your Android device:
+                    </p>
+
+                    <div className="space-y-3.5 pt-1">
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          1
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Download APK</h4>
+                          <p className="text-xs text-brand-muted leading-relaxed">
+                            Tap the download button to save <code className="text-brand-lavender bg-black/30 px-1 py-0.5 rounded">tkmmingle-k1-release.apk</code> to your phone.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          2
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Open the Downloaded File</h4>
+                          <p className="text-xs text-brand-muted leading-relaxed">
+                            Open your browser&apos;s Downloads list or tap the download complete notification.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          3
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Allow Unknown Sources Prompt</h4>
+                          <p className="text-xs text-brand-muted leading-relaxed">
+                            When Android shows &quot;For your security, your phone is not allowed to install unknown apps from this source&quot;, tap <strong>Settings</strong> and toggle <strong>Allow from this source</strong>.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-brand-lavender/20 text-brand-lavender flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          4
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Install and Open</h4>
+                          <p className="text-xs text-brand-muted leading-relaxed">
+                            Tap <strong>Install</strong>. Once completed, open TKMingle and sign in with your TKMCE institutional credentials.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-brand-navySecondary border border-brand-border/60 text-xs text-brand-muted">
+                    <strong className="text-white block mb-1">Single Latest Release Policy:</strong>
+                    Older APK versions are automatically retired to protect student privacy and ensure real-time messaging sync.
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* IOS PWA SETUP */}
+                <div className="lg:col-span-7 glass-panel rounded-2xl border border-brand-border/90 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-2xl relative">
+                  <div className="space-y-5">
+                    {/* Status Banner */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border/60">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-brand-purple/15 border border-brand-purple/40 flex items-center justify-center text-brand-lavender">
+                          <Apple className="w-6 h-6 text-brand-lavender" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-lg text-white">
+                              iOS Safari Web App (PWA)
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-full bg-brand-teal/20 text-brand-teal text-xs font-bold border border-brand-teal/40">
+                              Standalone
+                            </span>
+                          </div>
+                          <span className="text-xs text-brand-muted">
+                            iOS 14.0+ • iPhone &amp; iPad • Add to Home Screen
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-lavender/10 border border-brand-lavender/30 text-brand-lavender text-[11px] font-medium">
+                        Instant Access
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-brand-text/90 leading-relaxed">
+                      Install TKMingle directly to your iPhone or iPad home screen via Safari. Runs in full-screen standalone mode without URL bars, delivering an authentic app experience without requiring Apple&apos;s $99/year developer membership or App Store publishing.
+                    </p>
+
+                    {/* Quick Access CTA Buttons */}
+                    <div className="space-y-2.5 pt-1">
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Link
+                          href="/login"
+                          className="flex-1 py-3.5 px-5 rounded-xl bg-gradient-to-r from-brand-purple to-purple-600 hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2.5 shadow-purple-glow transition-all"
+                        >
+                          <Globe className="w-4 h-4" />
+                          <span>Open Web Portal in Safari</span>
+                        </Link>
+                        <button
+                          onClick={copyPwaLink}
+                          className="py-3.5 px-5 rounded-xl bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+                        >
+                          {copiedPwaUrl ? <Check className="w-4 h-4 text-brand-teal" /> : <Copy className="w-4 h-4 text-brand-muted" />}
+                          <span>{copiedPwaUrl ? "URL Copied!" : "Copy Safari URL"}</span>
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-center text-brand-muted">
+                        Official URL: <code className="text-brand-lavender">https://tkmingle.vercel.app</code>
+                      </p>
+                    </div>
+
+                    {/* PWA Capabilities */}
+                    <div className="space-y-2 pt-2">
+                      <span className="text-[11px] font-bold text-white uppercase tracking-wider block">
+                        PWA Capabilities on iOS:
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-brand-muted">
+                        <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border">
+                          <strong className="text-white block mb-0.5">Standalone Viewport</strong>
+                          <span>Hides Safari navigation bars and toolbars for full-screen focus.</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border">
+                          <strong className="text-white block mb-0.5">Home Screen Icon</strong>
+                          <span>High-resolution Apple Touch Icon branded for iOS Home Screen.</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border">
+                          <strong className="text-white block mb-0.5">Realtime Messaging</strong>
+                          <span>Live Supabase WebSockets for cross-branch chat and notifications.</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border">
+                          <strong className="text-white block mb-0.5">Instant Updates</strong>
+                          <span>Zero update delays. Always loads the latest web platform build.</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Honest Transparency Disclaimer */}
+                    <div className="p-3.5 rounded-xl bg-brand-navySecondary/80 border border-brand-border/60 text-xs text-brand-muted flex items-start gap-2.5">
+                      <Info className="w-4 h-4 text-brand-lavender flex-shrink-0 mt-0.5" />
+                      <span>
+                        <strong className="text-white">Note:</strong> TKMingle on iOS runs as an installable Progressive Web App (PWA) using Apple WebKit. It is not an App Store listing.
                       </span>
                     </div>
                   </div>
 
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-teal/10 border border-brand-teal/30 text-brand-teal text-[11px] font-medium">
-                    <span className="w-2 h-2 rounded-full bg-brand-teal animate-pulse" />
-                    Latest Active Release
+                  <div className="pt-4 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
+                    <span>Configured Manifest: <code>/manifest.webmanifest</code></span>
+                    <span className="text-brand-teal font-medium">Standalone Enabled</span>
                   </div>
                 </div>
 
-                {/* Single Release Guarantee Notice */}
-                <div className="p-3.5 rounded-xl bg-brand-navySecondary/80 border border-brand-border/60 text-xs text-brand-muted leading-relaxed flex items-start gap-2.5">
-                  <ShieldCheck className="w-4 h-4 text-brand-teal flex-shrink-0 mt-0.5" />
-                  <span>
-                    <strong className="text-white">Strict Single Latest Release:</strong> This download automatically reflects the newest verified APK released by Equipo Kromium. Older builds are retired to protect campus communication security and ensure update compatibility.
-                  </span>
-                </div>
+                {/* iOS Installation Instructions Card */}
+                <div className="lg:col-span-5 glass-panel rounded-2xl border border-brand-border/80 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-lg">
+                  <div className="space-y-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <Apple className="w-5 h-5 text-brand-lavender" />
+                      iOS Safari Installation Guide
+                    </h3>
+                    <p className="text-xs text-brand-muted leading-relaxed">
+                      Follow these 5 steps to add TKMingle to your iPhone home screen:
+                    </p>
 
-                {/* Primary Download Action Button */}
-                <div className="space-y-2 pt-1">
-                  <a
-                    href={latestRelease.download_url}
-                    download
-                    className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-brand-purple via-purple-600 to-indigo-600 hover:opacity-95 text-white font-bold text-base flex items-center justify-center gap-3 shadow-lg shadow-purple-900/40 transition-all hover:scale-[1.01]"
-                  >
-                    <Download className="w-5 h-5" />
-                    <span>Download Latest APK ({latestRelease.version_name})</span>
-                  </a>
-                  <p className="text-[11px] text-center text-brand-muted">
-                    Universal APK • Compatible with Android 8.0, 9, 10, 11, 12, 13, 14, and 15
-                  </p>
-                </div>
+                    <div className="space-y-3.5 pt-1">
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          1
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Open in Safari</h4>
+                          <p className="text-xs text-brand-muted leading-relaxed">
+                            Open <code className="text-brand-lavender bg-black/30 px-1 py-0.5 rounded">https://tkmingle.vercel.app</code> in <strong>Safari</strong> (Chrome/Firefox on iOS do not support Add to Home Screen).
+                          </p>
+                        </div>
+                      </div>
 
-                {/* Release Highlights / Changelog */}
-                <div className="space-y-2 pt-2">
-                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">
-                    What&apos;s New in {latestRelease.version_name}:
-                  </span>
-                  <div className="p-3.5 rounded-xl bg-brand-navyCard border border-brand-border text-xs text-brand-text/90 leading-relaxed font-mono">
-                    {latestRelease.changelog}
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          2
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Tap the Share Button</h4>
+                          <p className="text-xs text-brand-muted leading-relaxed">
+                            Tap the <strong>Share</strong> button (the square icon with an upward-pointing arrow) in Safari&apos;s bottom toolbar.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          3
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Select &quot;Add to Home Screen&quot;</h4>
+                          <p className="text-xs text-brand-muted leading-relaxed">
+                            Scroll down the action list and select <strong>Add to Home Screen</strong>.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-brand-lavender/20 text-brand-lavender flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          4
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Confirm Add</h4>
+                          <p className="text-xs text-brand-muted leading-relaxed">
+                            Ensure the name displays as <strong>TKMingle</strong>, then tap <strong>Add</strong> in the top-right corner.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          5
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Open from Home Screen</h4>
+                          <p className="text-xs text-brand-muted leading-relaxed">
+                            Tap the TKMingle app icon on your home screen. It will launch in full-screen standalone mode.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-brand-navySecondary border border-brand-border/60 text-xs text-brand-muted">
+                    <strong className="text-white block mb-1">Campus Verification:</strong>
+                    Log in with your college email. Sessions persist securely in your device&apos;s encrypted browser storage.
                   </div>
                 </div>
-
-                {/* Integrity SHA-256 Checksum */}
-                <div className="space-y-1.5 pt-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
-                      SHA-256 Integrity Hash
-                    </span>
-                    <button
-                      onClick={copyChecksum}
-                      className="inline-flex items-center gap-1 text-[11px] text-brand-teal hover:underline font-medium"
-                    >
-                      {copiedHash ? (
-                        <>
-                          <Check className="w-3 h-3" />
-                          <span>Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          <span>Copy Hash</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-black/40 border border-brand-border/60 text-[11px] font-mono text-brand-lavender break-all select-all">
-                    {latestRelease.sha256_checksum}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer link to source release */}
-              <div className="pt-4 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
-                <span>Direct GitHub CDN Delivery</span>
-                <a
-                  href="https://github.com/creatorspara/tkmingle/releases"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-brand-lavender hover:text-white transition-colors flex items-center gap-1 font-medium"
-                >
-                  GitHub Release Page <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-
-            {/* Right Guide & Features Column */}
-            <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
-              {/* Feature Highlights Card */}
-              <div className="glass-panel rounded-2xl border border-brand-border/80 p-6 space-y-4 shadow-lg">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-brand-purple" />
-                  Mobile App Highlights
-                </h3>
-
-                <div className="space-y-3.5 pt-1">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-brand-purple/20 text-brand-purple flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <MessageSquare className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white">Instant Heads-Up Popups</h4>
-                      <p className="text-xs text-brand-muted leading-relaxed">
-                        WhatsApp-style push notifications appear when receiving chat messages or connection pings.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-brand-teal/20 text-brand-teal flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Users2 className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white">Instagram-Style Reminders</h4>
-                      <p className="text-xs text-brand-muted leading-relaxed">
-                        Easily resend connection reminders or cancel pending requests with smooth UI feedback.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-brand-lavender/20 text-brand-lavender flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white">Automated In-App Updates</h4>
-                      <p className="text-xs text-brand-muted leading-relaxed">
-                        The app queries Supabase directly on launch. New builds prompt seamless 1-tap in-app downloads.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3-Step Installation Guide */}
-              <div className="glass-panel rounded-2xl border border-brand-border/80 p-6 space-y-4 shadow-lg">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-brand-teal" />
-                  Quick Installation (3 Steps)
-                </h3>
-
-                <ol className="space-y-3 text-xs text-brand-muted list-decimal list-inside leading-relaxed pt-1">
-                  <li className="text-brand-text">
-                    <strong className="text-white">Download the APK:</strong> Click the download button to save <code className="text-brand-lavender bg-black/30 px-1 py-0.5 rounded">tkmmingle-k1-release.apk</code> to your device.
-                  </li>
-                  <li className="text-brand-text">
-                    <strong className="text-white">Open &amp; Install:</strong> Tap the file in your downloads. If Android asks, enable &quot;Allow installation from this source&quot; for your browser.
-                  </li>
-                  <li className="text-brand-text">
-                    <strong className="text-white">Sign In &amp; Mingle:</strong> Log in using your verified TKMCE institutional email to access your branch and circles!
-                  </li>
-                </ol>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -1172,7 +1407,7 @@ export default function LandingPage() {
               Frequently Asked Questions
             </h2>
             <p className="text-xs text-brand-muted">
-              Common questions about joining, using, and downloading TKMingle.
+              Common questions about joining, installing, and using TKMingle.
             </p>
           </div>
 
@@ -1268,9 +1503,10 @@ export default function LandingPage() {
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-white">Platform</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white">Platform &amp; Apps</h4>
               <ul className="space-y-1.5 text-xs text-brand-muted">
-                <li><a href="#download" className="text-brand-teal hover:underline flex items-center gap-1"><Download className="w-3 h-3" /> Android APK ({latestRelease.version_name})</a></li>
+                <li><a href="#download" onClick={() => setActivePlatformTab("android")} className="text-brand-teal hover:underline flex items-center gap-1"><Smartphone className="w-3 h-3" /> Android APK ({latestRelease.version_name})</a></li>
+                <li><a href="#download" onClick={() => setActivePlatformTab("ios")} className="text-brand-lavender hover:underline flex items-center gap-1"><Apple className="w-3 h-3" /> iOS Safari Web App</a></li>
                 <li><a href="#discover" className="hover:text-white transition-colors">Discover Students</a></li>
                 <li><a href="#circles" className="hover:text-white transition-colors">Campus Circles</a></li>
                 <li><a href="#connect" className="hover:text-white transition-colors">Connect &amp; Chat</a></li>
@@ -1303,7 +1539,7 @@ export default function LandingPage() {
           <div className="pt-6 border-t border-brand-border/60 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-muted gap-3">
             <p>&copy; 2026 TKMingle &bull; Designed &amp; Engineered by Equipo Kromium &bull; TKM College of Engineering.</p>
             <div className="flex items-center gap-5">
-              <a href="#download" className="hover:text-white transition-colors">Download</a>
+              <a href="#download" className="hover:text-white transition-colors">Get App</a>
               <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
               <button
                 onClick={() => setContactModalOpen(true)}
