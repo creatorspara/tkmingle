@@ -52,13 +52,16 @@ class ConnectionRequestModel {
   }
 
   factory ConnectionRequestModel.fromJson(Map<String, dynamic> json, {UserModel? sender, UserModel? receiver}) {
+    final sId = (json['sender_id'] ?? json['senderId'] ?? '') as String;
+    final rId = (json['receiver_id'] ?? json['receiverId'] ?? '') as String;
+    final rawDate = json['created_at'] ?? json['createdAt'];
     return ConnectionRequestModel(
       id: json['id'] as String,
-      senderId: json['senderId'] as String,
-      receiverId: json['receiverId'] as String,
+      senderId: sId,
+      receiverId: rId,
       status: ConnectionStatus.values.byName(json['status'] as String? ?? 'pending'),
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
+      createdAt: rawDate != null
+          ? DateTime.parse(rawDate as String)
           : DateTime.now(),
       sender: sender,
       receiver: receiver,

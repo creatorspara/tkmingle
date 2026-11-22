@@ -197,5 +197,48 @@ void main() {
       expect(restored.avatarId, equals('tk_avatar_05'));
       expect(restored.profileImage, equals('preset:tk_avatar_05'));
     });
+
+    test('Password reset and update workflow', () async {
+      await authRepo.resetPassword('arjun.k@tkmce.ac.in');
+      await authRepo.updatePassword('NewSecurePassword#2026');
+      // Succeeds without exception
+      expect(true, isTrue);
+    });
+
+    test('Bidirectional Connection Request System validation', () async {
+      // Test reverse scenario: User B (Ananya) sends User A (Gautham) request
+      final uB = 'user_ananya';
+      final uA = 'user_gautham';
+
+      // 1. Initial state is none
+      final status1 = await connRepo.getConnectionState(uB, uA);
+      expect(status1, equals('none'));
+
+      // 2. User B sends User A a connection request
+      final req = await connRepo.sendRequest(uB, uA);
+      expect(req.senderId, equals(uB));
+      expect(req.receiverId, equals(uA));
+
+      // 3. User B sees pending_sent, User A sees pending_received
+      expect(await connRepo.getConnectionState(uB, uA), equals('pending_sent'));
+      expect(await connRepo.getConnectionState(uA, uB), equals('pending_received'));
+
+      // 4. User A checks received requests and finds req
+      final received = await connRepo.getReceivedRequests(uA);
+      expect(received.any((r) => r.senderId == uB), isTrue);
+
+      // 5. User A accepts
+      await connRepo.acceptRequest(req.id);
+
+      // 6. Both users now see connected
+      expect(await connRepo.getConnectionState(uB, uA), equals('connected'));
+      expect(await connRepo.getConnectionState(uA, uB), equals('connected'));
+
+      // 7. Both users see connection in their connections list
+      final connsB = await connRepo.getConnections(uB);
+      final connsA = await connRepo.getConnections(uA);
+      expect(connsB.any((c) => c.userIds.contains(uA)), isTrue);
+      expect(connsA.any((c) => c.userIds.contains(uB)), isTrue);
+    });
   });
 }

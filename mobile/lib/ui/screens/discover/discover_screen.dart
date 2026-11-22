@@ -6,6 +6,7 @@ import '../../../core/constants/tk_avatars.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/connection_request_model.dart';
 import '../../../state/auth_provider.dart';
 import '../../../state/discovery_provider.dart';
 import '../../../state/connection_provider.dart';
@@ -385,6 +386,12 @@ class _StudentDiscoveryCardState extends ConsumerState<_StudentDiscoveryCard> {
     final currentInterests = widget.currentUser?.interests ?? [];
     final commonInterests = student.interests.where((i) => currentInterests.contains(i)).toList();
 
+    final connStatusAsync = ref.watch(connectionStatusProvider(student.uid));
+    final connStatus = connStatusAsync.value ?? 'none';
+    final isConnected = connStatus == 'connected';
+    final isPendingSent = connStatus == 'pending_sent' || _isRequestSent;
+    final isPendingReceived = connStatus == 'pending_received';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
       child: Card(
@@ -618,49 +625,118 @@ class _StudentDiscoveryCardState extends ConsumerState<_StudentDiscoveryCard> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        // Connect Request Button
-                        IconButton.filled(
-                          icon: _isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                )
-                              : Icon(
-                                  _isRequestSent ? Icons.check_rounded : Icons.person_add_rounded,
-                                  color: Colors.white,
-                                ),
-                          tooltip: _isRequestSent ? 'Request Sent' : 'Send Connection Request',
-                          style: IconButton.styleFrom(
-                            backgroundColor: _isRequestSent ? AppColors.success : AppColors.primaryAccent,
-                            padding: const EdgeInsets.all(14),
+                        // Connect / Connected / Accept Button
+                        if (isConnected) ...[
+                          IconButton.filled(
+                            icon: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white),
+                            tooltip: 'Connected • Message',
+                            style: IconButton.styleFrom(
+                              backgroundColor: AppColors.secondaryAccent,
+                              padding: const EdgeInsets.all(14),
+                            ),
+                            onPressed: () {
+                              context.push('/profile/${student.uid}');
+                            },
                           ),
-                          onPressed: _isRequestSent || _isLoading
-                              ? null
-                              : () async {
-                                  HapticFeedback.mediumImpact();
-                                  setState(() => _isLoading = true);
-                                  final curUser = ref.read(authProvider).value;
-                                  if (curUser != null) {
-                                    await ref
-                                        .read(connectionRepositoryProvider)
-                                        .sendRequest(curUser.uid, student.uid);
-                                  }
-                                  if (mounted) {
-                                    setState(() {
-                                      _isLoading = false;
-                                      _isRequestSent = true;
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Connection request sent to ${student.name}!'),
-                                        backgroundColor: AppColors.success,
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
-                                  }
-                                },
-                        ),
+                        ] else if (isPendingReceived) ...[
+                          IconButton.filled(
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
+                            tooltip: 'Accept Connection Request',
+                            style: IconButton.styleFrom(
+                              backgroundColor: AppColors.highlight,
+                              padding: const EdgeInsets.all(14),
+                            ),
+                            onPressed: _isLoading
+                                ? null
+                                : () async {
+                                    HapticFeedback.mediumImpact();
+                                    setState(() => _isLoading = true);
+                                    final curUser = ref.read(authProvider).value;
+                                    if (curUser != null) {
+                                      final received = await ref
+                                          .read(connectionRepositoryProvider)
+                                          .getReceivedRequests(curUser.uid);
+                                      final match = received.firstWhere(
+                                        (r) => r.senderId == student.uid,
+                                        orElse: () => ConnectionRequestModel(
+                                          id: '',
+                                          senderId: student.uid,
+                                          receiverId: curUser.uid,
+                                        ),
+                                      );
+                                      if (match.id.isNotEmpty) {
+                                        await ref
+                                            .read(connectionRepositoryProvider)
+                                            .acceptRequest(match.id);
+                                      }
+                                      ref.invalidate(connectionStatusProvider(student.uid));
+                                      ref.invalidate(myConnectionsProvider);
+                                      ref.invalidate(receivedRequestsProvider);
+                                    }
+                                    if (mounted) {
+                                      setState(() => _isLoading = false);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Connected with ${student.name}!'),
+                                          backgroundColor: AppColors.success,
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                    }
+                                  },
+                          ),
+                        ] else ...[
+                          IconButton.filled(
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : Icon(
+                                    isPendingSent ? Icons.hourglass_top_rounded : Icons.person_add_rounded,
+                                    color: Colors.white,
+                                  ),
+                            tooltip: isPendingSent ? 'Request Pending' : 'Send Connection Request',
+                            style: IconButton.styleFrom(
+                              backgroundColor: isPendingSent ? AppColors.darkTextMuted : AppColors.primaryAccent,
+                              padding: const EdgeInsets.all(14),
+                            ),
+                            onPressed: isPendingSent || _isLoading
+                                ? null
+                                : () async {
+                                    HapticFeedback.mediumImpact();
+                                    setState(() => _isLoading = true);
+                                    final curUser = ref.read(authProvider).value;
+                                    if (curUser != null) {
+                                      await ref
+                                          .read(connectionRepositoryProvider)
+                                          .sendRequest(curUser.uid, student.uid);
+                                      ref.invalidate(connectionStatusProvider(student.uid));
+                                      ref.invalidate(sentRequestsProvider);
+                                    }
+                                    if (mounted) {
+                                      setState(() {
+                                        _isLoading = false;
+                                        _isRequestSent = true;
+                                      });
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Connection request sent to ${student.name}!'),
+                                          backgroundColor: AppColors.success,
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                    }
+                                  },
+                          ),
+                        ],
                       ],
                     ),
                   ],

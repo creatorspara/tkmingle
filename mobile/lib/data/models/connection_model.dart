@@ -22,11 +22,21 @@ class ConnectionModel {
   }
 
   factory ConnectionModel.fromJson(Map<String, dynamic> json, {UserModel? otherUser}) {
+    List<String> ids;
+    if (json['userIds'] != null) {
+      ids = List<String>.from(json['userIds']);
+    } else if (json['user_one'] != null && json['user_two'] != null) {
+      ids = [json['user_one'].toString(), json['user_two'].toString()];
+    } else {
+      ids = [];
+    }
+
+    final rawDate = json['created_at'] ?? json['createdAt'];
     return ConnectionModel(
       id: json['id'] as String,
-      userIds: List<String>.from(json['userIds'] ?? []),
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
+      userIds: ids,
+      createdAt: rawDate != null
+          ? DateTime.parse(rawDate as String)
           : DateTime.now(),
       otherUser: otherUser,
     );

@@ -21,8 +21,10 @@ enabled = true
 site_url = "https://tkmingle.vercel.app"
 additional_redirect_urls = [
   "https://tkmingle.vercel.app/**",
+  "https://tkmingle.vercel.app/reset-password",
   "https://tkmingle-creatorspara.vercel.app/**",
-  "http://localhost:3000/**"
+  "http://localhost:3000/**",
+  "tkmingle://reset-password"
 ]
 jwt_expiry = 3600
 enable_signup = true

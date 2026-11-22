@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants/app_constants.dart';
+import '../core/router/app_router.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/supabase_auth_repository.dart';
@@ -37,6 +38,8 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<UserModel?>> {
         final event = data.event;
         if (event == AuthChangeEvent.signedOut) {
           state = const AsyncValue.data(null);
+        } else if (event == AuthChangeEvent.passwordRecovery) {
+          appRouter.go('/reset-password');
         } else if (event == AuthChangeEvent.signedIn ||
             event == AuthChangeEvent.tokenRefreshed ||
             event == AuthChangeEvent.userUpdated) {

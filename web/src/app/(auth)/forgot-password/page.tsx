@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
 
     try {
       if (isLiveSupabaseConfigured()) {
-        const redirectTo = getAuthRedirectUrl("/auth/callback?next=/app/profile");
+        const redirectTo = getAuthRedirectUrl("/reset-password");
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo,
         });

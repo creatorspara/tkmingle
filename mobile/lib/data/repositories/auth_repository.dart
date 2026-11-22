@@ -19,6 +19,7 @@ abstract class AuthRepository {
   Future<void> sendEmailOtp(String email);
   Future<void> logout();
   Future<void> resetPassword(String email);
+  Future<void> updatePassword(String newPassword);
   Future<void> updateCurrentUser(UserModel user);
 }
 
@@ -134,6 +135,11 @@ class LocalAuthRepository implements AuthRepository {
 
   @override
   Future<void> resetPassword(String email) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+  }
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
     await Future.delayed(const Duration(milliseconds: 400));
   }
 

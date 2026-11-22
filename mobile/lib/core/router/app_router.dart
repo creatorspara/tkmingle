@@ -7,6 +7,7 @@ import '../../ui/screens/auth/login_screen.dart';
 import '../../ui/screens/auth/register_screen.dart';
 import '../../ui/screens/auth/email_verification_screen.dart';
 import '../../ui/screens/auth/profile_creation_screen.dart';
+import '../../ui/screens/auth/reset_password_screen.dart';
 import '../../ui/screens/discover/discover_screen.dart';
 import '../../ui/screens/discover/full_student_profile_screen.dart';
 import '../../ui/screens/connections/connection_requests_screen.dart';
@@ -55,6 +56,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/profile-creation',
       builder: (context, state) => const ProfileCreationScreen(),
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) => const ResetPasswordScreen(),
     ),
     // Stateful Bottom Navigation Shell
     StatefulShellRoute.indexedStack(

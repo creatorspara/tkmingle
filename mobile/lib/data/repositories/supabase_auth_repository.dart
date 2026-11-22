@@ -231,7 +231,14 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> resetPassword(String email) async {
     await _client.auth.resetPasswordForEmail(
       email.trim().toLowerCase(),
-      redirectTo: 'https://tkmingle.vercel.app/auth/callback?next=/app/profile',
+      redirectTo: 'https://tkmingle.vercel.app/reset-password',
+    );
+  }
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    await _client.auth.updateUser(
+      UserAttributes(password: newPassword),
     );
   }
 

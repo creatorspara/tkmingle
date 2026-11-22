@@ -1,12 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/constants/app_constants.dart';
 import '../data/models/connection_request_model.dart';
 import '../data/models/connection_model.dart';
 import '../data/repositories/connection_repository.dart';
+import '../data/repositories/supabase_connection_repository.dart';
 import 'user_provider.dart';
 import 'auth_provider.dart';
 
 final connectionRepositoryProvider = Provider<ConnectionRepository>((ref) {
   final userRepo = ref.watch(userRepositoryProvider);
+  if (AppConstants.isSupabaseConfigured) {
+    return SupabaseConnectionRepository(userRepository: userRepo);
+  }
   return LocalConnectionRepository(userRepository: userRepo);
 });
 
