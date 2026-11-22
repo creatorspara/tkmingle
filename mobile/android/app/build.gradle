@@ -64,6 +64,8 @@ android {
                 keyPassword keystoreProperties['keyPassword']
                 storeFile rootProject.file(keystoreProperties['storeFile'])
                 storePassword keystoreProperties['storePassword']
+                v1SigningEnabled true
+                v2SigningEnabled true
             }
         }
     }
@@ -72,6 +74,10 @@ android {
         release {
             if (keystorePropertiesFile.exists()) {
                 signingConfig signingConfigs.release
+            } else {
+                // Fallback to debug signing if release key.properties is not found,
+                // ensuring no build produces an un-installable unsigned APK.
+                signingConfig signingConfigs.debug
             }
             minifyEnabled false
             shrinkResources false
