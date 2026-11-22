@@ -42,6 +42,10 @@ mobile/build/
 mobile/android/.gradle/
 mobile/android/local.properties
 mobile/android/app/build/
+key.properties
+mobile/android/key.properties
+*.keystore
+*.jks
 
 # IDE & OS files
 .idea/
