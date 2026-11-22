@@ -77,15 +77,6 @@ class _IndividualChatScreenState extends ConsumerState<IndividualChatScreen> {
     });
   }
 
-  void _sendPhotoAttachment() {
-    final samplePhotos = [
-      'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80',
-    ];
-    final selectedPhoto = samplePhotos[DateTime.now().millisecond % samplePhotos.length];
-    _handleSend(type: MessageType.image, attachmentUrl: selectedPhoto);
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -308,10 +299,6 @@ class _IndividualChatScreenState extends ConsumerState<IndividualChatScreen> {
               ),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.photo_camera_outlined, color: AppColors.primaryAccent),
-                    onPressed: _sendPhotoAttachment,
-                  ),
                   Expanded(
                     child: TextField(
                       controller: _textController,
