@@ -162,8 +162,8 @@ export async function uploadAvatarToStorage(
   const rawUrl = urlData.publicUrl;
   const versionedUrl = `${rawUrl}?v=${Date.now()}`;
 
-  // 3. Update public.profiles row
-  const { error: dbErr } = await supabase
+  // 3. Update public.profiles row (with graceful fallback if avatar_type migration pending)
+  let { error: dbErr } = await supabase
     .from("profiles")
     .update({
       profile_image: versionedUrl,
@@ -172,6 +172,18 @@ export async function uploadAvatarToStorage(
       updated_at: new Date().toISOString(),
     })
     .eq("id", userId);
+
+  if (dbErr && dbErr.message && dbErr.message.includes("avatar_type")) {
+    console.warn("Notice: avatar_type column pending migration. Falling back to profile_image.");
+    const fallback = await supabase
+      .from("profiles")
+      .update({
+        profile_image: versionedUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+    dbErr = fallback.error;
+  }
 
   if (dbErr) {
     console.error("Profile row update error:", dbErr);
@@ -197,7 +209,7 @@ export async function removeUploadedAvatar(userId: string): Promise<void> {
     console.warn("Storage deletion warning (ignorable if not found):", err);
   }
 
-  const { error: dbErr } = await supabase
+  let { error: dbErr } = await supabase
     .from("profiles")
     .update({
       profile_image: "",
@@ -206,6 +218,17 @@ export async function removeUploadedAvatar(userId: string): Promise<void> {
       updated_at: new Date().toISOString(),
     })
     .eq("id", userId);
+
+  if (dbErr && dbErr.message && dbErr.message.includes("avatar_type")) {
+    const fallback = await supabase
+      .from("profiles")
+      .update({
+        profile_image: "",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+    dbErr = fallback.error;
+  }
 
   if (dbErr) {
     throw new Error(`Failed to reset profile avatar: ${dbErr.message}`);
@@ -227,7 +250,7 @@ export async function setPresetAvatar(userId: string, avatarId: string): Promise
     // Ignore if no file existed
   }
 
-  const { error: dbErr } = await supabase
+  let { error: dbErr } = await supabase
     .from("profiles")
     .update({
       profile_image: presetValue,
@@ -236,6 +259,17 @@ export async function setPresetAvatar(userId: string, avatarId: string): Promise
       updated_at: new Date().toISOString(),
     })
     .eq("id", userId);
+
+  if (dbErr && dbErr.message && dbErr.message.includes("avatar_type")) {
+    const fallback = await supabase
+      .from("profiles")
+      .update({
+        profile_image: presetValue,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+    dbErr = fallback.error;
+  }
 
   if (dbErr) {
     throw new Error(`Failed to update preset avatar: ${dbErr.message}`);

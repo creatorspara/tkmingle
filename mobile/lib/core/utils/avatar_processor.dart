@@ -118,12 +118,19 @@ class AvatarProcessor {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final versionedUrl = '$publicUrl?v=$timestamp';
 
-    // Update profiles table
-    await client.from('profiles').update({
-      'profile_image': versionedUrl,
-      'avatar_type': 'upload',
-      'avatar_id': null,
-    }).eq('id', userId);
+    // Update profiles table (with fallback if avatar_type migration pending)
+    try {
+      await client.from('profiles').update({
+        'profile_image': versionedUrl,
+        'avatar_type': 'upload',
+        'avatar_id': null,
+      }).eq('id', userId);
+    } catch (e) {
+      debugPrint('Notice on avatar_type (pending migration): $e');
+      await client.from('profiles').update({
+        'profile_image': versionedUrl,
+      }).eq('id', userId);
+    }
 
     return versionedUrl;
   }
@@ -136,11 +143,18 @@ class AvatarProcessor {
     final client = Supabase.instance.client;
     final presetReference = 'preset:$avatarId';
 
-    await client.from('profiles').update({
-      'profile_image': presetReference,
-      'avatar_type': 'preset',
-      'avatar_id': avatarId,
-    }).eq('id', userId);
+    try {
+      await client.from('profiles').update({
+        'profile_image': presetReference,
+        'avatar_type': 'preset',
+        'avatar_id': avatarId,
+      }).eq('id', userId);
+    } catch (e) {
+      debugPrint('Notice on avatar_type (pending migration): $e');
+      await client.from('profiles').update({
+        'profile_image': presetReference,
+      }).eq('id', userId);
+    }
   }
 
   /// Removes custom avatar and resets to initial-based deterministic gradient
@@ -157,10 +171,17 @@ class AvatarProcessor {
     }
 
     // Reset profile avatar fields
-    await client.from('profiles').update({
-      'profile_image': null,
-      'avatar_type': 'initial',
-      'avatar_id': null,
-    }).eq('id', userId);
+    try {
+      await client.from('profiles').update({
+        'profile_image': null,
+        'avatar_type': 'initial',
+        'avatar_id': null,
+      }).eq('id', userId);
+    } catch (e) {
+      debugPrint('Notice on avatar_type (pending migration): $e');
+      await client.from('profiles').update({
+        'profile_image': null,
+      }).eq('id', userId);
+    }
   }
 }

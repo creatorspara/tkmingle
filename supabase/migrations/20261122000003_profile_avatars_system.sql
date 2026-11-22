@@ -48,11 +48,19 @@ ON CONFLICT (id) DO UPDATE SET
 -- Prevents cross-user modifications and unauthorized deletions
 -- -----------------------------------------------------------------------------
 
--- Drop previous policies if re-running
+-- Drop previous/dashboard policies if re-running
+DROP POLICY IF EXISTS "Anyone can view profile avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own avatar" ON storage.objects;
 DROP POLICY IF EXISTS "Public read access for profile avatars" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can upload own avatar" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can update own avatar" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can delete own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated users to upload avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated users to update avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated users to delete avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Give users access to own folder" ON storage.objects;
 
 -- 3.1. Public Read: Any student can view avatars in profile-avatars bucket
 CREATE POLICY "Public read access for profile avatars"
