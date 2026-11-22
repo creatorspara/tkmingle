@@ -6,6 +6,7 @@ import '../../state/auth_provider.dart';
 import '../../state/chat_provider.dart';
 import '../../state/connection_provider.dart';
 import '../../state/notification_provider.dart';
+import 'push_notification_service.dart';
 
 final realtimeNotificationServiceProvider = Provider<RealtimeNotificationService>((ref) {
   final service = RealtimeNotificationService(ref);
@@ -31,6 +32,7 @@ class RealtimeNotificationService {
       final user = next.value;
       if (user != null && user.uid != _subscribedUserId) {
         subscribeForUser(user.uid);
+        PushNotificationService().syncDeviceToken(user.uid);
       } else if (user == null) {
         dispose();
       }

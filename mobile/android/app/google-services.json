@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "778859048414",
+    "project_id": "tkmingle-23f31",
+    "storage_bucket": "tkmingle-23f31.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:778859048414:android:233e2c08d7bfde53bf414f",
+        "android_client_info": {
+          "package_name": "com.tkmingle.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6G0rHdx4uytVzHJWG_rniCYnuKNFz0mc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
