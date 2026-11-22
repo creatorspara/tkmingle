@@ -51,7 +51,8 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            // Signing configuration is omitted to allow F-Droid to sign the APK.
+            // When building locally without a custom keystore, Gradle will produce an unsigned APK.
             minifyEnabled false
             shrinkResources false
         }
