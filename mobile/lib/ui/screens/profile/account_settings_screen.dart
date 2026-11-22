@@ -41,7 +41,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('You are on the latest version of TKMingle! (v1.0.1)'),
+            content: Text('You are on the latest version of TKMingle! (v${UpdateService.currentVersionName})'),
             backgroundColor: Colors.green,
           ),
         );
@@ -163,7 +163,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   child: const Icon(Icons.system_update_rounded, color: AppColors.primaryAccent, size: 20),
                 ),
                 title: const Text('Check for Updates'),
-                subtitle: const Text('TKMingle v1.0.1 (k1) • Tap to check latest release'),
+                subtitle: const Text('v${UpdateService.currentVersionName} (Build ${UpdateService.currentVersionCode}) • Tap to check latest release'),
                 trailing: _checkingUpdate
                     ? const SizedBox(
                         width: 18,
@@ -211,7 +211,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             const SizedBox(height: 32),
             Center(
               child: Text(
-                '${AppConstants.appName} v1.0.0 • ${AppConstants.collegeShort}',
+                '${AppConstants.appName} v${UpdateService.currentVersionName} • ${AppConstants.collegeShort}',
                 style: AppTypography.labelSmall(AppColors.darkTextMuted),
               ),
             ),

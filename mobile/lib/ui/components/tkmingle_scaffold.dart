@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/services/realtime_notification_service.dart';
+import '../../core/services/update_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../state/chat_provider.dart';
 import '../../state/connection_provider.dart';
 import '../../state/notification_provider.dart';
+import 'update_dialog.dart';
 
-class TKMingleScaffold extends ConsumerWidget {
+class TKMingleScaffold extends ConsumerStatefulWidget {
   final StatefulNavigationShell navigationShell;
 
   const TKMingleScaffold({
@@ -16,7 +18,32 @@ class TKMingleScaffold extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TKMingleScaffold> createState() => _TKMingleScaffoldState();
+}
+
+class _TKMingleScaffoldState extends ConsumerState<TKMingleScaffold> {
+  static bool _hasCheckedForUpdates = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_hasCheckedForUpdates) {
+      _hasCheckedForUpdates = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        try {
+          final update = await UpdateService.checkForUpdate();
+          if (mounted && update != null) {
+            UpdateDialog.show(context, update);
+          }
+        } catch (e) {
+          debugPrint("Automatic update check notice: $e");
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Keep Supabase Realtime notification listener active
     ref.watch(realtimeNotificationServiceProvider);
 
@@ -28,7 +55,7 @@ class TKMingleScaffold extends ConsumerWidget {
     final unreadMessages = conversations.fold<int>(0, (sum, c) => sum + c.unreadCount);
 
     return Scaffold(
-      body: navigationShell,
+      body: widget.navigationShell,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.deepNavy : AppColors.lightSurface,
@@ -48,11 +75,11 @@ class TKMingleScaffold extends ConsumerWidget {
         ),
         child: SafeArea(
           child: NavigationBar(
-            selectedIndex: navigationShell.currentIndex,
+            selectedIndex: widget.navigationShell.currentIndex,
             onDestinationSelected: (index) {
-              navigationShell.goBranch(
+              widget.navigationShell.goBranch(
                 index,
-                initialLocation: index == navigationShell.currentIndex,
+                initialLocation: index == widget.navigationShell.currentIndex,
               );
             },
             backgroundColor: Colors.transparent,

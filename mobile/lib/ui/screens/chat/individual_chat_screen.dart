@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/services/push_notification_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +29,7 @@ class _IndividualChatScreenState extends ConsumerState<IndividualChatScreen> {
   @override
   void initState() {
     super.initState();
+    PushNotificationService.activeConversationId = widget.conversationId;
     // Mark messages as read on entry
     Future.microtask(() {
       final user = ref.read(authProvider).value;
@@ -40,6 +42,7 @@ class _IndividualChatScreenState extends ConsumerState<IndividualChatScreen> {
 
   @override
   void dispose() {
+    PushNotificationService.activeConversationId = null;
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();

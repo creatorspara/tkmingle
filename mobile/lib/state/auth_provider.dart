@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants/app_constants.dart';
+import '../core/services/push_notification_service.dart';
 import '../core/router/app_router.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/auth_repository.dart';
@@ -104,6 +105,12 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   }
 
   Future<void> logout() async {
+    final current = state.value;
+    if (current != null) {
+      try {
+        await PushNotificationService().clearDeviceToken(current.uid);
+      } catch (_) {}
+    }
     await _repository.logout();
     state = const AsyncValue.data(null);
   }

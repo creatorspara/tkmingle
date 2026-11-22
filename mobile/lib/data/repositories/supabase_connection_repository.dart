@@ -134,21 +134,10 @@ class SupabaseConnectionRepository implements ConnectionRepository {
         return ConnectionRequestModel.fromJson(updated, receiver: receiver);
       }
 
-      // Re-activate a previously cancelled or declined request
-      final updated = await _client
-          .from('connection_requests')
-          .update({
-            'sender_id': senderId,
-            'receiver_id': receiverId,
-            'status': 'pending',
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', existing['id'] as String)
-          .select()
-          .single();
-
-      final receiver = await userRepository.getUserById(receiverId);
-      return ConnectionRequestModel.fromJson(updated, receiver: receiver);
+      // If existing request was resolved/cancelled/declined, clean it up so we insert a clean fresh pending request
+      try {
+        await _client.from('connection_requests').delete().eq('id', existing['id'] as String);
+      } catch (_) {}
     }
 
     // Insert new pending request

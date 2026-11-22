@@ -24,8 +24,8 @@ class AppUpdateInfo {
 }
 
 class UpdateService {
-  static const int currentVersionCode = 8;
-  static const String currentVersionName = "1.0.4";
+  static const int currentVersionCode = 9;
+  static const String currentVersionName = "1.0.5";
   static const MethodChannel _channel = MethodChannel("com.tkmingle.app/updater");
 
   /// Checks Supabase `app_releases` table first, with fallback to GitHub Releases API.

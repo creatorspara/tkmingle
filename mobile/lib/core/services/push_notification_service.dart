@@ -26,6 +26,9 @@ class PushNotificationService {
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
 
+  /// Currently active conversation ID (suppresses banners when viewing the chat)
+  static String? activeConversationId;
+
   /// High importance notification channel for WhatsApp-style Heads-Up pop-up banners
   static const AndroidNotificationChannel _highImportanceChannel = AndroidNotificationChannel(
     channelId,
@@ -90,6 +93,26 @@ class PushNotificationService {
       // 4. Handle foreground notifications (show heads-up banner)
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         debugPrint('Got a message whilst in the foreground: ${message.messageId}');
+
+        final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+        final senderId = message.data['sender_id'] ?? message.data['reference_id'];
+        final type = message.data['type'];
+
+        // 1. Suppress notification if current user is the sender of this message/alert
+        if (currentUserId != null && senderId != null && currentUserId == senderId) {
+          debugPrint('Suppressing popup for self-sent event');
+          return;
+        }
+
+        // 2. Suppress notification if user is currently looking at this active conversation
+        if (type == 'new_message' && activeConversationId != null) {
+          final convId = message.data['conversation_id'] ?? message.data['reference_id'];
+          if (convId == activeConversationId) {
+            debugPrint('Suppressing in-chat popup for active conversation $activeConversationId');
+            return;
+          }
+        }
+
         final notification = message.notification;
         if (notification != null) {
           _localNotifications.show(
@@ -128,12 +151,18 @@ class PushNotificationService {
         debugPrint("Obtained FCM device token: ${token.substring(0, 15)}...");
 
         final supabase = Supabase.instance.client;
+
+        // Clear any previous user registered to this same physical phone token
+        try {
+          await supabase.from('device_tokens').delete().eq('device_token', token);
+        } catch (_) {}
+
         await supabase.from('device_tokens').upsert(
           {
             'user_id': userId,
             'device_token': token,
             'platform': Platform.isAndroid ? 'android' : 'ios',
-            'updated_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
           },
           onConflict: 'user_id,platform',
         );
@@ -144,12 +173,15 @@ class PushNotificationService {
       FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
         try {
           final supabase = Supabase.instance.client;
+          try {
+            await supabase.from('device_tokens').delete().eq('device_token', newToken);
+          } catch (_) {}
           await supabase.from('device_tokens').upsert(
             {
               'user_id': userId,
               'device_token': newToken,
               'platform': Platform.isAndroid ? 'android' : 'ios',
-              'updated_at': DateTime.now().toIso8601String(),
+              'updated_at': DateTime.now().toUtc().toIso8601String(),
             },
             onConflict: 'user_id,platform',
           );
@@ -158,5 +190,18 @@ class PushNotificationService {
     } catch (e) {
       debugPrint("Failed to sync device token with Supabase: $e");
     }
+  }
+
+  /// Removes the device token when user logs out
+  Future<void> clearDeviceToken(String userId) async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      final supabase = Supabase.instance.client;
+      if (token != null) {
+        await supabase.from('device_tokens').delete().eq('device_token', token);
+      } else {
+        await supabase.from('device_tokens').delete().eq('user_id', userId);
+      }
+    } catch (_) {}
   }
 }
