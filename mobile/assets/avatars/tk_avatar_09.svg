@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_09" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#081E32"/>
+      <stop offset="100%" stop-color="#103B60"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_09" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_09">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_09)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_09)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_09)"/>
+    
+        <!-- Blueprint Grid backdrop -->
+        <line x1="60" y1="60" x2="196" y2="60" stroke="#38BDF8" stroke-width="0.8" opacity="0.3"/>
+        <line x1="60" y1="100" x2="196" y2="100" stroke="#38BDF8" stroke-width="0.8" opacity="0.3"/>
+        <line x1="100" y1="40" x2="100" y2="180" stroke="#38BDF8" stroke-width="0.8" opacity="0.3"/>
+        <line x1="156" y1="40" x2="156" y2="180" stroke="#38BDF8" stroke-width="0.8" opacity="0.3"/>
+        <!-- Isometric Drafting Cube -->
+        <polygon points="128,70 162,90 128,110 94,90" fill="#38BDF8" opacity="0.85"/>
+        <polygon points="94,90 128,110 128,148 94,128" fill="#0284C7" opacity="0.9"/>
+        <polygon points="162,90 128,110 128,148 162,128" fill="#0369A1" opacity="0.95"/>
+        <circle cx="128" cy="110" r="3" fill="#FFFFFF"/>
+        <!-- Compass & Ruler badge -->
+        <path d="M80 215 C85 165 171 165 176 215 Z" fill="#0C2842"/>
+        <polygon points="128,172 120,200 136,200" fill="#F6F5FF"/>
+        <circle cx="128" cy="172" r="3" fill="#38BDF8"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_09)" stroke-width="2.5" fill="none"/>
+</svg>

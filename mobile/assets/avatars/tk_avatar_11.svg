@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_11" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A2416"/>
+      <stop offset="100%" stop-color="#17442A"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_11" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ADE80"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_11">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_11)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_11)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_11)"/>
+    
+        <circle cx="128" cy="118" r="40" fill="#FFE4D6"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#153824"/>
+        <!-- Sprout on Head -->
+        <path d="M128 78 Q118 60 108 65 Q115 80 128 78" fill="#4ADE80"/>
+        <path d="M128 78 Q138 58 148 62 Q140 78 128 78" fill="#22C55E"/>
+        <line x1="128" y1="78" x2="128" y2="86" stroke="#15803D" stroke-width="2.5"/>
+        <!-- Eyes & Smile -->
+        <circle cx="112" cy="118" r="3.5" fill="#0A2416"/>
+        <circle cx="144" cy="118" r="3.5" fill="#0A2416"/>
+        <path d="M120 136 Q128 144 136 136" stroke="#0A2416" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- Leaf pin on chest -->
+        <circle cx="128" cy="192" r="14" fill="#4ADE80"/>
+        <path d="M124 196 Q128 184 134 186 Q130 196 124 196" fill="#0A2416"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_11)" stroke-width="2.5" fill="none"/>
+</svg>

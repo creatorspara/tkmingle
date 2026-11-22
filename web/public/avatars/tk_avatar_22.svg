@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_22" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#081C10"/>
+      <stop offset="100%" stop-color="#103820"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_22" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_22">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_22)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_22)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_22)"/>
+    
+        <!-- Printed Circuit Board traces -->
+        <line x1="50" y1="80" x2="80" y2="80" stroke="#22C55E" stroke-width="2"/>
+        <line x1="80" y1="80" x2="100" y2="60" stroke="#22C55E" stroke-width="2"/>
+        <circle cx="100" cy="60" r="3.5" fill="#22C55E"/>
+        <line x1="206" y1="80" x2="176" y2="80" stroke="#22C55E" stroke-width="2"/>
+        <line x1="176" y1="80" x2="156" y2="60" stroke="#22C55E" stroke-width="2"/>
+        <circle cx="156" cy="60" r="3.5" fill="#22C55E"/>
+        <!-- Head & cyber shades -->
+        <circle cx="128" cy="118" r="40" fill="#243E30"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#12271D"/>
+        <!-- Matrix Green Visor -->
+        <polygon points="96,110 160,110 152,126 104,126" fill="#22C55E"/>
+        <line x1="102" y1="118" x2="154" y2="118" stroke="#081C10" stroke-width="2" stroke-dasharray="3,2"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_22)" stroke-width="2.5" fill="none"/>
+</svg>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/tk_avatars.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/user_model.dart';
@@ -12,6 +13,7 @@ import '../../../state/user_provider.dart';
 import '../../components/custom_button.dart';
 import '../../components/empty_state_view.dart';
 import '../../components/interest_chip.dart';
+import '../../components/profile_avatar.dart';
 import '../../components/skeleton_loader.dart';
 import '../../components/status_badge.dart';
 import 'discovery_filter_sheet.dart';
@@ -84,11 +86,13 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircleAvatar(
+              ProfileAvatar(
+                imageUrl: user.profileImage,
+                name: user.name,
+                avatarType: user.avatarType,
+                avatarId: user.avatarId,
                 radius: 44,
-                backgroundImage: user.profileImage.isNotEmpty ? NetworkImage(user.profileImage) : null,
-                backgroundColor: AppColors.primaryAccent,
-                child: user.profileImage.isEmpty ? Text(user.name[0], style: const TextStyle(fontSize: 28)) : null,
+                showVerifiedBadge: true,
               ),
               const SizedBox(height: 14),
               Text(
@@ -318,6 +322,60 @@ class _StudentDiscoveryCardState extends ConsumerState<_StudentDiscoveryCard> {
   bool _isRequestSent = false;
   bool _isLoading = false;
 
+  Widget _buildHeroAvatar(UserModel student) {
+    final effective = (student.avatarId != null && student.avatarId!.isNotEmpty)
+        ? student.avatarId!
+        : student.profileImage.trim();
+
+    if (TkAvatars.isPreset(effective) || student.avatarType == 'preset') {
+      final preset = TkAvatars.getById(student.avatarId ?? effective);
+      if (preset != null) {
+        return Container(
+          color: AppColors.darkBackground,
+          padding: const EdgeInsets.all(28),
+          alignment: Alignment.center,
+          child: Image.asset(
+            preset.assetPath,
+            fit: BoxFit.contain,
+          ),
+        );
+      }
+    } else if (effective.startsWith('http://') || effective.startsWith('https://')) {
+      return Image.network(
+        effective,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildInitialsHero(student),
+      );
+    }
+    return _buildInitialsHero(student);
+  }
+
+  Widget _buildInitialsHero(UserModel student) {
+    final gradient = TkAvatars.getDeterministicGradient(
+      student.name.isNotEmpty ? student.name : student.uid,
+    );
+    final initials = TkAvatars.getInitials(student.name);
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: const TextStyle(
+          fontSize: 72,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+          letterSpacing: 2,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -351,19 +409,7 @@ class _StudentDiscoveryCardState extends ConsumerState<_StudentDiscoveryCard> {
                     height: 280,
                     width: double.infinity,
                     decoration: const BoxDecoration(color: AppColors.darkElevated),
-                    child: student.profileImage.isNotEmpty
-                        ? Image.network(
-                            student.profileImage,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: AppColors.darkElevated,
-                              child: const Icon(Icons.person, size: 70, color: AppColors.darkTextMuted),
-                            ),
-                          )
-                        : Container(
-                            color: AppColors.darkElevated,
-                            child: const Icon(Icons.person, size: 70, color: AppColors.darkTextMuted),
-                          ),
+                    child: _buildHeroAvatar(student),
                   ),
                   // Dark Gradient Overlay for text legibility
                   Positioned.fill(

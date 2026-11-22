@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_15" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#071B26"/>
+      <stop offset="100%" stop-color="#0F3347"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_15" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_15">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_15)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_15)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_15)"/>
+    
+        <circle cx="128" cy="116" r="40" fill="#EAD9C8"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#132635"/>
+        <!-- Camera strap -->
+        <path d="M85 175 L128 215 L171 175" stroke="#06B6D4" stroke-width="4.5" fill="none"/>
+        <!-- Camera Lens aperture motif on chest -->
+        <circle cx="128" cy="192" r="16" fill="#071B26" stroke="#06B6D4" stroke-width="2"/>
+        <circle cx="128" cy="192" r="9" fill="#06B6D4" opacity="0.6"/>
+        <circle cx="128" cy="192" r="4" fill="#F6F5FF"/>
+        <!-- Winking photographer eye -->
+        <path d="M106 116 Q112 110 118 116" stroke="#071B26" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="144" cy="116" r="3.5" fill="#071B26"/>
+        <path d="M122 136 Q128 142 134 136" stroke="#071B26" stroke-width="2" fill="none" stroke-linecap="round"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_15)" stroke-width="2.5" fill="none"/>
+</svg>

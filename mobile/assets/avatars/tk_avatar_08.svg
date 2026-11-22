@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_08" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#062319"/>
+      <stop offset="100%" stop-color="#0F4632"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_08" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_08">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_08)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_08)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_08)"/>
+    
+        <circle cx="128" cy="118" r="40" fill="#E2C7B4"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#0B3023"/>
+        <!-- Sport Headband -->
+        <path d="M88 106 Q128 98 168 106 L168 116 Q128 108 88 116 Z" fill="#10B981"/>
+        <circle cx="128" cy="111" r="3" fill="#FFFFFF"/>
+        <!-- Eyes & confident grin -->
+        <circle cx="112" cy="125" r="3.5" fill="#062319"/>
+        <circle cx="144" cy="125" r="3.5" fill="#062319"/>
+        <path d="M118 142 Q128 152 138 142" stroke="#062319" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Motion wind lines -->
+        <path d="M52 80 L76 80" stroke="#10B981" stroke-width="3" stroke-linecap="round"/>
+        <path d="M44 95 L64 95" stroke="#50D6C2" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M192 145 L212 145" stroke="#10B981" stroke-width="3" stroke-linecap="round"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_08)" stroke-width="2.5" fill="none"/>
+</svg>

@@ -1,0 +1,218 @@
+[
+  {
+    "id": "tk_avatar_01",
+    "name": "Cyber Techie",
+    "category": "Tech & Code",
+    "accent": "#50D6C2",
+    "svgPath": "/avatars/tk_avatar_01.svg",
+    "pngPath": "/avatars/tk_avatar_01.png",
+    "assetPath": "assets/avatars/tk_avatar_01.png"
+  },
+  {
+    "id": "tk_avatar_02",
+    "name": "Campus Coder",
+    "category": "Tech & Code",
+    "accent": "#8875FF",
+    "svgPath": "/avatars/tk_avatar_02.svg",
+    "pngPath": "/avatars/tk_avatar_02.png",
+    "assetPath": "assets/avatars/tk_avatar_02.png"
+  },
+  {
+    "id": "tk_avatar_03",
+    "name": "Creative Artist",
+    "category": "Arts & Design",
+    "accent": "#FF6584",
+    "svgPath": "/avatars/tk_avatar_03.svg",
+    "pngPath": "/avatars/tk_avatar_03.png",
+    "assetPath": "assets/avatars/tk_avatar_03.png"
+  },
+  {
+    "id": "tk_avatar_04",
+    "name": "Robotics Engineer",
+    "category": "Engineering",
+    "accent": "#FFB84D",
+    "svgPath": "/avatars/tk_avatar_04.svg",
+    "pngPath": "/avatars/tk_avatar_04.png",
+    "assetPath": "assets/avatars/tk_avatar_04.png"
+  },
+  {
+    "id": "tk_avatar_05",
+    "name": "Campus Scholar",
+    "category": "Campus Life",
+    "accent": "#B9A9FF",
+    "svgPath": "/avatars/tk_avatar_05.svg",
+    "pngPath": "/avatars/tk_avatar_05.png",
+    "assetPath": "assets/avatars/tk_avatar_05.png"
+  },
+  {
+    "id": "tk_avatar_06",
+    "name": "Space Explorer",
+    "category": "Science & Maker",
+    "accent": "#50D6C2",
+    "svgPath": "/avatars/tk_avatar_06.svg",
+    "pngPath": "/avatars/tk_avatar_06.png",
+    "assetPath": "assets/avatars/tk_avatar_06.png"
+  },
+  {
+    "id": "tk_avatar_07",
+    "name": "Music Producer",
+    "category": "Arts & Design",
+    "accent": "#EC4899",
+    "svgPath": "/avatars/tk_avatar_07.svg",
+    "pngPath": "/avatars/tk_avatar_07.png",
+    "assetPath": "assets/avatars/tk_avatar_07.png"
+  },
+  {
+    "id": "tk_avatar_08",
+    "name": "Athletic Runner",
+    "category": "Campus Life",
+    "accent": "#10B981",
+    "svgPath": "/avatars/tk_avatar_08.svg",
+    "pngPath": "/avatars/tk_avatar_08.png",
+    "assetPath": "assets/avatars/tk_avatar_08.png"
+  },
+  {
+    "id": "tk_avatar_09",
+    "name": "Design Architect",
+    "category": "Arts & Design",
+    "accent": "#38BDF8",
+    "svgPath": "/avatars/tk_avatar_09.svg",
+    "pngPath": "/avatars/tk_avatar_09.png",
+    "assetPath": "assets/avatars/tk_avatar_09.png"
+  },
+  {
+    "id": "tk_avatar_10",
+    "name": "AI Innovator",
+    "category": "Tech & Code",
+    "accent": "#8875FF",
+    "svgPath": "/avatars/tk_avatar_10.svg",
+    "pngPath": "/avatars/tk_avatar_10.png",
+    "assetPath": "assets/avatars/tk_avatar_10.png"
+  },
+  {
+    "id": "tk_avatar_11",
+    "name": "Eco Pioneer",
+    "category": "Science & Maker",
+    "accent": "#4ADE80",
+    "svgPath": "/avatars/tk_avatar_11.svg",
+    "pngPath": "/avatars/tk_avatar_11.png",
+    "assetPath": "assets/avatars/tk_avatar_11.png"
+  },
+  {
+    "id": "tk_avatar_12",
+    "name": "Debate Champion",
+    "category": "Campus Life",
+    "accent": "#F59E0B",
+    "svgPath": "/avatars/tk_avatar_12.svg",
+    "pngPath": "/avatars/tk_avatar_12.png",
+    "assetPath": "assets/avatars/tk_avatar_12.png"
+  },
+  {
+    "id": "tk_avatar_13",
+    "name": "Mechanical Maker",
+    "category": "Engineering",
+    "accent": "#F97316",
+    "svgPath": "/avatars/tk_avatar_13.svg",
+    "pngPath": "/avatars/tk_avatar_13.png",
+    "assetPath": "assets/avatars/tk_avatar_13.png"
+  },
+  {
+    "id": "tk_avatar_14",
+    "name": "Literature Scribe",
+    "category": "Arts & Design",
+    "accent": "#C084FC",
+    "svgPath": "/avatars/tk_avatar_14.svg",
+    "pngPath": "/avatars/tk_avatar_14.png",
+    "assetPath": "assets/avatars/tk_avatar_14.png"
+  },
+  {
+    "id": "tk_avatar_15",
+    "name": "Photographer",
+    "category": "Arts & Design",
+    "accent": "#06B6D4",
+    "svgPath": "/avatars/tk_avatar_15.svg",
+    "pngPath": "/avatars/tk_avatar_15.png",
+    "assetPath": "assets/avatars/tk_avatar_15.png"
+  },
+  {
+    "id": "tk_avatar_16",
+    "name": "Data Scientist",
+    "category": "Tech & Code",
+    "accent": "#3B82F6",
+    "svgPath": "/avatars/tk_avatar_16.svg",
+    "pngPath": "/avatars/tk_avatar_16.png",
+    "assetPath": "assets/avatars/tk_avatar_16.png"
+  },
+  {
+    "id": "tk_avatar_17",
+    "name": "Quantum Physicist",
+    "category": "Science & Maker",
+    "accent": "#A855F7",
+    "svgPath": "/avatars/tk_avatar_17.svg",
+    "pngPath": "/avatars/tk_avatar_17.png",
+    "assetPath": "assets/avatars/tk_avatar_17.png"
+  },
+  {
+    "id": "tk_avatar_18",
+    "name": "Game Developer",
+    "category": "Tech & Code",
+    "accent": "#F43F5E",
+    "svgPath": "/avatars/tk_avatar_18.svg",
+    "pngPath": "/avatars/tk_avatar_18.png",
+    "assetPath": "assets/avatars/tk_avatar_18.png"
+  },
+  {
+    "id": "tk_avatar_19",
+    "name": "Campus Leader",
+    "category": "Campus Life",
+    "accent": "#EAB308",
+    "svgPath": "/avatars/tk_avatar_19.svg",
+    "pngPath": "/avatars/tk_avatar_19.png",
+    "assetPath": "assets/avatars/tk_avatar_19.png"
+  },
+  {
+    "id": "tk_avatar_20",
+    "name": "Social Explorer",
+    "category": "Campus Life",
+    "accent": "#8875FF",
+    "svgPath": "/avatars/tk_avatar_20.svg",
+    "pngPath": "/avatars/tk_avatar_20.png",
+    "assetPath": "assets/avatars/tk_avatar_20.png"
+  },
+  {
+    "id": "tk_avatar_21",
+    "name": "Startup Founder",
+    "category": "Campus Life",
+    "accent": "#14B8A6",
+    "svgPath": "/avatars/tk_avatar_21.svg",
+    "pngPath": "/avatars/tk_avatar_21.png",
+    "assetPath": "assets/avatars/tk_avatar_21.png"
+  },
+  {
+    "id": "tk_avatar_22",
+    "name": "Circuit Hacker",
+    "category": "Tech & Code",
+    "accent": "#22C55E",
+    "svgPath": "/avatars/tk_avatar_22.svg",
+    "pngPath": "/avatars/tk_avatar_22.png",
+    "assetPath": "assets/avatars/tk_avatar_22.png"
+  },
+  {
+    "id": "tk_avatar_23",
+    "name": "Astronomy Stargazer",
+    "category": "Science & Maker",
+    "accent": "#818CF8",
+    "svgPath": "/avatars/tk_avatar_23.svg",
+    "pngPath": "/avatars/tk_avatar_23.png",
+    "assetPath": "assets/avatars/tk_avatar_23.png"
+  },
+  {
+    "id": "tk_avatar_24",
+    "name": "TKM Pioneer",
+    "category": "Campus Life",
+    "accent": "#50D6C2",
+    "svgPath": "/avatars/tk_avatar_24.svg",
+    "pngPath": "/avatars/tk_avatar_24.png",
+    "assetPath": "assets/avatars/tk_avatar_24.png"
+  }
+]

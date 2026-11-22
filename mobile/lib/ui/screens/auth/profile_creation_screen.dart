@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/college_data.dart';
+import '../../../core/constants/tk_avatars.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/avatar_processor.dart';
 import '../../../state/auth_provider.dart';
 import '../../components/custom_button.dart';
 import '../../components/custom_text_field.dart';
 import '../../components/interest_chip.dart';
+import '../../components/preset_avatar_picker_sheet.dart';
 import '../../components/profile_avatar.dart';
 
 class ProfileCreationScreen extends ConsumerStatefulWidget {
@@ -28,16 +32,11 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
     'Malayalam Cinema',
     'UI/UX Design',
   };
-  String _selectedAvatarUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+  String _selectedAvatarUrl = 'preset:tk_avatar_01';
+  String? _avatarType = 'preset';
+  String? _avatarId = 'tk_avatar_01';
   bool _isSaving = false;
-
-  final List<String> _sampleAvatars = [
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
-    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-    'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
-  ];
+  bool _isProcessingAvatar = false;
 
   @override
   void dispose() {
@@ -45,6 +44,46 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
     _availabilityController.dispose();
     _promptAnswerController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handlePickPhoto(ImageSource source) async {
+    final currentUser = ref.read(authProvider).value;
+    setState(() => _isProcessingAvatar = true);
+    try {
+      final res = await AvatarProcessor.pickAndProcessImage(source);
+      if (res != null) {
+        String newUrl;
+        if (currentUser != null) {
+          try {
+            newUrl = await AvatarProcessor.uploadAvatar(
+              userId: currentUser.uid,
+              imageBytes: res.bytes,
+            );
+          } catch (e) {
+            newUrl = _selectedAvatarUrl;
+          }
+        } else {
+          newUrl = _selectedAvatarUrl;
+        }
+
+        setState(() {
+          _selectedAvatarUrl = newUrl;
+          _avatarType = 'upload';
+          _avatarId = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not process photo: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessingAvatar = false);
+    }
   }
 
   Future<void> _handleSave() async {
@@ -61,6 +100,8 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
             ? 'TKMCE student eager to meet new friends and collaborate.'
             : _bioController.text.trim(),
         profileImage: _selectedAvatarUrl,
+        avatarType: _avatarType,
+        avatarId: _avatarId,
         interests: _selectedInterests.toList(),
         socialAvailability: _availabilityController.text.trim(),
         prompts: updatedPrompts,
@@ -115,11 +156,33 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
               Center(
                 child: Column(
                   children: [
-                    ProfileAvatar(
-                      imageUrl: _selectedAvatarUrl,
-                      name: currentUser?.name ?? 'Student',
-                      radius: 46,
-                      showVerifiedBadge: true,
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        ProfileAvatar(
+                          imageUrl: _selectedAvatarUrl,
+                          name: currentUser?.name ?? 'Student',
+                          avatarType: _avatarType,
+                          avatarId: _avatarId,
+                          radius: 46,
+                          showVerifiedBadge: true,
+                        ),
+                        if (_isProcessingAvatar)
+                          Container(
+                            width: 92,
+                            height: 92,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withOpacity(0.5),
+                            ),
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.highlight),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -129,29 +192,89 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
+                    // Quick brand avatar row (first 4 presets) + More + Upload
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: _sampleAvatars.map((url) {
-                        final isSel = _selectedAvatarUrl == url;
-                        return GestureDetector(
-                          onTap: () => setState(() => _selectedAvatarUrl = url),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 5),
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isSel ? AppColors.primaryAccent : Colors.transparent,
-                                width: 2.5,
+                      children: [
+                        ...TkAvatars.all.take(4).map((avatar) {
+                          final isSel = _avatarId == avatar.id || _selectedAvatarUrl == 'preset:${avatar.id}';
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedAvatarUrl = 'preset:${avatar.id}';
+                                _avatarType = 'preset';
+                                _avatarId = avatar.id;
+                              });
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isSel ? AppColors.highlight : Colors.white24,
+                                  width: isSel ? 2.5 : 1,
+                                ),
+                              ),
+                              child: CircleAvatar(
+                                radius: 18,
+                                backgroundColor: AppColors.darkCard,
+                                backgroundImage: AssetImage(avatar.assetPath),
                               ),
                             ),
-                            child: CircleAvatar(
-                              radius: 18,
-                              backgroundImage: NetworkImage(url),
+                          );
+                        }),
+                        // More presets button
+                        GestureDetector(
+                          onTap: () async {
+                            final chosen = await PresetAvatarPickerSheet.show(
+                              context,
+                              currentAvatarId: _avatarId,
+                            );
+                            if (chosen != null) {
+                              setState(() {
+                                _selectedAvatarUrl = 'preset:${chosen.id}';
+                                _avatarType = 'preset';
+                                _avatarId = chosen.id;
+                              });
+                            }
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.darkCard,
+                              border: Border.all(color: AppColors.primaryAccent.withOpacity(0.5)),
+                            ),
+                            child: const Icon(
+                              Icons.grid_view_rounded,
+                              size: 18,
+                              color: AppColors.primaryAccent,
                             ),
                           ),
-                        );
-                      }).toList(),
+                        ),
+                        // Upload custom photo button
+                        GestureDetector(
+                          onTap: () => _handlePickPhoto(ImageSource.gallery),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.darkCard,
+                              border: Border.all(color: AppColors.highlight.withOpacity(0.5)),
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt_outlined,
+                              size: 18,
+                              color: AppColors.highlight,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_13" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#20120B"/>
+      <stop offset="100%" stop-color="#3D1E10"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_13" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_13">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_13)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_13)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_13)"/>
+    
+        <circle cx="128" cy="118" r="40" fill="#E8D2C0"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#2A1A14"/>
+        <!-- Workshop Overalls -->
+        <rect x="100" y="180" width="16" height="35" fill="#F97316"/>
+        <rect x="140" y="180" width="16" height="35" fill="#F97316"/>
+        <!-- Wrench emblem -->
+        <circle cx="128" cy="195" r="10" fill="#F6F5FF"/>
+        <path d="M125 192 L131 198" stroke="#20120B" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Face -->
+        <circle cx="112" cy="118" r="3.5" fill="#20120B"/>
+        <circle cx="144" cy="118" r="3.5" fill="#20120B"/>
+        <path d="M121 138 Q128 144 135 138" stroke="#20120B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- Safety specs on head -->
+        <rect x="98" y="86" width="26" height="14" rx="4" stroke="#F97316" stroke-width="2.5" fill="none"/>
+        <rect x="132" y="86" width="26" height="14" rx="4" stroke="#F97316" stroke-width="2.5" fill="none"/>
+        <line x1="124" y1="93" x2="132" y2="93" stroke="#F97316" stroke-width="2.5"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_13)" stroke-width="2.5" fill="none"/>
+</svg>

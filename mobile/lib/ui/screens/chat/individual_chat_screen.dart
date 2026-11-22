@@ -109,6 +109,8 @@ class _IndividualChatScreenState extends ConsumerState<IndividualChatScreen> {
                     ProfileAvatar(
                       imageUrl: otherUser.profileImage,
                       name: otherUser.name,
+                      avatarType: otherUser.avatarType,
+                      avatarId: otherUser.avatarId,
                       radius: 19,
                       isOnline: true,
                     ),

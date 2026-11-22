@@ -6,6 +6,8 @@ class UserModel {
   final String academicYear;
   final String bio;
   final String profileImage;
+  final String avatarType; // 'upload', 'preset', or 'initial'
+  final String? avatarId;
   final List<String> interests;
   final List<String> hobbies;
   final List<String> skills;
@@ -28,6 +30,8 @@ class UserModel {
     required this.academicYear,
     this.bio = '',
     this.profileImage = '',
+    String? avatarType,
+    this.avatarId,
     this.interests = const [],
     this.hobbies = const [],
     this.skills = const [],
@@ -41,7 +45,11 @@ class UserModel {
     DateTime? createdAt,
     this.blockedUserIds = const [],
     this.isSuspended = false,
-  }) : createdAt = createdAt ?? DateTime.now();
+  })  : createdAt = createdAt ?? DateTime.now(),
+        avatarType = avatarType ??
+            (profileImage.startsWith('preset:')
+                ? 'preset'
+                : (profileImage.startsWith('http') ? 'upload' : 'initial'));
 
   bool get isAdmin => role == 'admin';
 
@@ -53,6 +61,8 @@ class UserModel {
     String? academicYear,
     String? bio,
     String? profileImage,
+    String? avatarType,
+    String? avatarId,
     List<String>? interests,
     List<String>? hobbies,
     List<String>? skills,
@@ -75,6 +85,8 @@ class UserModel {
       academicYear: academicYear ?? this.academicYear,
       bio: bio ?? this.bio,
       profileImage: profileImage ?? this.profileImage,
+      avatarType: avatarType ?? this.avatarType,
+      avatarId: avatarId ?? this.avatarId,
       interests: interests ?? this.interests,
       hobbies: hobbies ?? this.hobbies,
       skills: skills ?? this.skills,
@@ -100,6 +112,8 @@ class UserModel {
       'academicYear': academicYear,
       'bio': bio,
       'profileImage': profileImage,
+      'avatarType': avatarType,
+      'avatarId': avatarId,
       'interests': interests,
       'hobbies': hobbies,
       'skills': skills,
@@ -125,6 +139,8 @@ class UserModel {
       academicYear: json['academicYear'] as String? ?? '',
       bio: json['bio'] as String? ?? '',
       profileImage: json['profileImage'] as String? ?? '',
+      avatarType: json['avatarType'] as String?,
+      avatarId: json['avatarId'] as String?,
       interests: List<String>.from(json['interests'] ?? []),
       hobbies: List<String>.from(json['hobbies'] ?? []),
       skills: List<String>.from(json['skills'] ?? []),

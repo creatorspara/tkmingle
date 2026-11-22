@@ -18,6 +18,7 @@ import {
 import { MOCK_STUDENTS, TKMCE_DEPARTMENTS, StudentProfile } from "@/lib/mockData";
 import { useCurrentUser } from "@/lib/useUser";
 import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
+import UserAvatar from "@/components/UserAvatar";
 
 export default function DiscoverPage() {
   const { user } = useCurrentUser();
@@ -53,7 +54,7 @@ export default function DiscoverPage() {
             department: p.department || "General",
             academic_year: p.academic_year || "1st Year",
             bio: p.bio || "",
-            profile_image: p.profile_image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80",
+            profile_image: p.profile_image || (p.avatar_id ? `preset:${p.avatar_id}` : ""),
             interests: p.interests || [],
             skills: p.skills || [],
             languages: p.languages || ["English", "Malayalam"],
@@ -190,13 +191,13 @@ export default function DiscoverPage() {
                   <div className="flex items-center gap-3">
                     <div
                       onClick={() => setSelectedStudent(student)}
-                      className="relative w-14 h-14 rounded-2xl overflow-hidden border border-brand-border cursor-pointer hover:border-brand-purple transition-colors"
+                      className="cursor-pointer"
                     >
-                      <Image
+                      <UserAvatar
                         src={student.profile_image}
-                        alt={student.full_name}
-                        fill
-                        className="object-cover"
+                        name={student.full_name}
+                        size={56}
+                        className="rounded-2xl border border-brand-border hover:border-brand-purple transition-colors"
                       />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -270,14 +271,12 @@ export default function DiscoverPage() {
             </button>
 
             <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-brand-purple/60">
-                <Image
-                  src={selectedStudent.profile_image}
-                  alt={selectedStudent.full_name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <UserAvatar
+                src={selectedStudent.profile_image}
+                name={selectedStudent.full_name}
+                size={64}
+                className="rounded-2xl border border-brand-purple/60"
+              />
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-1.5">
                   {selectedStudent.full_name}

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { MOCK_CIRCLES, MOCK_POSTS, CirclePostItem } from "@/lib/mockData";
 import { useCurrentUser } from "@/lib/useUser";
+import UserAvatar from "@/components/UserAvatar";
 
 export default function CirclesPage() {
   const { user, profile } = useCurrentUser();
@@ -49,7 +50,7 @@ export default function CirclesPage() {
       id: "p_" + Date.now(),
       circle_id: MOCK_CIRCLES[2].id,
       author_name: profile?.full_name || user?.user_metadata?.full_name || "TKM Student",
-      author_image: profile?.profile_image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80",
+      author_image: profile?.profile_image || (profile?.avatar_id ? `preset:${profile.avatar_id}` : ""),
       title: newPostTitle.trim() || "Campus Update",
       content: newPostContent.trim(),
       likes_count: 1,
@@ -162,14 +163,11 @@ export default function CirclesPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-9 h-9 rounded-full overflow-hidden border border-brand-border">
-                    <Image
-                      src={post.author_image}
-                      alt={post.author_name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                  <UserAvatar
+                    src={post.author_image}
+                    name={post.author_name}
+                    size={36}
+                  />
                   <div>
                     <div className="font-bold text-xs text-white flex items-center gap-1.5">
                       {post.author_name}

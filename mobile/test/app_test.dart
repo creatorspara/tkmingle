@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tkmingle/core/constants/tk_avatars.dart';
+import 'package:tkmingle/data/models/user_model.dart';
 import 'package:tkmingle/data/repositories/auth_repository.dart';
 import 'package:tkmingle/data/repositories/user_repository.dart';
 import 'package:tkmingle/data/repositories/connection_repository.dart';
@@ -146,6 +148,54 @@ void main() {
       // 5. Clean logout
       await authRepo.logout();
       expect(await authRepo.getCurrentUser(), isNull);
+    });
+
+    test('v1.5 Unified Avatar System: 24 brand avatars, presets, and initial gradient hashing', () {
+      // 1. Verify 24 built-in avatars
+      expect(TkAvatars.all.length, equals(24));
+
+      // 2. Verify preset identification and lookup
+      expect(TkAvatars.isPreset('preset:tk_avatar_01'), isTrue);
+      expect(TkAvatars.isPreset('tk_avatar_01'), isTrue);
+      expect(TkAvatars.isPreset('https://example.com/photo.jpg'), isFalse);
+      expect(TkAvatars.isPreset(''), isFalse);
+
+      final avatar01 = TkAvatars.getById('preset:tk_avatar_01');
+      expect(avatar01, isNotNull);
+      expect(avatar01!.name, equals('Cyber Techie'));
+      expect(avatar01.assetPath, equals('assets/avatars/tk_avatar_01.png'));
+
+      // 3. Verify initials generator
+      expect(TkAvatars.getInitials('Abhiram V'), equals('AV'));
+      expect(TkAvatars.getInitials('Sneha'), equals('SN'));
+      expect(TkAvatars.getInitials(''), equals('?'));
+
+      // 4. Verify deterministic gradient hash
+      final grad1 = TkAvatars.getDeterministicGradient('Abhiram V');
+      final grad2 = TkAvatars.getDeterministicGradient('Abhiram V');
+      expect(grad1, equals(grad2));
+      expect(grad1.length, equals(2));
+
+      // 5. Verify UserModel avatarType & avatarId serialization
+      final testUser = UserModel(
+        uid: 'test_u1',
+        name: 'Test Student',
+        email: 'test@tkmce.ac.in',
+        department: 'CSE',
+        academicYear: '2nd Year',
+        profileImage: 'preset:tk_avatar_05',
+        avatarType: 'preset',
+        avatarId: 'tk_avatar_05',
+      );
+
+      final json = testUser.toJson();
+      expect(json['avatarType'], equals('preset'));
+      expect(json['avatarId'], equals('tk_avatar_05'));
+
+      final restored = UserModel.fromJson(json);
+      expect(restored.avatarType, equals('preset'));
+      expect(restored.avatarId, equals('tk_avatar_05'));
+      expect(restored.profileImage, equals('preset:tk_avatar_05'));
     });
   });
 }

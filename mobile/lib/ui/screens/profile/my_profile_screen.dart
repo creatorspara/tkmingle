@@ -69,6 +69,8 @@ class MyProfileScreen extends ConsumerWidget {
                     ProfileAvatar(
                       imageUrl: currentUser.profileImage,
                       name: currentUser.name,
+                      avatarType: currentUser.avatarType,
+                      avatarId: currentUser.avatarId,
                       radius: 48,
                       showVerifiedBadge: currentUser.verified,
                     ),

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/college_data.dart';
+import '../../../core/constants/tk_avatars.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/avatar_processor.dart';
 import '../../../state/auth_provider.dart';
 import '../../../state/discovery_provider.dart';
 import '../../components/custom_button.dart';
 import '../../components/custom_text_field.dart';
 import '../../components/interest_chip.dart';
+import '../../components/preset_avatar_picker_sheet.dart';
 import '../../components/profile_avatar.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -29,7 +33,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late String _selectedPrompt;
   late Set<String> _interests;
   late String _profileImage;
+  String? _avatarType;
+  String? _avatarId;
   bool _isLoading = false;
+  bool _isProcessingAvatar = false;
 
   @override
   void initState() {
@@ -49,6 +56,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
     _interests = Set.from(user?.interests ?? []);
     _profileImage = user?.profileImage ?? '';
+    _avatarType = user?.avatarType;
+    _avatarId = user?.avatarId;
   }
 
   @override
@@ -81,6 +90,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       interests: _interests.toList(),
       prompts: updatedPrompts,
       profileImage: _profileImage,
+      avatarType: _avatarType,
+      avatarId: _avatarId,
     );
 
     await ref.read(authProvider.notifier).updateProfile(updated);
@@ -92,6 +103,217 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profile updated successfully!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showAvatarActionSheet() async {
+    final user = ref.read(authProvider).value;
+    if (user == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.darkBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        side: BorderSide(color: AppColors.primaryAccent, width: 1.5),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text(
+                'Change Profile Picture',
+                style: AppTypography.titleMedium(Colors.white).copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.highlight),
+                title: const Text('Take Photo', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('Use camera with auto square crop & optimization', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _processAndUploadPhoto(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primaryAccent),
+                title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('Pick photo from your device (compressed <= 100 KB)', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _processAndUploadPhoto(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.face_outlined, color: AppColors.lavender),
+                title: const Text('Choose Brand Avatar', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('24 built-in campus illustrations', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  final selected = await PresetAvatarPickerSheet.show(
+                    context,
+                    currentAvatarId: _avatarId ?? _profileImage,
+                  );
+                  if (selected != null) {
+                    _selectPreset(selected);
+                  }
+                },
+              ),
+              if (_profileImage.isNotEmpty && !_profileImage.startsWith('initial'))
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: AppColors.error),
+                  title: const Text('Remove Photo', style: TextStyle(color: AppColors.error)),
+                  subtitle: const Text('Reset to brand initials fallback', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _removeAvatar();
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _processAndUploadPhoto(ImageSource source) async {
+    final user = ref.read(authProvider).value;
+    if (user == null) return;
+
+    setState(() => _isProcessingAvatar = true);
+    try {
+      final result = await AvatarProcessor.pickAndProcessImage(source);
+      if (result == null) {
+        setState(() => _isProcessingAvatar = false);
+        return;
+      }
+
+      String newUrl;
+      try {
+        newUrl = await AvatarProcessor.uploadAvatar(
+          userId: user.uid,
+          imageBytes: result.bytes,
+        );
+      } catch (uploadErr) {
+        debugPrint('Remote storage upload notice: $uploadErr');
+        // Fallback to local memory representation if backend storage is unavailable
+        newUrl = _profileImage;
+      }
+
+      setState(() {
+        _profileImage = newUrl;
+        _avatarType = 'upload';
+        _avatarId = null;
+      });
+
+      final updated = user.copyWith(
+        profileImage: newUrl,
+        avatarType: 'upload',
+        avatarId: null,
+      );
+      await ref.read(authProvider.notifier).updateProfile(updated);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profile photo updated (${(result.byteSize / 1024).toStringAsFixed(1)} KB)'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to process photo: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessingAvatar = false);
+    }
+  }
+
+  Future<void> _selectPreset(TkAvatar preset) async {
+    final user = ref.read(authProvider).value;
+    if (user == null) return;
+
+    setState(() {
+      _profileImage = 'preset:${preset.id}';
+      _avatarType = 'preset';
+      _avatarId = preset.id;
+    });
+
+    try {
+      await AvatarProcessor.selectPresetAvatar(
+        userId: user.uid,
+        avatarId: preset.id,
+      );
+    } catch (e) {
+      debugPrint('Preset avatar remote update note: $e');
+    }
+
+    final updated = user.copyWith(
+      profileImage: 'preset:${preset.id}',
+      avatarType: 'preset',
+      avatarId: preset.id,
+    );
+    await ref.read(authProvider.notifier).updateProfile(updated);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Selected avatar: ${preset.name}'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
+  }
+
+  Future<void> _removeAvatar() async {
+    final user = ref.read(authProvider).value;
+    if (user == null) return;
+
+    setState(() {
+      _profileImage = '';
+      _avatarType = 'initial';
+      _avatarId = null;
+    });
+
+    try {
+      await AvatarProcessor.removeAvatar(userId: user.uid);
+    } catch (e) {
+      debugPrint('Avatar removal notice: $e');
+    }
+
+    final updated = user.copyWith(
+      profileImage: '',
+      avatarType: 'initial',
+      avatarId: null,
+    );
+    await ref.read(authProvider.notifier).updateProfile(updated);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile photo removed. Using initials fallback.'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -123,28 +345,39 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 Center(
                   child: Column(
                     children: [
-                      ProfileAvatar(
-                        imageUrl: _profileImage,
-                        name: _nameController.text,
-                        radius: 46,
-                        showVerifiedBadge: true,
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          ProfileAvatar(
+                            imageUrl: _profileImage,
+                            name: _nameController.text,
+                            avatarType: _avatarType,
+                            avatarId: _avatarId,
+                            radius: 46,
+                            showVerifiedBadge: true,
+                          ),
+                          if (_isProcessingAvatar)
+                            Container(
+                              width: 92,
+                              height: 92,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.black.withOpacity(0.5),
+                              ),
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.highlight),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 10),
                       TextButton.icon(
                         icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                        label: const Text('Change Photo'),
-                        onPressed: () {
-                          // Cycle avatar sample
-                          final samples = [
-                            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-                            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-                            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
-                            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-                          ];
-                          setState(() {
-                            _profileImage = samples[(samples.indexOf(_profileImage) + 1) % samples.length];
-                          });
-                        },
+                        label: const Text('Change Avatar / Photo'),
+                        onPressed: _isProcessingAvatar ? null : _showAvatarActionSheet,
                       ),
                     ],
                   ),

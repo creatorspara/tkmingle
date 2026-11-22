@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_10" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#110D2E"/>
+      <stop offset="100%" stop-color="#221852"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_10" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8875FF"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_10">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_10)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_10)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_10)"/>
+    
+        <!-- Neural Network node pattern -->
+        <circle cx="80" cy="80" r="5" fill="#8875FF"/>
+        <circle cx="176" cy="80" r="5" fill="#8875FF"/>
+        <circle cx="65" cy="140" r="4" fill="#50D6C2"/>
+        <circle cx="191" cy="140" r="4" fill="#50D6C2"/>
+        <circle cx="128" cy="60" r="6" fill="#F6F5FF"/>
+        <line x1="128" y1="60" x2="80" y2="80" stroke="#8875FF" stroke-width="1.8" opacity="0.7"/>
+        <line x1="128" y1="60" x2="176" y2="80" stroke="#8875FF" stroke-width="1.8" opacity="0.7"/>
+        <line x1="80" y1="80" x2="65" y2="140" stroke="#50D6C2" stroke-width="1.5" opacity="0.7"/>
+        <line x1="176" y1="80" x2="191" y2="140" stroke="#50D6C2" stroke-width="1.5" opacity="0.7"/>
+        <!-- Student Head & Glowing Synapse -->
+        <circle cx="128" cy="120" r="40" fill="#FCE7F3"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#2D1C5C"/>
+        <!-- Glasses with glowing AI prompt -->
+        <rect x="100" y="112" width="24" height="16" rx="4" fill="#110D2E" stroke="#50D6C2" stroke-width="2"/>
+        <rect x="132" y="112" width="24" height="16" rx="4" fill="#110D2E" stroke="#50D6C2" stroke-width="2"/>
+        <line x1="124" y1="120" x2="132" y2="120" stroke="#50D6C2" stroke-width="2"/>
+        <circle cx="112" cy="120" r="2.5" fill="#50D6C2"/>
+        <circle cx="144" cy="120" r="2.5" fill="#50D6C2"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_10)" stroke-width="2.5" fill="none"/>
+</svg>

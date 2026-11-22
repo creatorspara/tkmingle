@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_17" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140B29"/>
+      <stop offset="100%" stop-color="#29154E"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_17" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_17">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_17)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_17)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_17)"/>
+    
+        <!-- Atomic Orbitals behind head -->
+        <ellipse cx="128" cy="120" rx="55" ry="20" stroke="#A855F7" stroke-width="2" fill="none" transform="rotate(30 128 120)" opacity="0.75"/>
+        <ellipse cx="128" cy="120" rx="55" ry="20" stroke="#50D6C2" stroke-width="2" fill="none" transform="rotate(-30 128 120)" opacity="0.75"/>
+        <circle cx="128" cy="118" r="38" fill="#F3E8FF"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#2D1550"/>
+        <!-- Quantum Core Pin -->
+        <circle cx="128" cy="192" r="12" fill="#140B29" stroke="#A855F7" stroke-width="2"/>
+        <circle cx="128" cy="192" r="5" fill="#50D6C2"/>
+        <!-- Face -->
+        <circle cx="114" cy="118" r="3" fill="#140B29"/>
+        <circle cx="142" cy="118" r="3" fill="#140B29"/>
+        <path d="M122 136 Q128 141 134 136" stroke="#140B29" stroke-width="2" fill="none" stroke-linecap="round"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_17)" stroke-width="2.5" fill="none"/>
+</svg>

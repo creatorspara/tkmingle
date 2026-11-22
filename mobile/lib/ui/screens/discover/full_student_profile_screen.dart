@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/college_data.dart';
+import '../../../core/constants/tk_avatars.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/user_model.dart';
@@ -36,6 +37,60 @@ class _FullStudentProfileScreenState extends ConsumerState<FullStudentProfileScr
       builder: (ctx) => ReportBlockSheet(
         targetUserId: widget.userId,
         targetUserName: userName,
+      ),
+    );
+  }
+
+  Widget _buildHeroAvatar(UserModel student) {
+    final effective = (student.avatarId != null && student.avatarId!.isNotEmpty)
+        ? student.avatarId!
+        : student.profileImage.trim();
+
+    if (TkAvatars.isPreset(effective) || student.avatarType == 'preset') {
+      final preset = TkAvatars.getById(student.avatarId ?? effective);
+      if (preset != null) {
+        return Container(
+          color: AppColors.darkBackground,
+          padding: const EdgeInsets.all(32),
+          alignment: Alignment.center,
+          child: Image.asset(
+            preset.assetPath,
+            fit: BoxFit.contain,
+          ),
+        );
+      }
+    } else if (effective.startsWith('http://') || effective.startsWith('https://')) {
+      return Image.network(
+        effective,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildInitialsHero(student),
+      );
+    }
+    return _buildInitialsHero(student);
+  }
+
+  Widget _buildInitialsHero(UserModel student) {
+    final gradient = TkAvatars.getDeterministicGradient(
+      student.name.isNotEmpty ? student.name : student.uid,
+    );
+    final initials = TkAvatars.getInitials(student.name);
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: const TextStyle(
+          fontSize: 80,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+          letterSpacing: 2,
+        ),
       ),
     );
   }
@@ -80,15 +135,7 @@ class _FullStudentProfileScreenState extends ConsumerState<FullStudentProfileScr
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      student.profileImage.isNotEmpty
-                          ? Image.network(
-                              student.profileImage,
-                              fit: BoxFit.cover,
-                            )
-                          : Container(
-                              color: AppColors.darkElevated,
-                              child: const Icon(Icons.person, size: 80, color: AppColors.darkTextMuted),
-                            ),
+                      _buildHeroAvatar(student),
                       // Scrim
                       DecoratedBox(
                         decoration: BoxDecoration(

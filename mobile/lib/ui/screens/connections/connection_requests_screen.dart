@@ -109,6 +109,8 @@ class _ConnectionRequestsScreenState extends ConsumerState<ConnectionRequestsScr
                               ProfileAvatar(
                                 imageUrl: sender.profileImage,
                                 name: sender.name,
+                                avatarType: sender.avatarType,
+                                avatarId: sender.avatarId,
                                 radius: 24,
                                 showVerifiedBadge: sender.verified,
                                 onTap: () => context.push('/profile/${sender.uid}'),
@@ -220,6 +222,8 @@ class _ConnectionRequestsScreenState extends ConsumerState<ConnectionRequestsScr
                       leading: ProfileAvatar(
                         imageUrl: receiver.profileImage,
                         name: receiver.name,
+                        avatarType: receiver.avatarType,
+                        avatarId: receiver.avatarId,
                         radius: 22,
                         showVerifiedBadge: receiver.verified,
                       ),

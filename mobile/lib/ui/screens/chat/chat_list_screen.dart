@@ -95,6 +95,8 @@ class ChatListScreen extends ConsumerWidget {
                   leading: ProfileAvatar(
                     imageUrl: other.profileImage,
                     name: other.name,
+                    avatarType: other.avatarType,
+                    avatarId: other.avatarId,
                     radius: 26,
                     isOnline: true,
                     showVerifiedBadge: other.verified,

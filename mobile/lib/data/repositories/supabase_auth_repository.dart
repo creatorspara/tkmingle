@@ -30,6 +30,8 @@ class SupabaseAuthRepository implements AuthRepository {
           academicYear: res['academic_year'] as String? ?? user.userMetadata?['academic_year'] ?? '1st Year',
           bio: res['bio'] as String? ?? '',
           profileImage: res['profile_image'] as String? ?? '',
+          avatarType: res['avatar_type'] as String?,
+          avatarId: res['avatar_id'] as String?,
           interests: List<String>.from(res['interests'] ?? []),
           skills: List<String>.from(res['skills'] ?? []),
           languages: List<String>.from(res['languages'] ?? []),
@@ -240,11 +242,27 @@ class SupabaseAuthRepository implements AuthRepository {
       'department': user.department,
       'academic_year': user.academicYear,
       'bio': user.bio,
+      'profile_image': user.profileImage,
+      'avatar_type': user.avatarType,
+      'avatar_id': user.avatarId,
       'availability': user.socialAvailability,
       'discoverable': user.discoverable,
       'interests': user.interests,
       'skills': user.skills,
       'languages': user.languages,
     }).eq('id', user.uid);
+  }
+
+  Future<void> updateAvatar({
+    required String userId,
+    required String profileImage,
+    required String avatarType,
+    String? avatarId,
+  }) async {
+    await _client.from('profiles').update({
+      'profile_image': profileImage,
+      'avatar_type': avatarType,
+      'avatar_id': avatarId,
+    }).eq('id', userId);
   }
 }

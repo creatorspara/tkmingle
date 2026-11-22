@@ -17,6 +17,7 @@ import {
 import { StudentProfile } from "@/lib/mockData";
 import { useCurrentUser } from "@/lib/useUser";
 import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
+import UserAvatar from "@/components/UserAvatar";
 
 interface LiveConversation {
   id: string;
@@ -125,7 +126,7 @@ export default function MessagesPage() {
               department: profileRow.department || "General",
               academic_year: profileRow.academic_year || "1st Year",
               bio: profileRow.bio || "",
-              profile_image: profileRow.profile_image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80",
+              profile_image: profileRow.profile_image || (profileRow.avatar_id ? `preset:${profileRow.avatar_id}` : ""),
               interests: profileRow.interests || [],
               skills: profileRow.skills || [],
               languages: profileRow.languages || ["English", "Malayalam"],
@@ -367,7 +368,7 @@ export default function MessagesPage() {
               const partner = conv.otherUser;
               const isSelected = conv.id === activeConvId;
               const partnerName = partner?.full_name || conv.title || "Campus Student";
-              const partnerImage = partner?.profile_image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80";
+              const partnerImage = partner?.profile_image || (partner?.avatar_id ? `preset:${partner.avatar_id}` : "");
 
               return (
                 <div
@@ -379,15 +380,12 @@ export default function MessagesPage() {
                       : "bg-brand-navySecondary/60 border-brand-border/60 hover:bg-brand-navyCard hover:border-brand-border"
                   }`}
                 >
-                  <div className="relative w-11 h-11 rounded-xl overflow-hidden border border-brand-purple/40 flex-shrink-0">
-                    <Image
-                      src={partnerImage}
-                      alt={partnerName}
-                      fill
-                      className="object-cover"
-                    />
-                    <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-brand-teal border-2 border-brand-navy" />
-                  </div>
+                  <UserAvatar
+                    src={partnerImage}
+                    name={partnerName}
+                    size={44}
+                    isOnline={true}
+                  />
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
@@ -418,14 +416,12 @@ export default function MessagesPage() {
             {/* Chat Header */}
             <div className="px-6 py-3.5 bg-brand-navySecondary/90 backdrop-blur-md border-b border-brand-border/70 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-brand-purple/50">
-                  <Image
-                    src={activePartner.profile_image}
-                    alt={activePartner.full_name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
+                <UserAvatar
+                  src={activePartner.profile_image}
+                  name={activePartner.full_name}
+                  size={40}
+                  isOnline={true}
+                />
                 <div>
                   <div className="font-bold text-sm text-white flex items-center gap-1.5">
                     {activePartner.full_name}

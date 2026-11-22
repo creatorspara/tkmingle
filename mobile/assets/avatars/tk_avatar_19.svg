@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_19" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121A2E"/>
+      <stop offset="100%" stop-color="#1E2D4F"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_19" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EAB308"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_19">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_19)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_19)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_19)"/>
+    
+        <circle cx="128" cy="116" r="40" fill="#E8D7CA"/>
+        <path d="M70 215 C76 160 180 160 186 215 Z" fill="#19253F"/>
+        <!-- Leadership Sash -->
+        <path d="M90 175 L150 215 L165 215 L105 175 Z" fill="#EAB308"/>
+        <!-- Star medal on chest -->
+        <polygon points="128,180 131,188 139,188 133,193 135,201 128,196 121,201 123,193 117,188 125,188" fill="#EAB308"/>
+        <!-- Face -->
+        <circle cx="112" cy="116" r="3.5" fill="#121A2E"/>
+        <circle cx="144" cy="116" r="3.5" fill="#121A2E"/>
+        <path d="M120 136 Q128 144 136 136" stroke="#121A2E" stroke-width="3" fill="none" stroke-linecap="round"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_19)" stroke-width="2.5" fill="none"/>
+</svg>

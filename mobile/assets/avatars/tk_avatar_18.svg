@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_18" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1C0A1A"/>
+      <stop offset="100%" stop-color="#381333"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_18" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_18">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_18)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_18)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_18)"/>
+    
+        <circle cx="128" cy="118" r="40" fill="#FED7AA"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#2B1028"/>
+        <!-- Pixel D-Pad on chest -->
+        <rect x="124" y="180" width="8" height="24" fill="#F43F5E"/>
+        <rect x="116" y="188" width="24" height="8" fill="#F43F5E"/>
+        <!-- Pixel Hearts in background -->
+        <polygon points="65,70 70,65 75,70 75,75 70,80 65,75" fill="#F43F5E"/>
+        <polygon points="185,75 190,70 195,75 195,80 190,85 185,80" fill="#F43F5E"/>
+        <!-- Eyes & Gamer headset -->
+        <circle cx="112" cy="118" r="3.5" fill="#1C0A1A"/>
+        <circle cx="144" cy="118" r="3.5" fill="#1C0A1A"/>
+        <path d="M120 136 Q128 144 136 136" stroke="#1C0A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M80 115 C80 80 176 80 176 115" stroke="#F43F5E" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_18)" stroke-width="2.5" fill="none"/>
+</svg>

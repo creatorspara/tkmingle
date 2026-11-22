@@ -103,6 +103,8 @@ class _MyConnectionsScreenState extends ConsumerState<MyConnectionsScreen> {
                               ProfileAvatar(
                                 imageUrl: other.profileImage,
                                 name: other.name,
+                                avatarType: other.avatarType,
+                                avatarId: other.avatarId,
                                 radius: 26,
                                 showVerifiedBadge: other.verified,
                                 onTap: () => context.push('/profile/${other.uid}'),

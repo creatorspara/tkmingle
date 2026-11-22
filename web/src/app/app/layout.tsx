@@ -16,6 +16,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/useUser";
+import UserAvatar from "@/components/UserAvatar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -52,7 +53,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Fallback display if profile still syncing
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Student";
   const displayDept = profile?.department || user?.user_metadata?.department || "TKMCE";
-  const displayImage = profile?.profile_image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80";
 
   return (
     <div className="min-h-screen bg-brand-navy flex flex-col md:flex-row text-brand-text">
@@ -105,14 +105,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Current User Card */}
         <div className="pt-4 border-t border-brand-border/60 space-y-3">
           <div className="flex items-center gap-3 px-2">
-            <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-brand-purple/50">
-              <Image
-                src={displayImage}
-                alt={displayName}
-                fill
-                className="object-cover"
-              />
-            </div>
+            <UserAvatar
+              src={profile?.profile_image}
+              name={displayName}
+              size={36}
+              showVerifiedBadge={profile?.verification_status === "verified"}
+            />
             <div className="flex-1 min-w-0">
               <div className="font-bold text-xs text-white truncate">
                 {displayName}
@@ -148,13 +146,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </Link>
         <Link
           href="/app/profile"
-          className="relative w-8 h-8 rounded-full overflow-hidden border border-brand-purple"
+          className="relative inline-flex items-center justify-center"
         >
-          <Image
-            src={displayImage}
-            alt={displayName}
-            fill
-            className="object-cover"
+          <UserAvatar
+            src={profile?.profile_image}
+            name={displayName}
+            size={32}
+            showVerifiedBadge={profile?.verification_status === "verified"}
           />
         </Link>
       </header>

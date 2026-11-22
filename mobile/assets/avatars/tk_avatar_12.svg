@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_12" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#261605"/>
+      <stop offset="100%" stop-color="#45290A"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_12" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_12">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_12)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_12)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_12)"/>
+    
+        <circle cx="128" cy="116" r="40" fill="#F7E6D5"/>
+        <!-- Blazer & Tie -->
+        <path d="M70 215 C76 160 180 160 186 215 Z" fill="#1F1A24"/>
+        <polygon points="128,165 110,215 146,215" fill="#F59E0B"/>
+        <polygon points="128,165 124,195 132,195" fill="#78350F"/>
+        <!-- Hair -->
+        <path d="M88 110 C88 74 168 74 168 110 L168 95 C150 78 106 78 88 95 Z" fill="#291807"/>
+        <!-- Expressive eyes & smile -->
+        <circle cx="112" cy="116" r="3" fill="#261605"/>
+        <circle cx="144" cy="116" r="3" fill="#261605"/>
+        <path d="M118 135 Q128 145 138 135" stroke="#261605" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Speech spark -->
+        <path d="M185 85 L190 70 L195 85 L210 90 L195 95 L190 110 L185 95 L170 90 Z" fill="#F59E0B"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_12)" stroke-width="2.5" fill="none"/>
+</svg>

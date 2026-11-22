@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_21" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#091E24"/>
+      <stop offset="100%" stop-color="#113A42"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_21" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14B8A6"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_21">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_21)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_21)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_21)"/>
+    
+        <circle cx="128" cy="118" r="40" fill="#FCEBD9"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#132B32"/>
+        <!-- Minimalist Ascending Rocket on chest -->
+        <path d="M128 175 Q136 185 136 200 L120 200 Q120 185 128 175 Z" fill="#14B8A6"/>
+        <circle cx="128" cy="186" r="3" fill="#F6F5FF"/>
+        <polygon points="128,200 124,208 132,208" fill="#FFB84D"/>
+        <!-- Face -->
+        <circle cx="112" cy="118" r="3.5" fill="#091E24"/>
+        <circle cx="144" cy="118" r="3.5" fill="#091E24"/>
+        <path d="M120 138 Q128 146 136 138" stroke="#091E24" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_21)" stroke-width="2.5" fill="none"/>
+</svg>

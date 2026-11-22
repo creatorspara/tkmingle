@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/tk_avatars.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
@@ -9,6 +10,8 @@ class ProfileAvatar extends StatelessWidget {
   final bool showVerifiedBadge;
   final bool isOnline;
   final VoidCallback? onTap;
+  final String? avatarType;
+  final String? avatarId;
 
   const ProfileAvatar({
     super.key,
@@ -18,22 +21,57 @@ class ProfileAvatar extends StatelessWidget {
     this.showVerifiedBadge = false,
     this.isOnline = false,
     this.onTap,
+    this.avatarType,
+    this.avatarId,
   });
 
   @override
   Widget build(BuildContext context) {
-    final initials = _getInitials(name);
+    final initials = TkAvatars.getInitials(name.isNotEmpty ? name : 'Student');
     final size = radius * 2;
+    final gradientColors = TkAvatars.getDeterministicGradient(name.isNotEmpty ? name : imageUrl);
+
+    Widget imageContent;
+    final effectiveSrc = (avatarId != null && avatarId!.isNotEmpty) ? avatarId! : imageUrl.trim();
+
+    if (TkAvatars.isPreset(effectiveSrc) || (avatarType == 'preset' && avatarId != null)) {
+      final preset = TkAvatars.getById(avatarId ?? effectiveSrc);
+      if (preset != null) {
+        imageContent = Image.asset(
+          preset.assetPath,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _initialsWidget(initials, gradientColors),
+        );
+      } else {
+        imageContent = _initialsWidget(initials, gradientColors);
+      }
+    } else if (effectiveSrc.startsWith('http://') || effectiveSrc.startsWith('https://')) {
+      imageContent = Image.network(
+        effectiveSrc,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _initialsWidget(initials, gradientColors),
+      );
+    } else {
+      imageContent = _initialsWidget(initials, gradientColors);
+    }
 
     Widget avatar = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: AppColors.primaryGradient,
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryAccent.withOpacity(0.18),
+            color: gradientColors.first.withOpacity(0.25),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -41,15 +79,7 @@ class ProfileAvatar extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: imageUrl.isNotEmpty
-            ? Image.network(
-                imageUrl,
-                width: size,
-                height: size,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => _initialsWidget(initials),
-              )
-            : _initialsWidget(initials),
+        child: imageContent,
       ),
     );
 
@@ -110,26 +140,24 @@ class ProfileAvatar extends StatelessWidget {
     );
   }
 
-  Widget _initialsWidget(String initials) {
+  Widget _initialsWidget(String initials, List<Color> gradientColors) {
     return Container(
       alignment: Alignment.center,
-      color: AppColors.darkElevated,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: Text(
         initials,
         style: AppTypography.titleMedium(Colors.white).copyWith(
           fontSize: radius * 0.75,
           fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
         ),
       ),
     );
-  }
-
-  String _getInitials(String string) {
-    if (string.trim().isEmpty) return '?';
-    final parts = string.trim().split(RegExp(r'\s+'));
-    if (parts.length > 1) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return string.substring(0, string.length >= 2 ? 2 : 1).toUpperCase();
   }
 }

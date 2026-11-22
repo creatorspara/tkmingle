@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_14" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1C102E"/>
+      <stop offset="100%" stop-color="#361858"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_14" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C084FC"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_14">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_14)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_14)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_14)"/>
+    
+        <circle cx="128" cy="118" r="40" fill="#FDF4ED"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#2B1A43"/>
+        <!-- Quill pen behind ear -->
+        <path d="M156 110 Q176 75 195 65 Q185 85 168 116 Z" fill="#C084FC"/>
+        <line x1="156" y1="110" x2="195" y2="65" stroke="#F6F5FF" stroke-width="1.2"/>
+        <!-- Serene face -->
+        <circle cx="112" cy="118" r="3.2" fill="#1C102E"/>
+        <circle cx="144" cy="118" r="3.2" fill="#1C102E"/>
+        <path d="M122 138 Q128 143 134 138" stroke="#1C102E" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Open book icon badge on collar -->
+        <path d="M116 195 Q128 190 128 205 Q128 190 140 195 L140 185 Q128 180 128 195 Q128 180 116 185 Z" fill="#C084FC"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_14)" stroke-width="2.5" fill="none"/>
+</svg>

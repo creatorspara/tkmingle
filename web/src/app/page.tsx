@@ -21,6 +21,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { MOCK_STUDENTS, MOCK_CIRCLES } from "@/lib/mockData";
+import UserAvatar from "@/components/UserAvatar";
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -253,14 +254,12 @@ export default function LandingPage() {
             <div className="lg:col-span-5 flex justify-center">
               <div className="w-full max-w-sm glass-panel rounded-2xl p-5 border border-brand-border/80 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-14 h-14 rounded-2xl overflow-hidden border border-brand-purple/40">
-                    <Image
-                      src={MOCK_STUDENTS[1].profile_image}
-                      alt="Sneha Varma"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                  <UserAvatar
+                    src={MOCK_STUDENTS[1].profile_image}
+                    name="Sneha Varma"
+                    size={56}
+                    className="rounded-2xl border border-brand-purple/40"
+                  />
                   <div>
                     <h3 className="font-bold text-base text-white flex items-center gap-1.5">
                       Sneha Varma
@@ -327,14 +326,12 @@ export default function LandingPage() {
               >
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-brand-border">
-                      <Image
-                        src={student.profile_image}
-                        alt={student.full_name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
+                    <UserAvatar
+                      src={student.profile_image}
+                      name={student.full_name}
+                      size={48}
+                      className="rounded-xl border border-brand-border"
+                    />
                     <div className="min-w-0 flex-1">
                       <h3 className="font-bold text-sm text-white truncate flex items-center gap-1.5">
                         {student.full_name}
@@ -494,14 +491,12 @@ export default function LandingPage() {
             <div className="lg:col-span-6">
               <div className="glass-panel rounded-2xl border border-brand-border p-5 space-y-3 max-w-md mx-auto">
                 <div className="flex items-center gap-3 pb-3 border-b border-brand-border/60">
-                  <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-brand-purple/50">
-                    <Image
-                      src={MOCK_STUDENTS[1].profile_image}
-                      alt="Sneha"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                  <UserAvatar
+                    src={MOCK_STUDENTS[1].profile_image}
+                    name="Sneha Varma"
+                    size={36}
+                    isOnline={true}
+                  />
                   <div>
                     <div className="font-bold text-xs text-white flex items-center gap-1.5">
                       Sneha Varma

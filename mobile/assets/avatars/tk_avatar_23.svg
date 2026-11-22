@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_23" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D1129"/>
+      <stop offset="100%" stop-color="#192254"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_23" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_23">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_23)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_23)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_23)"/>
+    
+        <!-- Crescent Moon in night sky -->
+        <path d="M190 60 A 24 24 0 1 0 175 100 A 20 20 0 1 1 190 60 Z" fill="#FDE047"/>
+        <circle cx="128" cy="120" r="40" fill="#EAD9CC"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#1C2454"/>
+        <!-- Star Constellation on Robe -->
+        <circle cx="116" cy="188" r="3" fill="#818CF8"/>
+        <circle cx="132" cy="182" r="3" fill="#818CF8"/>
+        <circle cx="140" cy="198" r="3" fill="#818CF8"/>
+        <line x1="116" y1="188" x2="132" y2="182" stroke="#818CF8" stroke-width="1.5"/>
+        <line x1="132" y1="182" x2="140" y2="198" stroke="#818CF8" stroke-width="1.5"/>
+        <!-- Face -->
+        <circle cx="112" cy="120" r="3.2" fill="#0D1129"/>
+        <circle cx="144" cy="120" r="3.2" fill="#0D1129"/>
+        <path d="M122 138 Q128 143 134 138" stroke="#0D1129" stroke-width="2" fill="none" stroke-linecap="round"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_23)" stroke-width="2.5" fill="none"/>
+</svg>

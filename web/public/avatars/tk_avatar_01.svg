@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_01" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A1026"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_01" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#50D6C2"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_01">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_01)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_01)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_01)"/>
+    
+        <!-- Techie Visor & Headset -->
+        <circle cx="128" cy="115" r="42" fill="#2E335A"/>
+        <path d="M78 210 C82 165 174 165 178 210 Z" fill="#1C2142"/>
+        <path d="M100 172 L128 190 L156 172" stroke="#50D6C2" stroke-width="3" fill="none"/>
+        <!-- Glowing Visor -->
+        <rect x="96" y="105" width="64" height="20" rx="10" fill="#50D6C2" opacity="0.95"/>
+        <line x1="106" y1="115" x2="150" y2="115" stroke="#0A1026" stroke-width="2.5" stroke-dasharray="4,3"/>
+        <!-- Headset band & cans -->
+        <path d="M82 115 C82 85 174 85 174 115" stroke="#8875FF" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <rect x="80" y="105" width="10" height="22" rx="4" fill="#8875FF"/>
+        <rect x="166" y="105" width="10" height="22" rx="4" fill="#8875FF"/>
+        <!-- Tech dots -->
+        <circle cx="65" cy="70" r="3" fill="#50D6C2" opacity="0.7"/>
+        <circle cx="190" cy="80" r="2.5" fill="#B9A9FF" opacity="0.7"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_01)" stroke-width="2.5" fill="none"/>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_05" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#13102E"/>
+      <stop offset="100%" stop-color="#251D5A"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_05" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B9A9FF"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_05">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_05)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_05)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_05)"/>
+    
+        <circle cx="128" cy="118" r="40" fill="#F5EBE1"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#2C2463"/>
+        <!-- Hair -->
+        <path d="M88 115 C85 75 171 75 168 115 C160 90 96 90 88 115 Z" fill="#18133C"/>
+        <!-- Intellectual round spectacles -->
+        <circle cx="110" cy="118" r="14" stroke="#B9A9FF" stroke-width="3" fill="#FFFFFF" fill-opacity="0.3"/>
+        <circle cx="146" cy="118" r="14" stroke="#B9A9FF" stroke-width="3" fill="#FFFFFF" fill-opacity="0.3"/>
+        <line x1="124" y1="118" x2="132" y2="118" stroke="#B9A9FF" stroke-width="3"/>
+        <path d="M121 142 Q128 147 135 142" stroke="#18133C" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Polo collar -->
+        <polygon points="128,175 110,195 128,198" fill="#F6F5FF"/>
+        <polygon points="128,175 146,195 128,198" fill="#E2E0F5"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_05)" stroke-width="2.5" fill="none"/>
+</svg>

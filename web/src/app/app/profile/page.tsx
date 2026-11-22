@@ -12,9 +12,16 @@ import {
   X,
   Loader2,
   AlertCircle,
+  Camera,
+  Trash2,
+  Smile,
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/useUser";
 import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
+import UserAvatar from "@/components/UserAvatar";
+import AvatarCropModal from "@/components/AvatarCropModal";
+import PresetAvatarPickerModal from "@/components/PresetAvatarPickerModal";
+import { removeUploadedAvatar } from "@/lib/avatarProcessor";
 
 export default function ProfilePage() {
   const { user, profile, loading, refreshProfile } = useCurrentUser();
@@ -25,6 +32,42 @@ export default function ProfilePage() {
   const [newInterest, setNewInterest] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [showPresetModal, setShowPresetModal] = useState(false);
+  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
+  const [avatarSuccessMsg, setAvatarSuccessMsg] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Selected image exceeds 5 MB limit. Please select a smaller photo.");
+        return;
+      }
+      setCropFile(file);
+      setShowCropModal(true);
+    }
+    if (e.target) e.target.value = "";
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+    if (!confirm("Are you sure you want to remove your profile picture? It will reset to your initials.")) return;
+    setIsRemovingAvatar(true);
+    try {
+      await removeUploadedAvatar(user.id);
+      await refreshProfile();
+      setAvatarSuccessMsg("Profile picture removed.");
+      setTimeout(() => setAvatarSuccessMsg(null), 2500);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to remove avatar.");
+    } finally {
+      setIsRemovingAvatar(false);
+    }
+  };
 
   useEffect(() => {
     if (profile) {
@@ -90,11 +133,20 @@ export default function ProfilePage() {
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "TKM Student";
   const displayDept = profile?.department || user?.user_metadata?.department || "Engineering";
   const displayYear = profile?.academic_year || user?.user_metadata?.academic_year || "1st Year";
-  const displayImage = profile?.profile_image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80";
   const isVerified = profile?.verification_status === "verified" || !!user?.email_confirmed_at;
+  const hasAvatar = !!profile?.profile_image && !profile.profile_image.startsWith("initial");
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+      {/* Hidden file input for photo upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/jpg"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-white">Campus Profile</h1>
@@ -137,19 +189,75 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {avatarSuccessMsg && (
+        <div className="p-3 rounded-xl bg-brand-teal/15 border border-brand-teal/40 text-xs text-brand-teal flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4" />
+          {avatarSuccessMsg}
+        </div>
+      )}
+
       {/* Main Profile Card */}
       <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-brand-border/80 space-y-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-          <div className="relative w-24 h-24 rounded-3xl overflow-hidden border-2 border-brand-purple shadow-purple-glow">
-            <Image
-              src={displayImage}
-              alt={displayName}
-              fill
-              className="object-cover"
-            />
+          {/* Avatar & Avatar Action Buttons */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative group">
+              <UserAvatar
+                src={profile?.profile_image}
+                name={displayName}
+                size="xl"
+                className="border-2 border-brand-purple shadow-purple-glow"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                title="Change Photo"
+                className="absolute inset-0 bg-brand-navy/60 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-semibold gap-1"
+              >
+                <Camera className="w-5 h-5 text-brand-teal" />
+                <span>Upload</span>
+              </button>
+            </div>
+
+            {/* Quick avatar buttons */}
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-navySecondary border border-brand-border text-[11px] font-medium text-brand-lavender hover:text-white hover:border-brand-purple transition-colors"
+              >
+                <Camera className="w-3 h-3 text-brand-teal" />
+                <span>Upload</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowPresetModal(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-navySecondary border border-brand-border text-[11px] font-medium text-brand-lavender hover:text-white hover:border-brand-purple transition-colors"
+              >
+                <Smile className="w-3 h-3 text-brand-purple" />
+                <span>Avatars</span>
+              </button>
+
+              {hasAvatar && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={isRemovingAvatar}
+                  title="Remove custom photo and reset to initials"
+                  className="p-1 rounded-lg bg-brand-navySecondary border border-brand-border text-[11px] font-medium text-brand-muted hover:text-brand-error hover:border-brand-error/40 transition-colors"
+                >
+                  {isRemovingAvatar ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-brand-error" />
+                  ) : (
+                    <Trash2 className="w-3 h-3" />
+                  )}
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-2 flex-1">
+          <div className="space-y-2 flex-1 pt-1">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <h2 className="text-xl font-bold text-white flex items-center justify-center sm:justify-start gap-2">
                 {displayName}
@@ -260,6 +368,42 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Avatar Crop & Compression Modal */}
+      {showCropModal && cropFile && user && (
+        <AvatarCropModal
+          isOpen={showCropModal}
+          imageFile={cropFile}
+          userId={user.id}
+          onClose={() => {
+            setShowCropModal(false);
+            setCropFile(null);
+          }}
+          onSuccess={async () => {
+            setShowCropModal(false);
+            setCropFile(null);
+            await refreshProfile();
+            setAvatarSuccessMsg("Profile photo updated successfully!");
+            setTimeout(() => setAvatarSuccessMsg(null), 3000);
+          }}
+        />
+      )}
+
+      {/* Built-in TKM Brand Avatar Picker Modal */}
+      {showPresetModal && user && (
+        <PresetAvatarPickerModal
+          isOpen={showPresetModal}
+          userId={user.id}
+          currentAvatar={profile?.avatar_id || profile?.profile_image}
+          onClose={() => setShowPresetModal(false)}
+          onSuccess={async () => {
+            setShowPresetModal(false);
+            await refreshProfile();
+            setAvatarSuccessMsg("Brand avatar updated successfully!");
+            setTimeout(() => setAvatarSuccessMsg(null), 3000);
+          }}
+        />
+      )}
     </div>
   );
 }

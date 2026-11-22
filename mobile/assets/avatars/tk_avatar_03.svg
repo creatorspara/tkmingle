@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_03" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F1235"/>
+      <stop offset="100%" stop-color="#3B184C"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_03" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6584"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_03">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_03)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_03)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_03)"/>
+    
+        <!-- Beret and artistic splash -->
+        <circle cx="128" cy="120" r="40" fill="#FFDFC4"/>
+        <path d="M72 215 C78 165 178 165 184 215 Z" fill="#2E1C4E"/>
+        <!-- Classic beret -->
+        <ellipse cx="132" cy="85" rx="48" ry="20" fill="#FF6584"/>
+        <circle cx="134" cy="65" r="4" fill="#FF6584"/>
+        <!-- Eyes & glasses -->
+        <circle cx="112" cy="116" r="3" fill="#1F1235"/>
+        <circle cx="144" cy="116" r="3" fill="#1F1235"/>
+        <path d="M122 134 Q128 140 134 134" stroke="#1F1235" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- Dynamic paintbrush streak across background -->
+        <path d="M50 170 Q100 130 200 90" stroke="#FF6584" stroke-width="6" fill="none" opacity="0.6" stroke-linecap="round"/>
+        <circle cx="198" cy="90" r="6" fill="#50D6C2"/>
+        <circle cx="60" cy="165" r="4" fill="#B9A9FF"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_03)" stroke-width="2.5" fill="none"/>
+</svg>

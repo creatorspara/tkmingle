@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg_tk_avatar_06" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080B1A"/>
+      <stop offset="100%" stop-color="#121A38"/>
+    </linearGradient>
+    <linearGradient id="ring_tk_avatar_06" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#50D6C2"/>
+      <stop offset="100%" stop-color="#8875FF"/>
+    </linearGradient>
+    <clipPath id="circle_clip_tk_avatar_06">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Outer subtle glow & border -->
+  <circle cx="128" cy="128" r="124" fill="url(#ring_tk_avatar_06)" opacity="0.3"/>
+  <circle cx="128" cy="128" r="122" fill="#0A1026"/>
+  <!-- Clipped inner content -->
+  <g clip-path="url(#circle_clip_tk_avatar_06)">
+    <circle cx="128" cy="128" r="120" fill="url(#bg_tk_avatar_06)"/>
+    
+        <!-- Astronaut Helmet -->
+        <circle cx="128" cy="120" r="56" fill="#E8ECF5" stroke="#8875FF" stroke-width="3"/>
+        <!-- Visor with Gold/Teal Sheen -->
+        <ellipse cx="128" cy="120" rx="42" ry="32" fill="#0A1026" stroke="#50D6C2" stroke-width="2"/>
+        <path d="M96 112 Q128 100 156 108" stroke="#50D6C2" stroke-width="3" fill="none" opacity="0.8"/>
+        <!-- Stars reflection in visor -->
+        <circle cx="110" cy="125" r="2" fill="#FFFFFF"/>
+        <circle cx="140" cy="130" r="1.5" fill="#FFFFFF"/>
+        <circle cx="122" cy="135" r="1" fill="#FFFFFF"/>
+        <!-- Space Suit Collar -->
+        <path d="M68 215 C75 170 181 170 188 215 Z" fill="#CBD5E1"/>
+        <rect x="112" y="190" width="32" height="12" rx="4" fill="#50D6C2"/>
+        
+  </g>
+  <!-- Fine outer border ring -->
+  <circle cx="128" cy="128" r="120" stroke="url(#ring_tk_avatar_06)" stroke-width="2.5" fill="none"/>
+</svg>
