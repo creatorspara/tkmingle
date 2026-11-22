@@ -139,9 +139,7 @@ export default function LandingPage() {
   const [contactSuccess, setContactSuccess] = useState(false);
   const [contactMailto, setContactMailto] = useState("");
 
-  // Check auth session, fetch active student profiles, and query latest release dynamically
   useEffect(() => {
-    // 1. Auth session listener
     if (isLiveSupabaseConfigured()) {
       supabase.auth.getSession().then(({ data }) => {
         if (data?.session?.user) {
@@ -153,7 +151,7 @@ export default function LandingPage() {
         setSessionUser(session?.user ?? null);
       });
 
-      // 2. Fetch live discoverable profiles
+      // Fetch live discoverable profiles
       const loadLiveProfiles = async () => {
         try {
           const { data, error } = await supabase
@@ -184,7 +182,7 @@ export default function LandingPage() {
       };
       loadLiveProfiles();
 
-      // 3. Dynamic Auto-Updating Release Fetch (Always selects highest version_code)
+      // Fetch latest release dynamically from Supabase (or fallback to GitHub)
       const fetchLatestRelease = async () => {
         try {
           const { data, error } = await supabase
@@ -207,7 +205,6 @@ export default function LandingPage() {
             return;
           }
 
-          // Fallback to GitHub Releases API if Supabase query yields nothing
           const ghRes = await fetch("https://api.github.com/repos/creatorspara/tkmingle/releases/latest");
           if (ghRes.ok) {
             const ghData = await ghRes.json();
@@ -222,7 +219,7 @@ export default function LandingPage() {
             }
           }
         } catch (e) {
-          console.warn("Release sync notification:", e);
+          console.warn("Release sync notice:", e);
         }
       };
       fetchLatestRelease();
@@ -237,14 +234,14 @@ export default function LandingPage() {
     if (latestRelease.sha256_checksum) {
       navigator.clipboard.writeText(latestRelease.sha256_checksum);
       setCopiedHash(true);
-      setTimeout(() => setCopiedHash(false), 2200);
+      setTimeout(() => setCopiedHash(false), 2000);
     }
   };
 
   const copyPwaLink = () => {
     navigator.clipboard.writeText("https://tkmingle.vercel.app");
     setCopiedPwaUrl(true);
-    setTimeout(() => setCopiedPwaUrl(false), 2200);
+    setTimeout(() => setCopiedPwaUrl(false), 2000);
   };
 
   const handleContactSubmit = async (e: React.FormEvent) => {
@@ -270,7 +267,7 @@ export default function LandingPage() {
         setContactMailto(data.mailtoUrl);
       }
     } catch (err) {
-      console.error("Contact inquiry dispatch notice:", err);
+      console.error("Contact inquiry notice:", err);
     } finally {
       setContactSubmitting(false);
       setContactSuccess(true);
@@ -280,42 +277,42 @@ export default function LandingPage() {
         setContactMessage("");
         setContactName("");
         setContactEmail("");
-      }, 3800);
+      }, 3500);
     }
   };
 
   const faqs = [
     {
       q: "What is TKMingle?",
-      a: "TKMingle is a student platform built exclusively for TKM College of Engineering (TKMCE), Kollam. It helps students discover peers from other departments based on shared interests, projects, and activities.",
+      a: "TKMingle is a student platform built for TKM College of Engineering (TKMCE), Kollam. It helps students connect across different departments based on shared interests, projects, and campus activities.",
     },
     {
       q: "How do I install TKMingle on Android?",
-      a: `Download the universal APK file (${latestRelease.version_name}) directly from the download section. Once downloaded, tap the file. When Android prompts 'Install unknown apps', enable 'Allow from this source', then tap Install. The app queries Supabase on launch and provides 1-tap in-app updates for future releases.`,
+      a: `Download the APK (${latestRelease.version_name}) directly from the download section. Once downloaded, open the file. If Android prompts 'Install unknown apps', enable 'Allow from this source', then tap Install. Future updates are detected automatically when opening the app.`,
     },
     {
       q: "How do I install TKMingle on an iPhone (iOS)?",
-      a: "Open https://tkmingle.vercel.app in Safari on your iPhone, tap the Share button (square with arrow at the bottom), and select 'Add to Home Screen'. TKMingle will install directly to your home screen and open in standalone app mode without browser bars.",
+      a: "Open https://tkmingle.vercel.app in Safari on your iPhone, tap the Share button (square with arrow at the bottom), and choose 'Add to Home Screen'. TKMingle will install directly to your home screen and run in full-screen standalone mode without browser bars.",
     },
     {
       q: "Why isn't TKMingle on Google Play or the Apple App Store?",
-      a: "Our distribution strategy relies on direct Android APK releases via GitHub and iOS Progressive Web Apps (PWA) via Safari. This allows us to deliver TKMingle freely and immediately to all students without recurring commercial membership fees ($99/year Apple Developer Program, Play Console fees) or bureaucratic store approval delays.",
+      a: "We distribute directly via GitHub Releases and Safari PWA to keep TKMingle completely free for students and avoid commercial developer fees ($99/year Apple Developer Program). Direct distribution also lets our student developer team fix bugs and deploy updates immediately. Store releases will be considered later.",
     },
     {
       q: "Who can join TKMingle?",
-      a: "Access is limited to verified students and community members of TKM College of Engineering. Accounts are authenticated using institutional credentials.",
+      a: "Access is limited to students and members of TKM College of Engineering. Accounts are verified using institutional credentials.",
     },
     {
       q: "How do student connections work?",
-      a: "Connections are based on mutual consent. You can send a connection request with a brief note. Direct 1:1 messaging opens only after both students accept. Pending requests can be resent or cancelled at any time.",
+      a: "Connections require mutual consent. You can send a request with a brief note. Direct 1:1 messaging opens only after both students accept. Pending requests can be resent or cancelled at any time.",
     },
     {
       q: "Can I control my profile visibility?",
-      a: "Yes. You can turn campus discovery on or off at any time in Settings. When discovery is turned off, your profile does not appear in the student directory.",
+      a: "Yes. You can turn campus discovery on or off at any time in Settings. When discovery is turned off, your profile is hidden from the campus directory.",
     },
     {
       q: "What are Campus Circles?",
-      a: "Circles are campus communities for clubs, technical teams, sports, and interests where students post updates, announce workshops, and organize activities.",
+      a: "Circles are campus communities for clubs, technical teams, sports, and interests where students post updates and organize activities.",
     },
   ];
 
@@ -351,9 +348,9 @@ export default function LandingPage() {
             <a href="#discover" className="hover:text-white transition-colors">
               Discover
             </a>
-            <a href="#download" className="hover:text-white transition-colors flex items-center gap-1.5 text-brand-teal font-semibold">
+            <a href="#download" className="hover:text-white transition-colors flex items-center gap-1.5 text-brand-teal font-medium">
               <Download className="w-3.5 h-3.5" />
-              Get App (Android &amp; iOS)
+              Download &amp; Install
             </a>
             <a href="#circles" className="hover:text-white transition-colors">
               Campus Circles
@@ -361,7 +358,7 @@ export default function LandingPage() {
             <a href="#connect" className="hover:text-white transition-colors">
               Connect &amp; Chat
             </a>
-            <a href="#kromium" className="hover:text-white transition-colors flex items-center gap-1 text-brand-lavender font-semibold">
+            <a href="#kromium" className="hover:text-white transition-colors flex items-center gap-1 text-brand-lavender font-medium">
               Equipo Kromium
             </a>
             <a href="#faq" className="hover:text-white transition-colors">
@@ -371,14 +368,12 @@ export default function LandingPage() {
 
           {/* Action CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Direct download CTA in header */}
             <a
               href="#download"
               className="px-3.5 py-2 text-xs font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-teal transition-colors flex items-center gap-1.5"
-              title="Install for Android & iOS"
             >
               <Smartphone className="w-3.5 h-3.5" />
-              <span>Get TKMingle</span>
+              <span>Get the App</span>
             </a>
 
             {sessionUser ? (
@@ -432,7 +427,7 @@ export default function LandingPage() {
               onClick={() => setMobileMenuOpen(false)}
               className="block text-sm font-semibold text-brand-teal hover:text-white flex items-center gap-2"
             >
-              <Smartphone className="w-4 h-4" /> Get App (Android APK &amp; iOS PWA)
+              <Smartphone className="w-4 h-4" /> Download (Android &amp; iOS)
             </a>
             <a
               href="#circles"
@@ -470,7 +465,7 @@ export default function LandingPage() {
                 className="w-full text-center py-2.5 text-xs font-semibold rounded-tk-btn bg-brand-navyCard border border-brand-border text-brand-teal flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                Direct Download APK ({latestRelease.version_name})
+                Download Android APK ({latestRelease.version_name})
               </a>
 
               {sessionUser ? (
@@ -506,7 +501,7 @@ export default function LandingPage() {
       </header>
 
       {/* 2. HERO SECTION */}
-      <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 border-b border-brand-border/60 overflow-hidden">
+      <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 border-b border-brand-border/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             {/* Left Content */}
@@ -524,32 +519,30 @@ export default function LandingPage() {
                 Meet students from other engineering departments, find partners for hackathons and projects, join campus circles, and connect across TKMCE.
               </p>
 
-              {/* Primary Action Buttons */}
+              {/* Action Buttons */}
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-                {/* Android APK Button */}
                 <a
                   href={latestRelease.download_url}
                   download
-                  className="w-full sm:w-auto px-5 py-3 text-sm font-bold rounded-tk-btn bg-gradient-to-r from-brand-purple to-purple-600 hover:opacity-95 text-white transition-all flex items-center justify-center gap-2 shadow-purple-glow"
+                  className="w-full sm:w-auto px-5 py-3 text-sm font-bold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors flex items-center justify-center gap-2 shadow-purple-glow"
                 >
                   <Download className="w-4 h-4" />
                   <span>Download APK (Android)</span>
                 </a>
 
-                {/* iOS Safari Web App CTA */}
                 <a
                   href="#download"
                   onClick={() => setActivePlatformTab("ios")}
                   className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white transition-colors flex items-center justify-center gap-2"
                 >
                   <Apple className="w-4 h-4 text-brand-lavender" />
-                  <span>iOS Safari PWA</span>
+                  <span>iOS Safari Web App</span>
                 </a>
 
                 {sessionUser ? (
                   <Link
                     href="/app/discover"
-                    className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn border border-brand-border/60 hover:border-brand-purple text-brand-text transition-colors flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn border border-brand-border text-brand-text hover:text-white transition-colors flex items-center justify-center gap-2"
                   >
                     Enter Portal
                     <ArrowRight className="w-4 h-4" />
@@ -564,15 +557,15 @@ export default function LandingPage() {
                 )}
               </div>
 
-              {/* Live Version Tag & Checksum Preview */}
+              {/* Version & Platform Summary */}
               <div className="pt-1 flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs text-brand-muted">
-                <span className="inline-flex items-center gap-1 text-[11px] text-brand-teal font-medium">
-                  <span className="w-2 h-2 rounded-full bg-brand-teal animate-pulse" />
-                  Latest APK {latestRelease.version_name} (Build {latestRelease.version_code})
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-brand-teal font-medium">
+                  <span className="w-2 h-2 rounded-full bg-brand-teal" />
+                  Android APK {latestRelease.version_name} (Build {latestRelease.version_code})
                 </span>
                 <span className="text-brand-border">|</span>
                 <span className="text-[11px] text-brand-muted">
-                  iOS: Safari Add to Home Screen PWA
+                  iOS: Safari Add to Home Screen (PWA)
                 </span>
               </div>
 
@@ -652,59 +645,49 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. RELEASE STRATEGY & INSTALLATION GUIDANCE (ANDROID APK & IOS PWA) */}
-      <section id="download" className="py-20 bg-[#090C15] border-b border-brand-border/60 relative overflow-hidden">
-        {/* Glow backdrop accent */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-brand-purple/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-brand-teal/5 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
-          {/* Section Header */}
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-navyCard border border-brand-border text-xs font-semibold text-brand-teal">
-              <Smartphone className="w-3.5 h-3.5 text-brand-teal" />
-              <span>Release Strategy • Android APK &amp; iOS PWA</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Get TKMingle on Android &amp; iOS
+      {/* 3. RELEASE STRATEGY & INSTALLATION (ANDROID APK & IOS PWA) */}
+      <section id="download" className="py-16 bg-[#090C15] border-b border-brand-border/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          {/* Header */}
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Download &amp; Install
             </h2>
-            <p className="text-sm text-brand-muted leading-relaxed">
-              Direct campus distribution built by students for students — free, open, and without commercial store paywalls.
+            <p className="text-sm text-brand-muted">
+              Choose your platform below to get TKMingle on your device.
             </p>
           </div>
 
-          {/* Release Strategy Context Card */}
-          <div className="max-w-4xl mx-auto p-5 rounded-2xl bg-brand-navySecondary/60 border border-brand-border/80 text-xs text-brand-muted leading-relaxed flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-brand-lavender flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold text-white block mb-0.5">Why this release strategy?</span>
-                <span>
-                  To deliver TKMingle to all TKMCE students freely and immediately without waiting for commercial app store memberships ($99/year Apple Developer Program, Play Console fees) or bureaucratic store approval delays. Direct APK + Safari PWA gives our student engineering team the freedom to ship updates in real time. Official store releases will be evaluated later.
-                </span>
-              </div>
+          {/* Strategy note */}
+          <div className="max-w-3xl mx-auto p-4 rounded-xl bg-brand-navySecondary/60 border border-brand-border/70 text-xs text-brand-muted leading-relaxed flex items-start gap-3">
+            <Info className="w-4 h-4 text-brand-lavender flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold text-white block mb-0.5">Distribution Note</span>
+              <span>
+                We distribute TKMingle directly via GitHub Releases (Android APK) and Safari PWA (iOS) to keep it free for all students and avoid commercial developer program fees ($99/year Apple Developer fee). Store releases will be considered in the future.
+              </span>
             </div>
           </div>
 
-          {/* Platform Switcher Tabs */}
+          {/* Platform Switcher */}
           <div className="flex justify-center">
-            <div className="inline-flex p-1 rounded-xl bg-brand-navySecondary border border-brand-border/80">
+            <div className="inline-flex p-1 rounded-xl bg-brand-navySecondary border border-brand-border">
               <button
                 onClick={() => setActivePlatformTab("android")}
-                className={`px-5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                className={`px-5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 ${
                   activePlatformTab === "android"
-                    ? "bg-brand-purple text-white shadow-purple-glow"
+                    ? "bg-brand-purple text-white shadow-sm"
                     : "text-brand-muted hover:text-white"
                 }`}
               >
                 <Smartphone className="w-4 h-4" />
-                <span>Android (Universal APK)</span>
+                <span>Android (APK)</span>
               </button>
               <button
                 onClick={() => setActivePlatformTab("ios")}
-                className={`px-5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                className={`px-5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 ${
                   activePlatformTab === "ios"
-                    ? "bg-brand-purple text-white shadow-purple-glow"
+                    ? "bg-brand-purple text-white shadow-sm"
                     : "text-brand-muted hover:text-white"
                 }`}
               >
@@ -714,72 +697,63 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Platform Setup Content */}
+          {/* Platform Content */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {/* ANDROID SETUP */}
             {activePlatformTab === "android" ? (
               <>
-                {/* Android Primary Action Card */}
-                <div className="lg:col-span-7 glass-panel rounded-2xl border border-brand-border/90 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-2xl relative">
-                  <div className="space-y-5">
-                    {/* Status Banner */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border/60">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-brand-purple/15 border border-brand-purple/40 flex items-center justify-center text-brand-lavender">
-                          <Smartphone className="w-6 h-6 text-brand-purple" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-extrabold text-lg text-white">
-                              Android Universal APK
-                            </span>
-                            <span className="px-2.5 py-0.5 rounded-full bg-brand-purple/20 text-brand-lavender text-xs font-bold border border-brand-purple/40">
-                              {latestRelease.version_name}
-                            </span>
-                          </div>
-                          <span className="text-xs text-brand-muted">
-                            Build Code {latestRelease.version_code} • Free Direct Download
+                {/* Android Card */}
+                <div className="lg:col-span-7 glass-panel rounded-2xl border border-brand-border/90 p-6 sm:p-7 space-y-5 flex flex-col justify-between shadow-xl">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-brand-border/60">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-base text-white">
+                            Android Universal APK
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-brand-purple/20 text-brand-lavender text-xs font-semibold border border-brand-purple/30">
+                            {latestRelease.version_name}
                           </span>
                         </div>
+                        <span className="text-xs text-brand-muted">
+                          Build {latestRelease.version_code} • Android 8.0+
+                        </span>
                       </div>
-
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-teal/10 border border-brand-teal/30 text-brand-teal text-[11px] font-medium">
-                        <span className="w-2 h-2 rounded-full bg-brand-teal animate-pulse" />
-                        Latest Active Build
-                      </div>
+                      <span className="text-[11px] text-brand-teal font-medium px-2 py-0.5 rounded bg-brand-teal/10 border border-brand-teal/20">
+                        Latest Release
+                      </span>
                     </div>
 
-                    <p className="text-xs text-brand-text/90 leading-relaxed">
-                      Distributed directly via GitHub Releases. The app connects to Supabase on launch to verify version status and provides 1-tap in-app downloads when new builds are published.
+                    <p className="text-xs text-brand-muted leading-relaxed">
+                      Download the universal APK file directly to your phone. The app checks for new updates on launch.
                     </p>
 
-                    {/* Primary Download Button */}
-                    <div className="space-y-2 pt-1">
+                    {/* Download Button */}
+                    <div className="pt-1">
                       <a
                         href={latestRelease.download_url}
                         download
-                        className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-brand-purple via-purple-600 to-indigo-600 hover:opacity-95 text-white font-bold text-base flex items-center justify-center gap-3 shadow-lg shadow-purple-900/40 transition-all hover:scale-[1.01]"
+                        className="w-full py-3.5 px-5 rounded-xl bg-brand-purple hover:bg-brand-purple/90 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors shadow-purple-glow"
                       >
-                        <Download className="w-5 h-5" />
+                        <Download className="w-4 h-4" />
                         <span>Download APK ({latestRelease.version_name})</span>
                       </a>
-                      <p className="text-[11px] text-center text-brand-muted">
-                        Universal APK (~61 MB) • Android 8.0 to Android 15
+                      <p className="text-[11px] text-center text-brand-muted mt-1.5">
+                        Universal APK (~61 MB)
                       </p>
                     </div>
 
                     {/* Release Notes */}
-                    <div className="space-y-2 pt-2">
-                      <span className="text-[11px] font-bold text-white uppercase tracking-wider block">
-                        Release Highlights:
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[11px] font-semibold text-white uppercase tracking-wider block">
+                        Changes in this build:
                       </span>
-                      <div className="p-3.5 rounded-xl bg-brand-navyCard border border-brand-border text-xs text-brand-text/90 leading-relaxed font-mono">
+                      <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border text-xs text-brand-text/90 leading-relaxed font-mono">
                         {latestRelease.changelog}
                       </div>
                     </div>
 
-                    {/* SHA-256 Checksum */}
-                    <div className="space-y-1.5 pt-2">
+                    {/* Checksum */}
+                    <div className="space-y-1 pt-1">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
                           SHA-256 Checksum
@@ -788,17 +762,8 @@ export default function LandingPage() {
                           onClick={copyChecksum}
                           className="inline-flex items-center gap-1 text-[11px] text-brand-teal hover:underline font-medium"
                         >
-                          {copiedHash ? (
-                            <>
-                              <Check className="w-3 h-3" />
-                              <span>Copied!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3" />
-                              <span>Copy Hash</span>
-                            </>
-                          )}
+                          {copiedHash ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedHash ? "Copied" : "Copy"}</span>
                         </button>
                       </div>
                       <div className="p-2.5 rounded-lg bg-black/40 border border-brand-border/60 text-[11px] font-mono text-brand-lavender break-all select-all">
@@ -807,262 +772,215 @@ export default function LandingPage() {
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
-                    <span>Direct GitHub CDN Delivery</span>
+                  <div className="pt-3 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
+                    <span>Hosted on GitHub Releases</span>
                     <a
                       href="https://github.com/creatorspara/tkmingle/releases"
                       target="_blank"
                       rel="noreferrer"
-                      className="text-brand-lavender hover:text-white transition-colors flex items-center gap-1 font-medium"
+                      className="text-brand-lavender hover:text-white transition-colors flex items-center gap-1"
                     >
-                      GitHub Releases <ExternalLink className="w-3 h-3" />
+                      Release notes <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
                 </div>
 
-                {/* Android Installation Instructions Card */}
-                <div className="lg:col-span-5 glass-panel rounded-2xl border border-brand-border/80 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-lg">
+                {/* Android Steps */}
+                <div className="lg:col-span-5 glass-panel rounded-2xl border border-brand-border/80 p-6 sm:p-7 space-y-5 flex flex-col justify-between shadow-lg">
                   <div className="space-y-4">
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <ShieldCheck className="w-5 h-5 text-brand-teal" />
-                      Android Installation Guide
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-brand-teal" />
+                      Installation Steps (Android)
                     </h3>
-                    <p className="text-xs text-brand-muted leading-relaxed">
-                      Follow these 4 simple steps to install the APK file on your Android device:
-                    </p>
 
-                    <div className="space-y-3.5 pt-1">
+                    <div className="space-y-3 pt-1 text-xs text-brand-muted">
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                        <div className="w-5 h-5 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                           1
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white">Download APK</h4>
-                          <p className="text-xs text-brand-muted leading-relaxed">
-                            Tap the download button to save <code className="text-brand-lavender bg-black/30 px-1 py-0.5 rounded">tkmmingle-k1-release.apk</code> to your phone.
-                          </p>
+                          <h4 className="font-semibold text-white">Download APK</h4>
+                          <p className="mt-0.5">Tap the download button to save <code className="text-brand-lavender bg-black/30 px-1 py-0.5 rounded">tkmmingle-k1-release.apk</code>.</p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                        <div className="w-5 h-5 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                           2
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white">Open the Downloaded File</h4>
-                          <p className="text-xs text-brand-muted leading-relaxed">
-                            Open your browser&apos;s Downloads list or tap the download complete notification.
-                          </p>
+                          <h4 className="font-semibold text-white">Open the File</h4>
+                          <p className="mt-0.5">Tap the notification or open the file from your Downloads folder.</p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                        <div className="w-5 h-5 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                           3
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white">Allow Unknown Sources Prompt</h4>
-                          <p className="text-xs text-brand-muted leading-relaxed">
-                            When Android shows &quot;For your security, your phone is not allowed to install unknown apps from this source&quot;, tap <strong>Settings</strong> and toggle <strong>Allow from this source</strong>.
-                          </p>
+                          <h4 className="font-semibold text-white">Allow Unknown Apps</h4>
+                          <p className="mt-0.5">If Android prompts about unknown apps, tap <strong>Settings</strong> and turn on <strong>Allow from this source</strong>.</p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-brand-lavender/20 text-brand-lavender flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                        <div className="w-5 h-5 rounded-full bg-brand-lavender/20 text-brand-lavender flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                           4
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white">Install and Open</h4>
-                          <p className="text-xs text-brand-muted leading-relaxed">
-                            Tap <strong>Install</strong>. Once completed, open TKMingle and sign in with your TKMCE institutional credentials.
-                          </p>
+                          <h4 className="font-semibold text-white">Install &amp; Log In</h4>
+                          <p className="mt-0.5">Tap <strong>Install</strong>. Once done, open TKMingle and sign in with your college email.</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-brand-navySecondary border border-brand-border/60 text-xs text-brand-muted">
-                    <strong className="text-white block mb-1">Single Latest Release Policy:</strong>
-                    Older APK versions are automatically retired to protect student privacy and ensure real-time messaging sync.
+                  <div className="p-3 rounded-xl bg-brand-navySecondary border border-brand-border/60 text-xs text-brand-muted">
+                    Only the single latest release is hosted here to keep versioning consistent.
                   </div>
                 </div>
               </>
             ) : (
               <>
-                {/* IOS PWA SETUP */}
-                <div className="lg:col-span-7 glass-panel rounded-2xl border border-brand-border/90 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-2xl relative">
-                  <div className="space-y-5">
-                    {/* Status Banner */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border/60">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-brand-purple/15 border border-brand-purple/40 flex items-center justify-center text-brand-lavender">
-                          <Apple className="w-6 h-6 text-brand-lavender" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-extrabold text-lg text-white">
-                              iOS Safari Web App (PWA)
-                            </span>
-                            <span className="px-2.5 py-0.5 rounded-full bg-brand-teal/20 text-brand-teal text-xs font-bold border border-brand-teal/40">
-                              Standalone
-                            </span>
-                          </div>
-                          <span className="text-xs text-brand-muted">
-                            iOS 14.0+ • iPhone &amp; iPad • Add to Home Screen
+                {/* iOS Card */}
+                <div className="lg:col-span-7 glass-panel rounded-2xl border border-brand-border/90 p-6 sm:p-7 space-y-5 flex flex-col justify-between shadow-xl">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-brand-border/60">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-base text-white">
+                            iOS Safari Web App (PWA)
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-brand-teal/20 text-brand-teal text-xs font-semibold border border-brand-teal/30">
+                            Standalone
                           </span>
                         </div>
-                      </div>
-
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-lavender/10 border border-brand-lavender/30 text-brand-lavender text-[11px] font-medium">
-                        Instant Access
+                        <span className="text-xs text-brand-muted">
+                          iPhone &amp; iPad • iOS 14.0+
+                        </span>
                       </div>
                     </div>
 
-                    <p className="text-xs text-brand-text/90 leading-relaxed">
-                      Install TKMingle directly to your iPhone or iPad home screen via Safari. Runs in full-screen standalone mode without URL bars, delivering an authentic app experience without requiring Apple&apos;s $99/year developer membership or App Store publishing.
+                    <p className="text-xs text-brand-muted leading-relaxed">
+                      You can add TKMingle directly to your iPhone home screen via Safari. It runs in full-screen standalone mode without browser bars.
                     </p>
 
                     {/* Quick Access CTA Buttons */}
-                    <div className="space-y-2.5 pt-1">
-                      <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="space-y-2 pt-1">
+                      <div className="flex flex-col sm:flex-row gap-2.5">
                         <Link
                           href="/login"
-                          className="flex-1 py-3.5 px-5 rounded-xl bg-gradient-to-r from-brand-purple to-purple-600 hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2.5 shadow-purple-glow transition-all"
+                          className="flex-1 py-3 px-4 rounded-xl bg-brand-purple hover:bg-brand-purple/90 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow-purple-glow"
                         >
                           <Globe className="w-4 h-4" />
-                          <span>Open Web Portal in Safari</span>
+                          <span>Open in Safari</span>
                         </Link>
                         <button
                           onClick={copyPwaLink}
-                          className="py-3.5 px-5 rounded-xl bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+                          className="py-3 px-4 rounded-xl bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
                         >
-                          {copiedPwaUrl ? <Check className="w-4 h-4 text-brand-teal" /> : <Copy className="w-4 h-4 text-brand-muted" />}
-                          <span>{copiedPwaUrl ? "URL Copied!" : "Copy Safari URL"}</span>
+                          {copiedPwaUrl ? <Check className="w-3.5 h-3.5 text-brand-teal" /> : <Copy className="w-3.5 h-3.5 text-brand-muted" />}
+                          <span>{copiedPwaUrl ? "Copied" : "Copy URL"}</span>
                         </button>
                       </div>
                       <p className="text-[11px] text-center text-brand-muted">
-                        Official URL: <code className="text-brand-lavender">https://tkmingle.vercel.app</code>
+                        URL: <code className="text-brand-lavender">https://tkmingle.vercel.app</code>
                       </p>
                     </div>
 
-                    {/* PWA Capabilities */}
-                    <div className="space-y-2 pt-2">
-                      <span className="text-[11px] font-bold text-white uppercase tracking-wider block">
-                        PWA Capabilities on iOS:
+                    {/* PWA Features */}
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[11px] font-semibold text-white uppercase tracking-wider block">
+                        Features:
                       </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-brand-muted">
-                        <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border">
-                          <strong className="text-white block mb-0.5">Standalone Viewport</strong>
-                          <span>Hides Safari navigation bars and toolbars for full-screen focus.</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-brand-muted">
+                        <div className="p-2.5 rounded-lg bg-brand-navyCard border border-brand-border">
+                          <strong className="text-white block">Full-screen display</strong>
+                          <span>Hides browser address and navigation bars.</span>
                         </div>
-                        <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border">
-                          <strong className="text-white block mb-0.5">Home Screen Icon</strong>
-                          <span>High-resolution Apple Touch Icon branded for iOS Home Screen.</span>
+                        <div className="p-2.5 rounded-lg bg-brand-navyCard border border-brand-border">
+                          <strong className="text-white block">Home screen icon</strong>
+                          <span>Launches directly like an installed app.</span>
                         </div>
-                        <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border">
-                          <strong className="text-white block mb-0.5">Realtime Messaging</strong>
-                          <span>Live Supabase WebSockets for cross-branch chat and notifications.</span>
+                        <div className="p-2.5 rounded-lg bg-brand-navyCard border border-brand-border">
+                          <strong className="text-white block">Realtime chat</strong>
+                          <span>WebSockets support for messaging.</span>
                         </div>
-                        <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border">
-                          <strong className="text-white block mb-0.5">Instant Updates</strong>
-                          <span>Zero update delays. Always loads the latest web platform build.</span>
+                        <div className="p-2.5 rounded-lg bg-brand-navyCard border border-brand-border">
+                          <strong className="text-white block">Always up to date</strong>
+                          <span>Loads the latest web build on launch.</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Honest Transparency Disclaimer */}
-                    <div className="p-3.5 rounded-xl bg-brand-navySecondary/80 border border-brand-border/60 text-xs text-brand-muted flex items-start gap-2.5">
+                    <div className="p-3 rounded-xl bg-brand-navySecondary/80 border border-brand-border/60 text-xs text-brand-muted flex items-start gap-2">
                       <Info className="w-4 h-4 text-brand-lavender flex-shrink-0 mt-0.5" />
                       <span>
-                        <strong className="text-white">Note:</strong> TKMingle on iOS runs as an installable Progressive Web App (PWA) using Apple WebKit. It is not an App Store listing.
+                        Runs as a Progressive Web App (PWA) in Safari. This is not an App Store native application.
                       </span>
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
-                    <span>Configured Manifest: <code>/manifest.webmanifest</code></span>
-                    <span className="text-brand-teal font-medium">Standalone Enabled</span>
+                  <div className="pt-3 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
+                    <span>Manifest: <code>/manifest.webmanifest</code></span>
+                    <span className="text-brand-teal font-medium">Standalone enabled</span>
                   </div>
                 </div>
 
-                {/* iOS Installation Instructions Card */}
-                <div className="lg:col-span-5 glass-panel rounded-2xl border border-brand-border/80 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-lg">
+                {/* iOS Steps */}
+                <div className="lg:col-span-5 glass-panel rounded-2xl border border-brand-border/80 p-6 sm:p-7 space-y-5 flex flex-col justify-between shadow-lg">
                   <div className="space-y-4">
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <Apple className="w-5 h-5 text-brand-lavender" />
-                      iOS Safari Installation Guide
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Apple className="w-4 h-4 text-brand-lavender" />
+                      Installation Steps (iOS Safari)
                     </h3>
-                    <p className="text-xs text-brand-muted leading-relaxed">
-                      Follow these 5 steps to add TKMingle to your iPhone home screen:
-                    </p>
 
-                    <div className="space-y-3.5 pt-1">
+                    <div className="space-y-3 pt-1 text-xs text-brand-muted">
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                        <div className="w-5 h-5 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                           1
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white">Open in Safari</h4>
-                          <p className="text-xs text-brand-muted leading-relaxed">
-                            Open <code className="text-brand-lavender bg-black/30 px-1 py-0.5 rounded">https://tkmingle.vercel.app</code> in <strong>Safari</strong> (Chrome/Firefox on iOS do not support Add to Home Screen).
-                          </p>
+                          <h4 className="font-semibold text-white">Open in Safari</h4>
+                          <p className="mt-0.5">Go to <code className="text-brand-lavender bg-black/30 px-1 py-0.5 rounded">https://tkmingle.vercel.app</code> in <strong>Safari</strong> on your iPhone.</p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                        <div className="w-5 h-5 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                           2
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white">Tap the Share Button</h4>
-                          <p className="text-xs text-brand-muted leading-relaxed">
-                            Tap the <strong>Share</strong> button (the square icon with an upward-pointing arrow) in Safari&apos;s bottom toolbar.
-                          </p>
+                          <h4 className="font-semibold text-white">Tap Share</h4>
+                          <p className="mt-0.5">Tap the <strong>Share</strong> button (square with arrow) at the bottom of Safari.</p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                        <div className="w-5 h-5 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                           3
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white">Select &quot;Add to Home Screen&quot;</h4>
-                          <p className="text-xs text-brand-muted leading-relaxed">
-                            Scroll down the action list and select <strong>Add to Home Screen</strong>.
-                          </p>
+                          <h4 className="font-semibold text-white">Add to Home Screen</h4>
+                          <p className="mt-0.5">Scroll down the menu and tap <strong>Add to Home Screen</strong>.</p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-brand-lavender/20 text-brand-lavender flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                        <div className="w-5 h-5 rounded-full bg-brand-lavender/20 text-brand-lavender flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                           4
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white">Confirm Add</h4>
-                          <p className="text-xs text-brand-muted leading-relaxed">
-                            Ensure the name displays as <strong>TKMingle</strong>, then tap <strong>Add</strong> in the top-right corner.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                          5
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-white">Open from Home Screen</h4>
-                          <p className="text-xs text-brand-muted leading-relaxed">
-                            Tap the TKMingle app icon on your home screen. It will launch in full-screen standalone mode.
-                          </p>
+                          <h4 className="font-semibold text-white">Confirm Add</h4>
+                          <p className="mt-0.5">Tap <strong>Add</strong> in the top-right corner. The TKMingle icon will appear on your home screen.</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-brand-navySecondary border border-brand-border/60 text-xs text-brand-muted">
-                    <strong className="text-white block mb-1">Campus Verification:</strong>
-                    Log in with your college email. Sessions persist securely in your device&apos;s encrypted browser storage.
+                  <div className="p-3 rounded-xl bg-brand-navySecondary border border-brand-border/60 text-xs text-brand-muted">
+                    Session authentication is preserved across launches.
                   </div>
                 </div>
               </>
@@ -1074,7 +992,7 @@ export default function LandingPage() {
       {/* 4. DISCOVER PEOPLE SECTION */}
       <section id="discover" className="py-16 bg-brand-navySecondary/40 border-b border-brand-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
               Connect across departments
             </h2>
@@ -1160,7 +1078,7 @@ export default function LandingPage() {
       {/* 5. CAMPUS CIRCLES SECTION */}
       <section id="circles" className="py-16 bg-brand-navy border-b border-brand-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
               Campus Circles
             </h2>
@@ -1308,28 +1226,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 7. EQUIPO KROMIUM BRAND INTEGRATION SECTION */}
-      <section id="kromium" className="py-20 bg-gradient-to-b from-[#090C15] to-brand-navy border-b border-brand-border/60 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          {/* Section Header */}
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1C1C28] border border-white/10 text-xs font-semibold text-brand-lavender">
-              <Code2 className="w-3.5 h-3.5 text-brand-purple" />
-              <span>Engineering &amp; Product Collective • TKMCE</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Designed &amp; Engineered by Equipo Kromium
+      {/* 7. EQUIPO KROMIUM SECTION */}
+      <section id="kromium" className="py-16 bg-[#090C15] border-b border-brand-border/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Built by Equipo Kromium
             </h2>
-            <p className="text-sm text-brand-muted leading-relaxed">
-              Equipo Kromium is an engineering and design collective born inside TKM College of Engineering, dedicated to crafting open-source, high-performance software for the student community.
+            <p className="text-sm text-brand-muted">
+              Student developer collective at TKM College of Engineering building open-source software for campus life.
             </p>
           </div>
 
-          {/* Kromium Hero Visual Banner */}
-          <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative bg-[#0D0E1A]">
+          {/* Kromium Banner */}
+          <div className="rounded-2xl border border-white/10 overflow-hidden shadow-xl bg-[#0D0E1A]">
             <Image
               src="/images/kromium/kromium_hero_banner_2x.png"
-              alt="Equipo Kromium - Build Open Share"
+              alt="Equipo Kromium"
               width={1600}
               height={500}
               className="w-full h-auto object-cover"
@@ -1337,63 +1250,62 @@ export default function LandingPage() {
             />
           </div>
 
-          {/* Kromium Core Pillars */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-purple/20 border border-brand-purple/40 flex items-center justify-center text-brand-lavender">
-                <Code2 className="w-5 h-5" />
+          {/* Pillars */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="glass-panel rounded-xl border border-white/10 p-5 space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-brand-purple/20 flex items-center justify-center text-brand-lavender">
+                <Code2 className="w-4 h-4" />
               </div>
-              <h3 className="text-base font-bold text-white">Open-Source First</h3>
-              <p className="text-xs text-brand-muted leading-relaxed">
-                Full transparency with public repositories, clean modular architecture, and continuous community contributions.
+              <h3 className="text-sm font-bold text-white">Open Source</h3>
+              <p className="text-xs text-brand-muted">
+                Public GitHub repository with transparent code and architecture for students to inspect and contribute.
               </p>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-teal/20 border border-brand-teal/40 flex items-center justify-center text-brand-teal">
-                <Cpu className="w-5 h-5" />
+            <div className="glass-panel rounded-xl border border-white/10 p-5 space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-brand-teal/20 flex items-center justify-center text-brand-teal">
+                <Cpu className="w-4 h-4" />
               </div>
-              <h3 className="text-base font-bold text-white">High-Performance Stack</h3>
-              <p className="text-xs text-brand-muted leading-relaxed">
-                Native Flutter mobile application, Next.js 14 Web Portal, Supabase Postgres, and Edge Functions.
+              <h3 className="text-sm font-bold text-white">Modern Stack</h3>
+              <p className="text-xs text-brand-muted">
+                Built with Flutter for the Android client, Next.js for the web portal, and Supabase for authentication and database.
               </p>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-lavender/20 border border-brand-lavender/40 flex items-center justify-center text-brand-lavender">
-                <ShieldCheck className="w-5 h-5" />
+            <div className="glass-panel rounded-xl border border-white/10 p-5 space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-brand-lavender/20 flex items-center justify-center text-brand-lavender">
+                <ShieldCheck className="w-4 h-4" />
               </div>
-              <h3 className="text-base font-bold text-white">Campus Privacy by Design</h3>
-              <p className="text-xs text-brand-muted leading-relaxed">
-                Zero unsolicited spam, end-to-end access rules, and verified TKMCE institutional authentication.
+              <h3 className="text-sm font-bold text-white">Student Privacy</h3>
+              <p className="text-xs text-brand-muted">
+                Strict institutional email requirement, mutual consent messaging, and customizable profile visibility.
               </p>
             </div>
           </div>
 
-          {/* Action CTAs */}
-          <div className="text-center pt-2 flex flex-wrap items-center justify-center gap-4">
+          <div className="text-center pt-2 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/team"
-              className="px-6 py-3 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white font-semibold text-xs flex items-center gap-2 shadow-purple-glow transition-all"
+              className="px-5 py-2.5 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white font-semibold text-xs flex items-center gap-2 transition-colors"
             >
-              Meet Equipo Kromium <ArrowRight className="w-3.5 h-3.5" />
+              Meet the Team <ArrowRight className="w-3.5 h-3.5" />
             </Link>
             <button
               onClick={() => {
                 setContactCategory("Collaborate with Kromium");
                 setContactModalOpen(true);
               }}
-              className="px-6 py-3 rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white font-semibold text-xs transition-all"
+              className="px-5 py-2.5 rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white font-semibold text-xs transition-colors"
             >
-              Collaborate with Us
+              Collaborate
             </button>
             <a
               href="https://github.com/creatorspara/tkmingle"
               target="_blank"
               rel="noreferrer"
-              className="px-5 py-3 rounded-tk-btn border border-brand-border/70 hover:border-white/30 text-brand-muted hover:text-white font-semibold text-xs flex items-center gap-1.5 transition-colors"
+              className="px-4 py-2.5 rounded-tk-btn border border-brand-border/70 text-brand-muted hover:text-white font-medium text-xs flex items-center gap-1.5 transition-colors"
             >
-              GitHub Repository <ExternalLink className="w-3 h-3" />
+              GitHub <ExternalLink className="w-3 h-3" />
             </a>
           </div>
         </div>
@@ -1442,38 +1354,32 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 9. BOTTOM COMMUNITY / COLLABORATE SECTION */}
+      {/* 9. BOTTOM COMMUNITY SECTION */}
       <section className="py-16 bg-brand-navySecondary/60 border-b border-brand-border/60">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-navyCard border border-brand-border text-xs font-semibold text-brand-lavender">
-            <Sparkles className="w-3.5 h-3.5 text-brand-purple" />
-            <span>Community Collaboration</span>
-          </div>
-
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            Have an idea or want to collaborate with Team Kromium?
+            Have questions or feedback?
           </h2>
-
-          <p className="text-sm text-brand-muted max-w-2xl mx-auto leading-relaxed">
-            TKMingle is built for the TKMCE student community. Have suggestions, found an issue, or want to contribute code or design? You can write to us anonymously or with your campus handle.
+          <p className="text-sm text-brand-muted max-w-xl mx-auto">
+            Got an idea, found a bug, or want to contribute? Reach out to our student team directly.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => {
-                setContactCategory("Collaborate with Kromium");
+                setContactCategory("Suggestions & Feedback");
                 setContactModalOpen(true);
               }}
-              className="px-6 py-2.5 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-semibold shadow-purple-glow transition-all"
+              className="px-5 py-2.5 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-semibold shadow-purple-glow transition-all"
             >
-              Contact Team Kromium
+              Send Message
             </button>
             <a
-              href="mailto:tkmmingle@gmail.com?subject=TKMingle%20Community%20Inquiry"
-              className="px-6 py-2.5 rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white text-xs font-semibold transition-all flex items-center gap-1.5"
+              href="mailto:tkmmingle@gmail.com?subject=TKMingle%20Inquiry"
+              className="px-5 py-2.5 rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white text-xs font-semibold transition-all flex items-center gap-1.5"
             >
               <Mail className="w-3.5 h-3.5 text-brand-purple" />
-              Email tkmmingle@gmail.com
+              tkmmingle@gmail.com
             </a>
           </div>
         </div>
@@ -1498,23 +1404,18 @@ export default function LandingPage() {
                 </span>
               </div>
               <p className="text-xs text-brand-muted max-w-sm leading-relaxed">
-                Campus social discovery platform for TKM College of Engineering, Kollam, Kerala. Designed &amp; Engineered with passion by Equipo Kromium.
+                Campus social discovery platform for TKM College of Engineering, Kollam, Kerala. Built by Equipo Kromium.
               </p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-white">Platform &amp; Apps</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white">Platform</h4>
               <ul className="space-y-1.5 text-xs text-brand-muted">
-                <li><a href="#download" onClick={() => setActivePlatformTab("android")} className="text-brand-teal hover:underline flex items-center gap-1"><Smartphone className="w-3 h-3" /> Android APK ({latestRelease.version_name})</a></li>
+                <li><a href="#download" onClick={() => setActivePlatformTab("android")} className="text-brand-teal hover:underline flex items-center gap-1"><Smartphone className="w-3 h-3" /> Android APK</a></li>
                 <li><a href="#download" onClick={() => setActivePlatformTab("ios")} className="text-brand-lavender hover:underline flex items-center gap-1"><Apple className="w-3 h-3" /> iOS Safari Web App</a></li>
                 <li><a href="#discover" className="hover:text-white transition-colors">Discover Students</a></li>
                 <li><a href="#circles" className="hover:text-white transition-colors">Campus Circles</a></li>
                 <li><a href="#connect" className="hover:text-white transition-colors">Connect &amp; Chat</a></li>
-                <li>
-                  <Link href={sessionUser ? "/app/discover" : "/login"} className="hover:text-white transition-colors">
-                    {sessionUser ? "Campus Portal" : "Student Login"}
-                  </Link>
-                </li>
               </ul>
             </div>
 
@@ -1537,7 +1438,7 @@ export default function LandingPage() {
           </div>
 
           <div className="pt-6 border-t border-brand-border/60 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-muted gap-3">
-            <p>&copy; 2026 TKMingle &bull; Designed &amp; Engineered by Equipo Kromium &bull; TKM College of Engineering.</p>
+            <p>&copy; 2026 TKMingle &bull; Equipo Kromium &bull; TKM College of Engineering.</p>
             <div className="flex items-center gap-5">
               <a href="#download" className="hover:text-white transition-colors">Get App</a>
               <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
@@ -1552,7 +1453,7 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* 11. ANONYMOUS CONTACT & COLLABORATE MODAL */}
+      {/* 11. CONTACT MODAL */}
       {contactModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-brand-navySecondary border border-brand-border rounded-2xl max-w-lg w-full p-6 space-y-4 relative shadow-2xl animate-in fade-in zoom-in-95 duration-150">
@@ -1575,7 +1476,7 @@ export default function LandingPage() {
                 Contact Team Kromium
               </h3>
               <p className="text-xs text-brand-muted">
-                Your message is safely forwarded to <span className="text-brand-teal font-medium">tkmmingle@gmail.com</span>. You may submit anonymously or with your details.
+                Messages are forwarded to <span className="text-brand-teal font-medium">tkmmingle@gmail.com</span>. Submissions can be anonymous.
               </p>
             </div>
 
@@ -1584,9 +1485,9 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-full bg-brand-teal/20 text-brand-teal mx-auto flex items-center justify-center">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <h4 className="text-base font-bold text-white">Message Dispatched!</h4>
+                <h4 className="text-base font-bold text-white">Message Sent</h4>
                 <p className="text-xs text-brand-muted max-w-sm mx-auto">
-                  Your inquiry has been forwarded directly to <span className="text-brand-lavender font-semibold">tkmmingle@gmail.com</span> and recorded in the team database.
+                  Your message has been sent to <span className="text-brand-lavender font-semibold">tkmmingle@gmail.com</span>.
                 </p>
                 <div className="pt-2 flex flex-col items-center gap-2">
                   <a
@@ -1594,7 +1495,7 @@ export default function LandingPage() {
                     className="text-xs text-brand-teal hover:underline flex items-center gap-1 font-medium"
                   >
                     <Mail className="w-3.5 h-3.5" />
-                    Open in your email client &rarr;
+                    Open in email client &rarr;
                   </a>
                 </div>
               </div>
@@ -1625,7 +1526,7 @@ export default function LandingPage() {
                       type="text"
                       value={contactName}
                       onChange={(e) => setContactName(e.target.value)}
-                      placeholder="Anonymous Student (or enter name)"
+                      placeholder="Anonymous Student"
                       className="w-full px-3 py-2 rounded-tk-btn bg-brand-navy border border-brand-border text-xs text-white focus:outline-none focus:border-brand-purple"
                     />
                   </div>
@@ -1638,7 +1539,7 @@ export default function LandingPage() {
                       type="email"
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
-                      placeholder="name@tkmce.ac.in (or contact email)"
+                      placeholder="name@tkmce.ac.in"
                       className="w-full px-3 py-2 rounded-tk-btn bg-brand-navy border border-brand-border text-xs text-white focus:outline-none focus:border-brand-purple"
                     />
                   </div>
@@ -1666,14 +1567,14 @@ export default function LandingPage() {
                     required
                     value={contactMessage}
                     onChange={(e) => setContactMessage(e.target.value)}
-                    placeholder="Describe your idea, bug report, or how you would like to collaborate with Equipo Kromium..."
+                    placeholder="Write your note here..."
                     className="w-full p-3 rounded-tk-btn bg-brand-navy border border-brand-border text-xs text-white focus:outline-none focus:border-brand-purple"
                   />
                 </div>
 
                 <div className="pt-2 flex items-center justify-between">
                   <span className="text-[10px] text-brand-muted">
-                    Forwarded to <code className="text-brand-lavender">tkmmingle@gmail.com</code>
+                    Sent to <code className="text-brand-lavender">tkmmingle@gmail.com</code>
                   </span>
                   <div className="flex items-center gap-2">
                     <button
