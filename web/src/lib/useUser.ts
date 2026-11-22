@@ -122,6 +122,18 @@ export function useCurrentUser(): CurrentUserData {
           return;
         }
 
+        // 1. Instantly check cached session so back navigation and page reloads retain login without flicker
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user) {
+          if (mounted) {
+            setUser(sessionData.session.user);
+            setLoading(false);
+          }
+          await fetchProfile(sessionData.session.user);
+          return;
+        }
+
+        // 2. Verify with server user endpoint
         const { data: { user: authUser }, error } = await supabase.auth.getUser();
 
         if (error || !authUser) {
@@ -153,11 +165,11 @@ export function useCurrentUser(): CurrentUserData {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
-        if (event === "SIGNED_OUT" || !session) {
+        if (event === "SIGNED_OUT") {
           setUser(null);
           setProfile(null);
           setLoading(false);
-        } else if (session.user) {
+        } else if (session?.user) {
           setUser(session.user);
           await fetchProfile(session.user);
           setLoading(false);
@@ -179,7 +191,7 @@ export function useCurrentUser(): CurrentUserData {
     } finally {
       setUser(null);
       setProfile(null);
-      router.push("/login");
+      router.replace("/login");
     }
   };
 

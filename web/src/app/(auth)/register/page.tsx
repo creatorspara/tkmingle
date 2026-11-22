@@ -19,6 +19,17 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // If already authenticated, redirect to portal
+  React.useEffect(() => {
+    if (isLiveSupabaseConfigured()) {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data?.session?.user) {
+          router.replace("/app/discover");
+        }
+      });
+    }
+  }, [router]);
+
   const years = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Postgraduate / MCA", "PhD Scholar"];
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -114,7 +125,7 @@ export default function RegisterPage() {
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Arjun Krishna"
+                  placeholder="e.g. Vaishnav V."
                   className="w-full pl-10 pr-3.5 py-2.5 rounded-tk-btn bg-brand-navySecondary border border-brand-border text-sm text-white focus:outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple"
                 />
               </div>

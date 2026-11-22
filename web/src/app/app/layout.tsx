@@ -73,7 +73,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (!loading && !user) {
-      router.replace("/login");
+      supabase.auth.getSession().then(({ data }) => {
+        if (!data?.session?.user) {
+          router.replace("/login");
+        }
+      });
     }
   }, [loading, user, router]);
 

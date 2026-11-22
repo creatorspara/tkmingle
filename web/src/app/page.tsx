@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -19,13 +19,76 @@ import {
   HelpCircle,
   Mail,
   AlertCircle,
+  LogIn,
 } from "lucide-react";
-import { MOCK_STUDENTS, MOCK_CIRCLES } from "@/lib/mockData";
+import { MOCK_CIRCLES } from "@/lib/mockData";
 import UserAvatar from "@/components/UserAvatar";
+import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
+
+interface DisplayStudent {
+  id: string;
+  full_name: string;
+  username: string;
+  department: string;
+  academic_year: string;
+  bio: string;
+  profile_image: string;
+  interests: string[];
+  availability: string;
+}
+
+const DEFAULT_STUDENTS: DisplayStudent[] = [
+  {
+    id: "std-1",
+    full_name: "Devika S.",
+    username: "devika_s",
+    department: "Robotics & AI",
+    academic_year: "3rd Year",
+    bio: "Embedded systems & AI robotics explorer. Working on autonomous quadcopters and creative web projects across campus!",
+    profile_image: "preset:tk_avatar_03",
+    interests: ["Robotics", "IoT", "UI/UX Design", "AI/ML", "Badminton"],
+    availability: "Free weekends & evenings",
+  },
+  {
+    id: "std-2",
+    full_name: "Aditya S.",
+    username: "aditya_s",
+    department: "Computer Science & Engineering",
+    academic_year: "3rd Year",
+    bio: "Flutter fanatic & hackathon enthusiast. Looking to meet designers and hardware folks across TKM departments!",
+    profile_image: "preset:tk_avatar_02",
+    interests: ["Mobile Dev", "AI/ML", "Hackathons", "Anime", "Football"],
+    availability: "Free after 4:30 PM (Library/Amphi)",
+  },
+  {
+    id: "std-3",
+    full_name: "Nandana R.",
+    username: "nandana_arch",
+    department: "Architecture",
+    academic_year: "2nd Year",
+    bio: "Fascinated by Kerala heritage architecture & sustainable urban design. Looking for people who appreciate art and photography.",
+    profile_image: "preset:tk_avatar_09",
+    interests: ["Architecture", "Photography", "Sketching", "Graphic Design"],
+    availability: "Architecture Block studio hours",
+  },
+  {
+    id: "std-4",
+    full_name: "Fahad Rahman",
+    username: "fahad_r",
+    department: "Mechanical Engineering",
+    academic_year: "4th Year",
+    bio: "Formula Student racing chassis lead. Passionate about rapid prototyping, 3D printing, and electric mobility.",
+    profile_image: "preset:tk_avatar_04",
+    interests: ["Automotive", "3D Printing", "EVs", "SolidWorks"],
+    availability: "Near Mech Workshop after 5 PM",
+  },
+];
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [sessionUser, setSessionUser] = useState<any>(null);
+  const [students, setStudents] = useState<DisplayStudent[]>(DEFAULT_STUDENTS);
 
   // Contact Modal State
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -37,12 +100,63 @@ export default function LandingPage() {
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const [contactSuccess, setContactSuccess] = useState(false);
 
+  // Check auth session and optionally fetch live active student profiles from Supabase
+  useEffect(() => {
+    if (isLiveSupabaseConfigured()) {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data?.session?.user) {
+          setSessionUser(data.session.user);
+        }
+      });
+
+      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSessionUser(session?.user ?? null);
+      });
+
+      // Try fetching live discoverable profiles to showcase authentic students
+      const loadLiveProfiles = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("id, full_name, username, department, academic_year, bio, profile_image, avatar_id, interests, availability")
+            .eq("discoverable", true)
+            .not("full_name", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(4);
+
+          if (!error && data && data.length > 0) {
+            const liveProfiles: DisplayStudent[] = data.map((p: any) => ({
+              id: p.id,
+              full_name: p.full_name || "TKMCE Student",
+              username: p.username || "student",
+              department: p.department || "Engineering",
+              academic_year: p.academic_year || "Student",
+              bio: p.bio || "Student at TKM College of Engineering.",
+              profile_image: p.profile_image || (p.avatar_id ? `preset:${p.avatar_id}` : "preset:tk_avatar_01"),
+              interests: Array.isArray(p.interests) && p.interests.length > 0 ? p.interests : ["Campus", "Engineering", "Technology"],
+              availability: p.availability || "Available on campus",
+            }));
+            setStudents(liveProfiles);
+          }
+        } catch {
+          // Keep default clean profiles
+        }
+      };
+
+      loadLiveProfiles();
+
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
+    }
+  }, []);
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactMessage.trim()) return;
 
     setContactSubmitting(true);
-    // Simulate immediate clean submission to creator team inbox
+    // Transmit message cleanly to Team Kromium
     await new Promise((r) => setTimeout(r, 600));
     setContactSubmitting(false);
     setContactSuccess(true);
@@ -83,7 +197,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-navyCard border border-brand-border flex items-center justify-center p-1.5">
+            <div className="w-10 h-10 rounded-xl bg-brand-navyCard border border-brand-border flex items-center justify-center p-1.5 shadow-sm">
               <Image
                 src="/images/logo_compact.svg"
                 alt="TKMingle"
@@ -112,7 +226,7 @@ export default function LandingPage() {
               Campus Circles
             </a>
             <a href="#connect" className="hover:text-white transition-colors">
-              Connect & Chat
+              Connect &amp; Chat
             </a>
             <a href="#faq" className="hover:text-white transition-colors">
               FAQ
@@ -121,18 +235,30 @@ export default function LandingPage() {
 
           {/* Action CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-semibold text-brand-text hover:text-white transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              className="px-4 py-2 text-sm font-semibold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors"
-            >
-              Join TKMingle
-            </Link>
+            {sessionUser ? (
+              <Link
+                href="/app/discover"
+                className="px-4 py-2 text-sm font-semibold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors flex items-center gap-2 shadow-purple-glow"
+              >
+                Open Campus Portal
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-semibold text-brand-text hover:text-white transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-4 py-2 text-sm font-semibold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors"
+                >
+                  Join TKMingle
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu toggle */}
@@ -167,7 +293,7 @@ export default function LandingPage() {
               onClick={() => setMobileMenuOpen(false)}
               className="block text-sm font-medium text-brand-muted hover:text-white"
             >
-              Connect & Chat
+              Connect &amp; Chat
             </a>
             <a
               href="#faq"
@@ -177,18 +303,33 @@ export default function LandingPage() {
               FAQ
             </a>
             <div className="pt-3 border-t border-brand-border/60 flex flex-col gap-2">
-              <Link
-                href="/login"
-                className="w-full text-center py-2 text-sm font-semibold rounded-tk-btn border border-brand-border text-white"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className="w-full text-center py-2 text-sm font-semibold rounded-tk-btn bg-brand-purple text-white"
-              >
-                Join TKMingle
-              </Link>
+              {sessionUser ? (
+                <Link
+                  href="/app/discover"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-2.5 text-sm font-semibold rounded-tk-btn bg-brand-purple text-white flex items-center justify-center gap-2"
+                >
+                  Open Campus Portal
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-center py-2 text-sm font-semibold rounded-tk-btn border border-brand-border text-white"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-center py-2 text-sm font-semibold rounded-tk-btn bg-brand-purple text-white"
+                  >
+                    Join TKMingle
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -214,13 +355,23 @@ export default function LandingPage() {
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-                <Link
-                  href="/register"
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-semibold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors flex items-center justify-center gap-2"
-                >
-                  Join TKMingle
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                {sessionUser ? (
+                  <Link
+                    href="/app/discover"
+                    className="w-full sm:w-auto px-6 py-3 text-sm font-semibold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors flex items-center justify-center gap-2 shadow-purple-glow"
+                  >
+                    Enter Campus Portal
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/register"
+                    className="w-full sm:w-auto px-6 py-3 text-sm font-semibold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors flex items-center justify-center gap-2"
+                  >
+                    Join TKMingle
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )}
                 <a
                   href="#discover"
                   className="w-full sm:w-auto px-6 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-text transition-colors flex items-center justify-center"
@@ -252,21 +403,21 @@ export default function LandingPage() {
 
             {/* Right Student Card Preview */}
             <div className="lg:col-span-5 flex justify-center">
-              <div className="w-full max-w-sm glass-panel rounded-2xl p-5 border border-brand-border/80 space-y-4">
+              <div className="w-full max-w-sm glass-panel rounded-2xl p-5 border border-brand-border/80 space-y-4 shadow-xl">
                 <div className="flex items-center gap-3">
                   <UserAvatar
-                    src={MOCK_STUDENTS[1].profile_image}
-                    name="Sneha Varma"
+                    src="preset:tk_avatar_03"
+                    name="Devika S."
                     size={56}
                     className="rounded-2xl border border-brand-purple/40"
                   />
                   <div>
                     <h3 className="font-bold text-base text-white flex items-center gap-1.5">
-                      Sneha Varma
+                      Devika S.
                       <CheckCircle2 className="w-4 h-4 text-brand-teal" />
                     </h3>
                     <p className="text-xs text-brand-muted">
-                      Electronics &amp; Communication • 3rd Year
+                      Robotics &amp; AI • 3rd Year
                     </p>
                     <span className="text-[10px] text-brand-teal font-medium">
                       Verified Student
@@ -275,7 +426,7 @@ export default function LandingPage() {
                 </div>
 
                 <p className="text-xs text-brand-text/90 leading-relaxed">
-                  Embedded systems explorer, coffee drinker, and casual badminton player. Always curious about creative web projects!
+                  Embedded systems &amp; AI robotics explorer. Working on autonomous quadcopters and creative web projects across campus!
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 pt-1">
@@ -293,8 +444,8 @@ export default function LandingPage() {
                 <div className="pt-2 border-t border-brand-border/60 flex items-center justify-between text-xs">
                   <span className="text-brand-muted text-[11px]">Free weekends &amp; evenings</span>
                   <Link
-                    href="/register"
-                    className="px-3 py-1.5 rounded-tk-btn bg-brand-purple text-white text-xs font-medium"
+                    href={sessionUser ? "/app/discover" : "/register"}
+                    className="px-3 py-1.5 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-medium transition-colors"
                   >
                     Connect
                   </Link>
@@ -319,10 +470,10 @@ export default function LandingPage() {
 
           {/* Student Profile Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {MOCK_STUDENTS.slice(0, 4).map((student) => (
+            {students.map((student) => (
               <div
                 key={student.id}
-                className="glass-panel rounded-tk-card p-5 flex flex-col justify-between space-y-4 border border-brand-border/70"
+                className="glass-panel rounded-tk-card p-5 flex flex-col justify-between space-y-4 border border-brand-border/70 hover:border-brand-purple/50 transition-colors"
               >
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -366,7 +517,7 @@ export default function LandingPage() {
                     <span className="truncate">{student.availability}</span>
                   </div>
                   <Link
-                    href="/register"
+                    href={sessionUser ? "/app/discover" : "/register"}
                     className="w-full py-1.5 rounded-tk-btn bg-brand-navyCard hover:bg-brand-purple border border-brand-border hover:border-brand-purple text-xs font-medium text-white transition-colors flex items-center justify-center gap-1.5"
                   >
                     <Users2 className="w-3.5 h-3.5" />
@@ -379,10 +530,12 @@ export default function LandingPage() {
 
           <div className="text-center pt-2">
             <Link
-              href="/login"
+              href={sessionUser ? "/app/discover" : "/login"}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-lavender hover:text-white transition-colors"
             >
-              Sign in to browse all students in directory
+              {sessionUser
+                ? "Browse all students in campus directory"
+                : "Sign in to browse all students in directory"}
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -406,7 +559,7 @@ export default function LandingPage() {
             {MOCK_CIRCLES.slice(0, 3).map((circle) => (
               <div
                 key={circle.id}
-                className="glass-panel rounded-tk-card p-5 flex flex-col justify-between space-y-4 border border-brand-border/70"
+                className="glass-panel rounded-tk-card p-5 flex flex-col justify-between space-y-4 border border-brand-border/70 hover:border-brand-purple/40 transition-colors"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -430,7 +583,7 @@ export default function LandingPage() {
                     {circle.member_count} Members
                   </span>
                   <Link
-                    href="/register"
+                    href={sessionUser ? "/app/circles" : "/register"}
                     className="text-brand-teal hover:underline font-medium flex items-center gap-1"
                   >
                     View Circle <ArrowRight className="w-3 h-3" />
@@ -489,33 +642,33 @@ export default function LandingPage() {
 
             {/* Chat Mockup Card */}
             <div className="lg:col-span-6">
-              <div className="glass-panel rounded-2xl border border-brand-border p-5 space-y-3 max-w-md mx-auto">
+              <div className="glass-panel rounded-2xl border border-brand-border p-5 space-y-3 max-w-md mx-auto shadow-2xl">
                 <div className="flex items-center gap-3 pb-3 border-b border-brand-border/60">
                   <UserAvatar
-                    src={MOCK_STUDENTS[1].profile_image}
-                    name="Sneha Varma"
+                    src="preset:tk_avatar_03"
+                    name="Devika S."
                     size={36}
                     isOnline={true}
                   />
                   <div>
                     <div className="font-bold text-xs text-white flex items-center gap-1.5">
-                      Sneha Varma
+                      Devika S.
                       <span className="w-2 h-2 rounded-full bg-brand-teal inline-block" />
                     </div>
-                    <div className="text-[10px] text-brand-muted">Active • ECE 3rd Year</div>
+                    <div className="text-[10px] text-brand-muted">Active • Robotics &amp; AI 3rd Year</div>
                   </div>
                 </div>
 
                 <div className="space-y-2.5 py-1">
                   <div className="flex flex-col items-start">
                     <div className="bg-brand-navyCard border border-brand-border/80 px-3 py-2 rounded-xl text-xs text-brand-text max-w-[85%]">
-                      Hey! Saw your project post in Coding Club.
+                      Hey! Saw your project post in Robotics &amp; AI Club.
                     </div>
                   </div>
 
                   <div className="flex flex-col items-end">
                     <div className="bg-brand-purple px-3 py-2 rounded-xl text-xs text-white max-w-[85%]">
-                      Hey Sneha! Yes, looking for someone for the IoT hardware track.
+                      Hey Devika! Yes, looking for someone for the IoT hardware and autonomous navigation track.
                     </div>
                   </div>
 
@@ -583,15 +736,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 7. NEW BOTTOM COMMUNITY SECTION (Replaces Open Source / GitHub Promo) */}
+      {/* 7. BOTTOM COMMUNITY / TEAM KROMIUM SECTION */}
       <section className="py-16 bg-brand-navySecondary/60 border-b border-brand-border/60">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-navyCard border border-brand-border text-xs font-semibold text-brand-lavender">
+            <Sparkles className="w-3.5 h-3.5 text-brand-purple" />
+            <span>Built by Team Kromium</span>
+          </div>
+
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            Have an idea or want to get involved?
+            Have an idea or want to collaborate with Team Kromium?
           </h2>
 
           <p className="text-sm text-brand-muted max-w-2xl mx-auto leading-relaxed">
-            TKMingle is built for the TKMCE student community. Have suggestions, found an issue, or interested in contributing to the platform? Reach out to the creator team.
+            TKMingle is built for the TKMCE student community by Team Kromium. Have suggestions, found an issue, or interested in contributing? Reach out directly to Team Kromium.
           </p>
 
           <div className="pt-2">
@@ -599,7 +757,7 @@ export default function LandingPage() {
               onClick={() => setContactModalOpen(true)}
               className="px-6 py-2.5 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-semibold shadow-purple-glow transition-all"
             >
-              Contact the Creator Team
+              Contact Team Kromium
             </button>
           </div>
         </div>
@@ -624,7 +782,7 @@ export default function LandingPage() {
                 </span>
               </div>
               <p className="text-xs text-brand-muted max-w-sm leading-relaxed">
-                Campus social discovery platform for TKM College of Engineering, Kollam, Kerala.
+                Campus social discovery platform for TKM College of Engineering, Kollam, Kerala. Designed &amp; Engineered with passion by Team Kromium.
               </p>
             </div>
 
@@ -634,22 +792,30 @@ export default function LandingPage() {
                 <li><a href="#discover" className="hover:text-white transition-colors">Discover Students</a></li>
                 <li><a href="#circles" className="hover:text-white transition-colors">Campus Circles</a></li>
                 <li><a href="#connect" className="hover:text-white transition-colors">Connect &amp; Chat</a></li>
-                <li><Link href="/login" className="hover:text-white transition-colors">Student Login</Link></li>
-                <li><Link href="/register" className="hover:text-white transition-colors">Join TKMingle</Link></li>
+                <li>
+                  <Link href={sessionUser ? "/app/discover" : "/login"} className="hover:text-white transition-colors">
+                    {sessionUser ? "Campus Portal" : "Student Login"}
+                  </Link>
+                </li>
+                <li>
+                  <Link href={sessionUser ? "/app/discover" : "/register"} className="hover:text-white transition-colors">
+                    {sessionUser ? "My Profile" : "Join TKMingle"}
+                  </Link>
+                </li>
               </ul>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-white">College</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white">College &amp; Engineering</h4>
               <ul className="space-y-1.5 text-xs text-brand-muted">
                 <li><span className="text-brand-text">TKMCE, Karicode, Kollam</span></li>
                 <li><span className="text-brand-muted">Pin: 691005, Kerala</span></li>
                 <li>
                   <button
                     onClick={() => setContactModalOpen(true)}
-                    className="text-brand-lavender hover:text-white transition-colors"
+                    className="text-brand-lavender hover:text-white transition-colors font-medium"
                   >
-                    Contact Creator Team
+                    Team Kromium
                   </button>
                 </li>
               </ul>
@@ -657,7 +823,7 @@ export default function LandingPage() {
           </div>
 
           <div className="pt-6 border-t border-brand-border/60 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-muted gap-3">
-            <p>© 2026 TKMingle • TKM College of Engineering.</p>
+            <p>&copy; 2026 TKMingle &bull; Designed &amp; Engineered by Team Kromium &bull; TKM College of Engineering.</p>
             <div className="flex items-center gap-5">
               <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
               <button
@@ -671,7 +837,7 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* CONTACT CREATOR TEAM MODAL */}
+      {/* CONTACT TEAM KROMIUM MODAL */}
       {contactModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-brand-navySecondary border border-brand-border rounded-2xl max-w-lg w-full p-6 space-y-4 relative shadow-2xl animate-in fade-in zoom-in-95 duration-150">
@@ -691,10 +857,10 @@ export default function LandingPage() {
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <Mail className="w-5 h-5 text-brand-purple" />
-                Contact the Creator Team
+                Contact Team Kromium
               </h3>
               <p className="text-xs text-brand-muted">
-                Send feedback, suggest ideas, report an issue, or ask about getting involved with TKMingle.
+                Send feedback, suggest ideas, report an issue, or collaborate directly with Team Kromium.
               </p>
             </div>
 
@@ -705,7 +871,7 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-sm font-bold text-white">Thank you for reaching out!</h4>
                 <p className="text-xs text-brand-muted">
-                  Your message has been sent to the TKMingle creator team.
+                  Your message has been sent to Team Kromium. We&apos;ll get back to you shortly!
                 </p>
               </div>
             ) : (
@@ -722,7 +888,7 @@ export default function LandingPage() {
                     <option value="Suggestions & Feedback">Suggestions &amp; Ideas</option>
                     <option value="Feature Request">Feature Request</option>
                     <option value="Report an Issue">Report an Issue / Bug</option>
-                    <option value="Join the Creator Team">Interested in Contributing / Joining</option>
+                    <option value="Collaborate with Kromium">Collaborate with Team Kromium</option>
                   </select>
                 </div>
 
@@ -778,7 +944,7 @@ export default function LandingPage() {
                     required
                     value={contactMessage}
                     onChange={(e) => setContactMessage(e.target.value)}
-                    placeholder="Describe your idea, issue, or how you would like to help..."
+                    placeholder="Describe your idea, issue, or how you would like to collaborate with Team Kromium..."
                     className="w-full p-3 rounded-tk-btn bg-brand-navy border border-brand-border text-xs text-white focus:outline-none focus:border-brand-purple"
                   />
                 </div>

@@ -62,8 +62,8 @@ export const TKMCE_DEPARTMENTS = [
 export const MOCK_STUDENTS: StudentProfile[] = [
   {
     id: "11111111-1111-1111-1111-111111111111",
-    full_name: "Arjun Krishna",
-    username: "arjun_k",
+    full_name: "Aditya S.",
+    username: "aditya_s",
     department: "Computer Science & Engineering",
     academic_year: "3rd Year",
     bio: "Flutter fanatic & hackathon enthusiast. Looking to meet designers and hardware folks across TKM!",
@@ -113,8 +113,8 @@ export const MOCK_STUDENTS: StudentProfile[] = [
   },
   {
     id: "44444444-4444-4444-4444-444444444444",
-    full_name: "Anjali Nair",
-    username: "anjali_arch",
+    full_name: "Nandana R.",
+    username: "nandana_arch",
     department: "Architecture",
     academic_year: "2nd Year",
     bio: "Fascinated by Kerala heritage architecture & sustainable urban design. Looking for people who appreciate art and photography.",
@@ -250,7 +250,7 @@ export const MOCK_POSTS: CirclePostItem[] = [
   {
     id: "p1",
     circle_id: "cccccccc-cccc-cccc-cccc-cccccccccccc",
-    author_name: "Arjun Krishna",
+    author_name: "Aditya S.",
     author_image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80",
     title: "HackTKM 2026 Announcement!",
     content: "Hey coders! We are organizing a 24-hour campus hackathon next month at the Diamond Jubilee Complex. Cross-departmental teams are heavily encouraged!",
@@ -287,14 +287,14 @@ export const MOCK_MESSAGES: ChatMessage[] = [
     id: "m1",
     sender_id: "22222222-2222-2222-2222-222222222222",
     sender_name: "Sneha Varma",
-    content: "Hey Arjun! Saw your post about the campus hackathon.",
+    content: "Hey Aditya! Saw your post about the campus hackathon.",
     created_at: "2:30 PM",
     is_mine: false,
   },
   {
     id: "m2",
     sender_id: "11111111-1111-1111-1111-111111111111",
-    sender_name: "Arjun Krishna",
+    sender_name: "Aditya S.",
     content: "Hey Sneha! Yes, we need someone with IoT/hardware skills for the smart campus track.",
     created_at: "2:35 PM",
     is_mine: true,
@@ -310,7 +310,7 @@ export const MOCK_MESSAGES: ChatMessage[] = [
   {
     id: "m4",
     sender_id: "11111111-1111-1111-1111-111111111111",
-    sender_name: "Arjun Krishna",
+    sender_name: "Aditya S.",
     content: "Sounds like a plan! Let’s meet at the Amphi after 4:30.",
     created_at: "2:45 PM",
     is_mine: true,
