@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Loader2, MailCheck, AlertCircle, RefreshCw, Send } from "lucide-react";
 import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
+import { getAuthRedirectUrl } from "@/lib/authConfig";
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -147,12 +148,12 @@ function VerifyEmailContent() {
 
     try {
       if (isLiveSupabaseConfigured()) {
-        const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://tkmingle.vercel.app";
+        const emailRedirectTo = getAuthRedirectUrl("/verify-email");
         const { error } = await supabase.auth.resend({
           type: "signup",
           email: email.trim(),
           options: {
-            emailRedirectTo: `${siteUrl}/verify-email`,
+            emailRedirectTo,
           },
         });
         if (error) throw error;

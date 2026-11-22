@@ -2,20 +2,37 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Mail, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Mail, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
+import { getAuthRedirectUrl } from "@/lib/authConfig";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setErrorMsg(null);
+
+    try {
+      if (isLiveSupabaseConfigured()) {
+        const redirectTo = getAuthRedirectUrl("/auth/callback?next=/app/profile");
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo,
+        });
+        if (error) throw error;
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+      }
       setSent(true);
-    }, 600);
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to send reset email");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,6 +52,13 @@ export default function ForgotPasswordPage() {
               Enter your college email address to receive password recovery instructions.
             </p>
           </div>
+
+          {errorMsg && (
+            <div className="p-3 rounded-lg bg-brand-error/15 border border-brand-error/30 text-xs text-brand-error flex items-center gap-2 text-left">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
 
           {!sent ? (
             <form onSubmit={handleSubmit} className="space-y-4">

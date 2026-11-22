@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, User, Mail, Lock, GraduationCap, Building2, Loader2, Sparkles, AlertCircle } from "lucide-react";
 import { TKMCE_DEPARTMENTS } from "@/lib/mockData";
 import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
+import { getAuthRedirectUrl } from "@/lib/authConfig";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -27,12 +28,12 @@ export default function RegisterPage() {
 
     try {
       if (isLiveSupabaseConfigured()) {
-        const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://tkmingle.vercel.app";
+        const emailRedirectTo = getAuthRedirectUrl("/verify-email");
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: `${siteUrl}/verify-email`,
+            emailRedirectTo,
             data: {
               full_name: fullName.trim(),
               department,

@@ -136,6 +136,7 @@ class SupabaseAuthRepository implements AuthRepository {
     final response = await _client.auth.signUp(
       email: normalizedEmail,
       password: password,
+      emailRedirectTo: 'https://tkmingle.vercel.app/verify-email',
       data: {
         'full_name': trimmedName,
         'department': department,
@@ -213,6 +214,7 @@ class SupabaseAuthRepository implements AuthRepository {
     await _client.auth.resend(
       type: OtpType.signup,
       email: email.trim().toLowerCase(),
+      emailRedirectTo: 'https://tkmingle.vercel.app/verify-email',
     );
   }
 
