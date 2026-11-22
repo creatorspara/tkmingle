@@ -96,15 +96,22 @@ class PushNotificationService {
 
         final currentUserId = Supabase.instance.client.auth.currentUser?.id;
         final senderId = message.data['sender_id'] ?? message.data['reference_id'];
+        final recipientId = message.data['recipient_id'];
         final type = message.data['type'];
 
-        // 1. Suppress notification if current user is the sender of this message/alert
+        // 1. Suppress notification if this push was meant for a different user account on this device
+        if (currentUserId != null && recipientId != null && currentUserId != recipientId) {
+          debugPrint('Suppressing popup meant for different account ($recipientId)');
+          return;
+        }
+
+        // 2. Suppress notification if current user is the sender of this message/alert
         if (currentUserId != null && senderId != null && currentUserId == senderId) {
           debugPrint('Suppressing popup for self-sent event');
           return;
         }
 
-        // 2. Suppress notification if user is currently looking at this active conversation
+        // 3. Suppress notification if user is currently looking at this active conversation
         if (type == 'new_message' && activeConversationId != null) {
           final convId = message.data['conversation_id'] ?? message.data['reference_id'];
           if (convId == activeConversationId) {
