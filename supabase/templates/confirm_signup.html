@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to TKMingle | Verify your email</title>
+  <style>
+    @media only screen and (max-width: 560px) {
+      .email-container { width: 100% !important; }
+      .content-padding { padding: 28px 20px !important; }
+      .headline { font-size: 22px !important; }
+      .otp-code { font-size: 28px !important; letter-spacing: 7px !important; }
+    }
+  </style>
+</head>
+
+<body style="margin:0;padding:0;background-color:#0A1026;font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#F6F5FF;-webkit-font-smoothing:antialiased;">
+
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#0A1026;padding:36px 12px;">
+    <tr>
+      <td align="center">
+
+        <!-- Main Card Container -->
+        <table role="presentation" class="email-container" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background-color:#111633;border:1px solid #30285F;border-radius:18px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.5);">
+
+          <!-- Brand Banner Image -->
+          <tr>
+            <td align="center" style="padding:0;line-height:0;background-color:#0D122B;">
+              <a href="{{ .SiteURL }}" target="_blank" style="display:block;text-decoration:none;">
+                <img src="https://i.ibb.co/0jBt3Gvm/brand-banner-crop.png" alt="TKMingle — Campus Social Discovery Platform" width="520" style="width:100%;max-width:520px;height:auto;display:block;border:0;outline:none;" />
+              </a>
+            </td>
+          </tr>
+
+          <!-- Gradient Accent Line -->
+          <tr>
+            <td style="padding:0;line-height:0;font-size:0;">
+              <div style="height:3px;background:linear-gradient(90deg,#8875FF 0%,#B9A9FF 50%,#50D6C2 100%);"></div>
+            </td>
+          </tr>
+
+          <!-- Main Content -->
+          <tr>
+            <td class="content-padding" align="center" style="padding:36px 34px 20px;">
+
+              <!-- Step Tag -->
+              <p style="margin:0 0 12px;color:#50D6C2;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">
+                ONE LAST STEP
+              </p>
+
+              <!-- Headline -->
+              <h1 class="headline" style="margin:0;color:#F6F5FF;font-size:24px;font-weight:700;line-height:1.35;">
+                Welcome to your campus community.
+              </h1>
+
+              <!-- Description -->
+              <p style="margin:16px 0 0;color:#B9A9FF;font-size:14px;line-height:1.8;">
+                We're excited to have you on TKMingle. Verify your email address to complete your registration and start connecting with students across campus.
+              </p>
+
+              <p style="margin:28px 0 12px;color:#F6F5FF;font-size:13px;font-weight:600;letter-spacing:0.5px;">
+                Your verification code
+              </p>
+
+              <!-- OTP Code Box -->
+              <div style="display:inline-block;padding:18px 28px;background-color:#1C2048;border:1px solid #8875FF;border-radius:14px;box-shadow:0 0 20px rgba(136,117,255,0.25);">
+                <span class="otp-code" style="font-size:32px;font-weight:800;letter-spacing:9px;color:#FFFFFF;font-family:monospace,'Sora',Arial,sans-serif;">
+                  {{ .Token }}
+                </span>
+              </div>
+
+              <p style="margin:16px 0 0;color:#B9A9FF;font-size:12px;line-height:1.7;">
+                Enter this 6-digit code in the TKMingle app to verify your account.
+              </p>
+
+              <!-- Or 1-Click Verification Link for Web/Browser -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:26px auto 14px;">
+                <tr>
+                  <td align="center" style="border-radius:50px;background:linear-gradient(135deg,#8875FF 0%,#6A52F5 100%);box-shadow:0 4px 18px rgba(136,117,255,0.35);">
+                    <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email&next=/verify-email" target="_blank" style="display:inline-block;padding:14px 34px;font-family:'Sora',-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;font-weight:700;color:#FFFFFF;text-decoration:none;letter-spacing:0.5px;border-radius:50px;">
+                      Verify Email Address &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Direct URL Fallback -->
+              <p style="margin:0;color:#777EAA;font-size:11px;line-height:1.7;word-break:break-all;">
+                Or open directly:<br>
+                <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email&next=/verify-email" style="color:#8875FF;text-decoration:underline;">
+                  {{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email&next=/verify-email
+                </a>
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Security Reminder -->
+          <tr>
+            <td style="padding:14px 34px 28px;">
+              <div style="padding:16px 18px;background-color:#171D3C;border-radius:12px;border-left:3px solid #50D6C2;text-align:left;">
+                <p style="margin:0;color:#F6F5FF;font-size:12px;line-height:1.7;">
+                  <strong style="color:#50D6C2;">Security reminder:</strong> Never share your verification code with anyone. If you didn't create a TKMingle account, you can safely ignore this email.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding:22px 24px;background-color:#0D122B;border-top:1px solid #30285F;">
+              <p style="margin:0;color:#B9A9FF;font-size:12px;letter-spacing:0.5px;">
+                Your campus. Your people. Your connections.
+              </p>
+              <p style="margin:10px 0 0;color:#777EAA;font-size:11px;">
+                &copy; 2026 TKMingle &bull; TKM College of Engineering (TKMCE), Kollam
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
