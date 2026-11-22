@@ -1,23 +1,54 @@
 -- ==============================================================================
 -- TKMingle v1.5 — Unified Profile Picture & Avatar Management System
 -- Migration: 20261122000003_profile_avatars_system.sql
--- Review: Pre-execution verified, idempotent, and production-safe
+-- Final Production Safety Review: Fully Idempotent, Non-destructive
 -- ==============================================================================
 
 -- -----------------------------------------------------------------------------
--- 1. Profiles Table Extension & Non-destructive Backfill
+-- 1. Profiles Table Extension & Robust Schema Constraints
 -- -----------------------------------------------------------------------------
 
 -- 1.1 Add avatar classification columns if not already present
 ALTER TABLE public.profiles
-ADD COLUMN IF NOT EXISTS avatar_type TEXT NOT NULL DEFAULT 'initial'
-    CHECK (avatar_type IN ('upload', 'preset', 'initial')),
+ADD COLUMN IF NOT EXISTS avatar_type TEXT;
+
+ALTER TABLE public.profiles
 ADD COLUMN IF NOT EXISTS avatar_id TEXT;
 
--- 1.2 Deterministic, atomic backfill of legacy profiles based on profile_image:
---     - 'preset:<id>' -> avatar_type = 'preset', avatar_id = '<id>'
---     - valid non-empty URL -> avatar_type = 'upload', avatar_id = NULL
---     - empty or NULL -> avatar_type = 'initial', avatar_id = NULL
+-- 1.2 Guarantee default value is 'initial'
+ALTER TABLE public.profiles
+ALTER COLUMN avatar_type SET DEFAULT 'initial';
+
+-- 1.3 Backfill any NULL avatar_type values prior to enforcing NOT NULL
+UPDATE public.profiles
+SET avatar_type = 'initial'
+WHERE avatar_type IS NULL;
+
+-- 1.4 Enforce NOT NULL on avatar_type
+ALTER TABLE public.profiles
+ALTER COLUMN avatar_type SET NOT NULL;
+
+-- 1.5 Enforce CHECK constraint on avatar_type idempotently
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM pg_constraint 
+        WHERE conname = 'profiles_avatar_type_check' 
+          AND conrelid = 'public.profiles'::regclass
+    ) THEN
+        ALTER TABLE public.profiles
+        ADD CONSTRAINT profiles_avatar_type_check
+        CHECK (avatar_type IN ('upload', 'preset', 'initial'));
+    END IF;
+END $$;
+
+-- -----------------------------------------------------------------------------
+-- 2. Deterministic, Rerun-Safe Legacy Avatar Backfill
+-- -----------------------------------------------------------------------------
+-- Only updates rows that have not yet been categorized, OR legacy rows that were
+-- assigned default 'initial' by ADD COLUMN but have a populated profile_image.
+-- Crucial: This will NOT overwrite subsequent avatar selections on reruns!
 UPDATE public.profiles
 SET 
     avatar_type = CASE
@@ -29,10 +60,14 @@ SET
         WHEN profile_image IS NOT NULL AND profile_image LIKE 'preset:%' 
             THEN NULLIF(SUBSTRING(profile_image FROM 8), '')
         ELSE NULL
-    END;
+    END
+    WHERE 
+        avatar_type IS NULL 
+        OR avatar_type = ''
+        OR (avatar_type = 'initial' AND profile_image IS NOT NULL AND TRIM(profile_image) <> '');
 
 -- -----------------------------------------------------------------------------
--- 2. Supabase Storage Bucket Configuration (profile-avatars)
+-- 3. Supabase Storage Bucket Configuration (profile-avatars)
 -- Enforces 100 KB file limit and restricts MIME types strictly to WebP & JPEG
 -- -----------------------------------------------------------------------------
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -49,9 +84,10 @@ ON CONFLICT (id) DO UPDATE SET
     allowed_mime_types = ARRAY['image/webp', 'image/jpeg'];
 
 -- -----------------------------------------------------------------------------
--- 3. Dynamic RLS Policy Cleanup & Re-creation for profile-avatars
--- Safely removes all dashboard-created variants, template suffixes (e.g. 1okq1_0),
--- and legacy policies for profile-avatars WITHOUT affecting other buckets.
+-- 4. Dynamic RLS Policy Cleanup & Re-creation for profile-avatars
+-- Drops all previous/dashboard variants targeting profile-avatars so PostgreSQL's
+-- permissive OR behavior cannot leave overly permissive legacy rules active.
+-- Unrelated buckets and their policies are strictly preserved.
 -- -----------------------------------------------------------------------------
 
 DO $$
@@ -64,6 +100,7 @@ BEGIN
         WHERE schemaname = 'storage'
           AND tablename = 'objects'
           AND (
+              -- Target policies referencing profile-avatars
               COALESCE(qual, '') LIKE '%profile-avatars%'
               OR COALESCE(with_check, '') LIKE '%profile-avatars%'
               OR LOWER(policyname) IN (
@@ -77,7 +114,11 @@ BEGIN
                   'authenticated users can delete own avatar',
                   'allow authenticated users to upload avatar',
                   'allow authenticated users to update avatar',
-                  'allow authenticated users to delete avatar'
+                  'allow authenticated users to delete avatar',
+                  'users can select own avatar objects',
+                  'users can upload own avatar',
+                  'users can update own avatar',
+                  'users can delete own avatar'
               )
           )
     LOOP
@@ -85,9 +126,9 @@ BEGIN
     END LOOP;
 END $$;
 
--- 3.1 Owner-Scoped SELECT: Authenticated user can read/list their own objects for upsert
+-- 4.1 Owner-Scoped SELECT: Authenticated user can read/list their own objects for upsert
 -- Note: Public bucket serving (/storage/v1/object/public/...) bypasses table-level RLS,
--- so public avatar viewing works globally without opening directory listing to anonymous scrapers.
+-- allowing public avatar viewing globally without opening directory listing to anonymous scrapers.
 CREATE POLICY "Users can select own avatar objects"
 ON storage.objects FOR SELECT
 TO authenticated
@@ -96,7 +137,7 @@ USING (
     AND (storage.foldername(name))[1] = auth.uid()::text
 );
 
--- 3.2 Authenticated INSERT: User can only upload into their own user_id directory
+-- 4.2 Authenticated INSERT: User can only upload into their own user_id directory
 CREATE POLICY "Users can upload own avatar"
 ON storage.objects FOR INSERT
 TO authenticated
@@ -105,7 +146,7 @@ WITH CHECK (
     AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
--- 3.3 Authenticated UPDATE: Requires both USING and WITH CHECK for seamless 'upsert: true'
+-- 4.3 Authenticated UPDATE: Requires both USING and WITH CHECK for seamless 'upsert: true'
 CREATE POLICY "Users can update own avatar"
 ON storage.objects FOR UPDATE
 TO authenticated
@@ -118,7 +159,7 @@ WITH CHECK (
     AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
--- 3.4 Authenticated DELETE: User can only delete objects in their own directory
+-- 4.4 Authenticated DELETE: User can only delete objects in their own directory
 CREATE POLICY "Users can delete own avatar"
 ON storage.objects FOR DELETE
 TO authenticated
@@ -128,9 +169,10 @@ USING (
 );
 
 -- -----------------------------------------------------------------------------
--- 4. Authentication Sync Trigger Update
+-- 5. Authentication Sync Trigger Update
 -- Modifies existing public.handle_new_user() with explicit search_path
--- Preserves existing on_auth_user_created trigger on auth.users
+-- Crucial: ON CONFLICT DO UPDATE only touches verification_status, NEVER
+-- overwriting existing user names, departments, years, roles, or avatars!
 -- -----------------------------------------------------------------------------
 
 -- Drop accidental draft function if created earlier
@@ -185,9 +227,6 @@ BEGIN
         'email_otp',
         'student'
     ) ON CONFLICT (id) DO UPDATE SET
-        full_name = EXCLUDED.full_name,
-        department = EXCLUDED.department,
-        academic_year = EXCLUDED.academic_year,
         verification_status = CASE 
             WHEN NEW.email_confirmed_at IS NOT NULL THEN 'verified' 
             ELSE public.profiles.verification_status 
@@ -198,11 +237,14 @@ BEGIN
 END;
 $$;
 
--- Ensure the existing trigger remains attached to public.handle_new_user
+-- Ensure the trigger on auth.users is present, accurately checked against auth.users
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created'
+        SELECT 1 
+        FROM pg_trigger 
+        WHERE tgname = 'on_auth_user_created' 
+          AND tgrelid = 'auth.users'::regclass
     ) THEN
         CREATE TRIGGER on_auth_user_created
             AFTER INSERT OR UPDATE OF email_confirmed_at ON auth.users
