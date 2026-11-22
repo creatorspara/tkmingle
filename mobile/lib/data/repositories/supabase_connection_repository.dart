@@ -121,8 +121,17 @@ class SupabaseConnectionRepository implements ConnectionRepository {
           return ConnectionRequestModel.fromJson(existing, receiver: receiver)
               .copyWith(status: ConnectionStatus.accepted);
         }
+        // If current user is re-sending their own pending request (nudge/reminder), update timestamp to re-trigger push notification
+        final updated = await _client
+            .from('connection_requests')
+            .update({
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', existing['id'] as String)
+            .select()
+            .single();
         final receiver = await userRepository.getUserById(receiverId);
-        return ConnectionRequestModel.fromJson(existing, receiver: receiver);
+        return ConnectionRequestModel.fromJson(updated, receiver: receiver);
       }
 
       // Re-activate a previously cancelled or declined request
@@ -179,6 +188,27 @@ class SupabaseConnectionRepository implements ConnectionRepository {
       'status': 'cancelled',
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', requestId);
+  }
+
+  @override
+  Future<void> resendRequest(String requestId) async {
+    await _client.from('connection_requests').update({
+      'status': 'pending',
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', requestId);
+  }
+
+  @override
+  Future<void> cancelRequestBetween(String senderId, String receiverId) async {
+    await _client
+        .from('connection_requests')
+        .update({
+          'status': 'cancelled',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('sender_id', senderId)
+        .eq('receiver_id', receiverId)
+        .eq('status', 'pending');
   }
 
   @override

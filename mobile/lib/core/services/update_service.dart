@@ -24,8 +24,8 @@ class AppUpdateInfo {
 }
 
 class UpdateService {
-  static const int currentVersionCode = 7;
-  static const String currentVersionName = "1.0.3";
+  static const int currentVersionCode = 8;
+  static const String currentVersionName = "1.0.4";
   static const MethodChannel _channel = MethodChannel("com.tkmingle.app/updater");
 
   /// Checks Supabase `app_releases` table first, with fallback to GitHub Releases API.
@@ -44,7 +44,7 @@ class UpdateService {
       if (response != null) {
         final remoteCode = response['version_code'] as int? ?? 0;
         final remoteName = response['version_name'] as String? ?? "v$remoteCode";
-        if (remoteCode > currentVersionCode || _isRemoteNewer(remoteName, remoteName)) {
+        if (remoteCode > currentVersionCode || _isRemoteNewer(remoteName, currentVersionName)) {
           return AppUpdateInfo(
             versionName: remoteName,
             versionCode: remoteCode,

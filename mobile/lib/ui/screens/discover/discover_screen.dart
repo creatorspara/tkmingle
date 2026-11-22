@@ -868,14 +868,18 @@ class _StudentDiscoveryCardState extends ConsumerState<_StudentDiscoveryCard> {
                                     isPendingSent ? Icons.hourglass_top_rounded : Icons.person_add_rounded,
                                     color: Colors.white,
                                   ),
-                            tooltip: isPendingSent ? 'Request Pending' : 'Send Connection Request',
+                            tooltip: isPendingSent ? 'Request Pending • Tap for options' : 'Send Connection Request',
                             style: IconButton.styleFrom(
                               backgroundColor: isPendingSent ? AppColors.darkTextMuted : AppColors.primaryAccent,
                               padding: const EdgeInsets.all(14),
                             ),
-                            onPressed: isPendingSent || _isLoading
+                            onPressed: _isLoading
                                 ? null
                                 : () async {
+                                    if (isPendingSent) {
+                                      _showManageRequestModal(context, student, ref.read(authProvider).value);
+                                      return;
+                                    }
                                     HapticFeedback.mediumImpact();
                                     setState(() => _isLoading = true);
                                     final curUser = ref.read(authProvider).value;
@@ -911,6 +915,108 @@ class _StudentDiscoveryCardState extends ConsumerState<_StudentDiscoveryCard> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showManageRequestModal(BuildContext context, UserModel student, UserModel? curUser) {
+    if (curUser == null) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomSheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Text(
+                  'Connection Request Sent',
+                  style: AppTypography.titleLarge(
+                    isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'You requested to connect with ${student.name}. If they haven’t responded, you can resend a notification reminder or cancel the request.',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodyMedium(
+                    isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                CustomButton(
+                  text: 'Resend Request (Remind)',
+                  icon: Icons.notifications_active_outlined,
+                  width: double.infinity,
+                  variant: ButtonVariant.primary,
+                  onPressed: () async {
+                    Navigator.pop(bottomSheetContext);
+                    setState(() => _isLoading = true);
+                    try {
+                      await ref.read(connectionRepositoryProvider).sendRequest(curUser.uid, student.uid);
+                      ref.invalidate(connectionStatusProvider(student.uid));
+                      ref.invalidate(sentRequestsProvider);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Connection reminder sent to ${student.name}!'),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                      }
+                    } finally {
+                      if (mounted) setState(() => _isLoading = false);
+                    }
+                  },
+                ),
+                const SizedBox(height: 10),
+                CustomButton(
+                  text: 'Cancel Request',
+                  icon: Icons.close_rounded,
+                  width: double.infinity,
+                  variant: ButtonVariant.secondary,
+                  onPressed: () async {
+                    Navigator.pop(bottomSheetContext);
+                    setState(() => _isLoading = true);
+                    try {
+                      await ref.read(connectionRepositoryProvider).cancelRequestBetween(curUser.uid, student.uid);
+                      ref.invalidate(connectionStatusProvider(student.uid));
+                      ref.invalidate(sentRequestsProvider);
+                      if (mounted) {
+                        setState(() => _isRequestSent = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Connection request cancelled. You can send again anytime.'),
+                            backgroundColor: AppColors.darkTextMuted,
+                          ),
+                        );
+                      }
+                    } finally {
+                      if (mounted) setState(() => _isLoading = false);
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

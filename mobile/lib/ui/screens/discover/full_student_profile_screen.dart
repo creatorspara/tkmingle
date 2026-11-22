@@ -415,12 +415,13 @@ class _FullStudentProfileScreenState extends ConsumerState<FullStudentProfileScr
     }
 
     if (connStatus == 'pending_sent') {
-      return const CustomButton(
-        text: 'Connection Request Pending',
-        icon: Icons.hourglass_top_rounded,
+      return CustomButton(
+        text: 'Requested • Options',
+        icon: Icons.schedule_send_rounded,
         width: double.infinity,
-        onPressed: null,
         variant: ButtonVariant.secondary,
+        isLoading: _isActionLoading,
+        onPressed: () => _showManageRequestSheet(context, student, currentUser),
       );
     }
 
@@ -467,6 +468,107 @@ class _FullStudentProfileScreenState extends ConsumerState<FullStudentProfileScr
         }
       },
       variant: ButtonVariant.primary,
+    );
+  }
+
+  void _showManageRequestSheet(BuildContext context, UserModel student, UserModel? currentUser) {
+    if (currentUser == null) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomSheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Text(
+                  'Connection Request Sent',
+                  style: AppTypography.titleLarge(
+                    isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'You requested to connect with ${student.name}. If they haven’t responded yet, you can resend a notification reminder or cancel the request.',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodyMedium(
+                    isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                CustomButton(
+                  text: 'Resend Request (Remind)',
+                  icon: Icons.notifications_active_outlined,
+                  width: double.infinity,
+                  variant: ButtonVariant.primary,
+                  onPressed: () async {
+                    Navigator.pop(bottomSheetContext);
+                    setState(() => _isActionLoading = true);
+                    try {
+                      await ref.read(connectionRepositoryProvider).sendRequest(currentUser.uid, student.uid);
+                      ref.invalidate(connectionStatusProvider(student.uid));
+                      ref.invalidate(sentRequestsProvider);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Connection reminder sent to ${student.name}!'),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                      }
+                    } finally {
+                      if (mounted) setState(() => _isActionLoading = false);
+                    }
+                  },
+                ),
+                const SizedBox(height: 10),
+                CustomButton(
+                  text: 'Cancel Request',
+                  icon: Icons.close_rounded,
+                  width: double.infinity,
+                  variant: ButtonVariant.secondary,
+                  onPressed: () async {
+                    Navigator.pop(bottomSheetContext);
+                    setState(() => _isActionLoading = true);
+                    try {
+                      await ref.read(connectionRepositoryProvider).cancelRequestBetween(currentUser.uid, student.uid);
+                      ref.invalidate(connectionStatusProvider(student.uid));
+                      ref.invalidate(sentRequestsProvider);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Connection request cancelled. You can send again anytime.'),
+                            backgroundColor: AppColors.darkTextMuted,
+                          ),
+                        );
+                      }
+                    } finally {
+                      if (mounted) setState(() => _isActionLoading = false);
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

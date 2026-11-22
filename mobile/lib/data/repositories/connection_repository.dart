@@ -11,6 +11,8 @@ abstract class ConnectionRepository {
   Future<void> acceptRequest(String requestId);
   Future<void> declineRequest(String requestId);
   Future<void> cancelRequest(String requestId);
+  Future<void> resendRequest(String requestId);
+  Future<void> cancelRequestBetween(String senderId, String receiverId);
   Future<void> removeConnection(String connectionId);
   Future<String> getConnectionState(String currentUserId, String targetUserId);
 }
@@ -148,6 +150,27 @@ class LocalConnectionRepository implements ConnectionRepository {
   @override
   Future<void> cancelRequest(String requestId) async {
     final index = _requests.indexWhere((r) => r.id == requestId);
+    if (index != -1) {
+      _requests[index] = _requests[index].copyWith(status: ConnectionStatus.cancelled);
+    }
+  }
+
+  @override
+  Future<void> resendRequest(String requestId) async {
+    final index = _requests.indexWhere((r) => r.id == requestId);
+    if (index != -1) {
+      _requests[index] = _requests[index].copyWith(
+        status: ConnectionStatus.pending,
+        createdAt: DateTime.now(),
+      );
+    }
+  }
+
+  @override
+  Future<void> cancelRequestBetween(String senderId, String receiverId) async {
+    final index = _requests.indexWhere(
+      (r) => r.senderId == senderId && r.receiverId == receiverId && r.status == ConnectionStatus.pending,
+    );
     if (index != -1) {
       _requests[index] = _requests[index].copyWith(status: ConnectionStatus.cancelled);
     }

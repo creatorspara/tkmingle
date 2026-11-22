@@ -229,12 +229,35 @@ class _ConnectionRequestsScreenState extends ConsumerState<ConnectionRequestsScr
                       ),
                       title: Text(receiver.name, style: const TextStyle(fontWeight: FontWeight.w600)),
                       subtitle: Text('${receiver.department} • ${receiver.academicYear}'),
-                      trailing: TextButton(
-                        onPressed: () async {
-                          await ref.read(connectionRepositoryProvider).cancelRequest(req.id);
-                          ref.invalidate(sentRequestsProvider);
-                        },
-                        child: const Text('Cancel', style: TextStyle(color: AppColors.darkTextMuted)),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.refresh_rounded, size: 20),
+                            tooltip: 'Resend Reminder',
+                            color: AppColors.primaryAccent,
+                            onPressed: () async {
+                              await ref.read(connectionRepositoryProvider).resendRequest(req.id);
+                              ref.invalidate(sentRequestsProvider);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Connection reminder sent to ${receiver.name}!'),
+                                    backgroundColor: AppColors.success,
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              await ref.read(connectionRepositoryProvider).cancelRequest(req.id);
+                              ref.invalidate(sentRequestsProvider);
+                            },
+                            child: const Text('Cancel', style: TextStyle(color: AppColors.darkTextMuted)),
+                          ),
+                        ],
                       ),
                     ),
                   );
