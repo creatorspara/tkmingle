@@ -16,12 +16,52 @@ import {
   Loader2,
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/useUser";
+import { fetchReceivedRequests } from "@/lib/connections";
+import { supabase } from "@/lib/supabaseClient";
 import UserAvatar from "@/components/UserAvatar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile, loading, logout } = useCurrentUser();
+  const [incomingCount, setIncomingCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!user) return;
+    let mounted = true;
+
+    async function loadRequests() {
+      try {
+        const received = await fetchReceivedRequests(user!.id);
+        if (mounted) setIncomingCount(received.length);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    loadRequests();
+
+    const channel = supabase
+      .channel(`nav_conns_${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "connection_requests",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => {
+          loadRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const navItems = [
     { label: "Discover", href: "/app/discover", icon: Compass },
@@ -84,6 +124,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname.startsWith(item.href);
+              const showBadge = item.label === "Discover" && incomingCount > 0;
               return (
                 <Link
                   key={item.href}
@@ -94,8 +135,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       : "text-brand-muted hover:text-white hover:bg-brand-navyCard"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-1">{item.label}</span>
+                  {showBadge && (
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-teal text-brand-navy leading-none animate-pulse">
+                      {incomingCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -144,17 +190,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             TKM<span className="text-brand-purple">ingle</span>
           </span>
         </Link>
-        <Link
-          href="/app/profile"
-          className="relative inline-flex items-center justify-center"
-        >
-          <UserAvatar
-            src={profile?.profile_image}
-            name={displayName}
-            size={32}
-            showVerifiedBadge={profile?.verification_status === "verified"}
-          />
-        </Link>
+        <div className="flex items-center gap-2.5">
+          {incomingCount > 0 && (
+            <Link
+              href="/app/discover"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-purple/20 border border-brand-purple text-xs text-brand-lavender font-semibold animate-pulse"
+            >
+              <Bell className="w-3.5 h-3.5 text-brand-lavender" />
+              <span>{incomingCount}</span>
+            </Link>
+          )}
+          <Link
+            href="/app/profile"
+            className="relative inline-flex items-center justify-center"
+          >
+            <UserAvatar
+              src={profile?.profile_image}
+              name={displayName}
+              size={32}
+              showVerifiedBadge={profile?.verification_status === "verified"}
+            />
+          </Link>
+        </div>
       </header>
 
       {/* Main Content Area */}
@@ -167,15 +224,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {navItems.slice(0, 4).map((item) => {
           const Icon = item.icon;
           const isActive = pathname.startsWith(item.href);
+          const showBadge = item.label === "Discover" && incomingCount > 0;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${
+              className={`relative flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${
                 isActive ? "text-brand-purple" : "text-brand-muted"
               }`}
             >
-              <Icon className="w-5 h-5" />
+              <div className="relative">
+                <Icon className="w-5 h-5" />
+                {showBadge && (
+                  <span className="absolute -top-1 -right-2 px-1 py-0.2 rounded-full text-[9px] font-bold bg-brand-teal text-brand-navy leading-tight">
+                    {incomingCount}
+                  </span>
+                )}
+              </div>
               <span>{item.label.split(" ")[0]}</span>
             </Link>
           );

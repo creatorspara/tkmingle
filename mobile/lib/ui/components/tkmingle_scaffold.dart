@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../state/chat_provider.dart';
+import '../../state/connection_provider.dart';
 import '../../state/notification_provider.dart';
 
 class TKMingleScaffold extends ConsumerWidget {
@@ -17,6 +18,8 @@ class TKMingleScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final unreadNotifs = ref.watch(unreadNotificationsCountProvider).value ?? 0;
+    final pendingRequests = ref.watch(receivedRequestsProvider).value ?? [];
+    final totalAlerts = unreadNotifs + pendingRequests.length;
     final conversations = ref.watch(conversationsProvider).value ?? [];
     final unreadMessages = conversations.fold<int>(0, (sum, c) => sum + c.unreadCount);
 
@@ -80,14 +83,14 @@ class TKMingleScaffold extends ConsumerWidget {
               ),
               NavigationDestination(
                 icon: Badge(
-                  isLabelVisible: unreadNotifs > 0,
-                  label: Text('$unreadNotifs'),
+                  isLabelVisible: totalAlerts > 0,
+                  label: Text('$totalAlerts'),
                   backgroundColor: AppColors.error,
                   child: const Icon(Icons.notifications_none),
                 ),
                 selectedIcon: Badge(
-                  isLabelVisible: unreadNotifs > 0,
-                  label: Text('$unreadNotifs'),
+                  isLabelVisible: totalAlerts > 0,
+                  label: Text('$totalAlerts'),
                   backgroundColor: AppColors.error,
                   child: const Icon(Icons.notifications, color: AppColors.tkmPurple),
                 ),

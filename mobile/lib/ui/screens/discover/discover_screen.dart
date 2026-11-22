@@ -188,6 +188,28 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           ],
         ),
         actions: [
+          // Connection Requests Button with Badge
+          Consumer(
+            builder: (context, ref, child) {
+              final receivedRequests = ref.watch(receivedRequestsProvider).value ?? [];
+              final count = receivedRequests.length;
+              return IconButton(
+                tooltip: 'Connection Requests',
+                icon: Badge(
+                  isLabelVisible: count > 0,
+                  label: Text('$count'),
+                  backgroundColor: AppColors.tkmPurple,
+                  child: Icon(
+                    count > 0 ? Icons.people_alt : Icons.people_alt_outlined,
+                    color: count > 0
+                        ? AppColors.tkmPurple
+                        : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                  ),
+                ),
+                onPressed: () => context.push('/requests'),
+              );
+            },
+          ),
           // Surprise Me Button
           IconButton(
             tooltip: 'Surprise Me with Random Student',
@@ -232,6 +254,114 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
+            ),
+            // Incoming Connection Requests Notification Banner
+            Consumer(
+              builder: (context, ref, child) {
+                final receivedRequests = ref.watch(receivedRequestsProvider).value ?? [];
+                if (receivedRequests.isEmpty) return const SizedBox.shrink();
+
+                final count = receivedRequests.length;
+                final firstReq = receivedRequests.first;
+                final senderName = firstReq.sender?.name ?? 'A student';
+                final senderDept = firstReq.sender?.department ?? 'TKMCE';
+
+                return Container(
+                  margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.surface : AppColors.lightCardBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.tkmPurple.withOpacity(0.5),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.tkmPurple.withOpacity(0.12),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.tkmPurple.withOpacity(0.18),
+                        ),
+                        child: const Icon(
+                          Icons.person_add_rounded,
+                          color: AppColors.tkmPurple,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  count == 1
+                                      ? 'New Connection Request!'
+                                      : '$count Connection Requests',
+                                  style: AppTypography.titleSmall(
+                                    isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                  ).copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.tkmPurple,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    'NEW',
+                                    style: AppTypography.labelSmall(Colors.white)
+                                        .copyWith(fontSize: 9, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              count == 1
+                                  ? '$senderName ($senderDept) wants to connect with you.'
+                                  : '$senderName and ${count - 1} other${count > 2 ? 's' : ''} sent you a request.',
+                              style: AppTypography.bodySmall(
+                                isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () => context.push('/requests'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.tkmPurple,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: const Text('Review', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             // Main Discovery View
             Expanded(

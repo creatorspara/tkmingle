@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../state/auth_provider.dart';
+import '../../../state/connection_provider.dart';
 import '../../../state/notification_provider.dart';
 import '../../components/empty_state_view.dart';
 
@@ -16,6 +17,7 @@ class NotificationsScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentUser = ref.watch(authProvider).value;
     final notificationsAsync = ref.watch(notificationsListProvider);
+    final receivedRequests = ref.watch(receivedRequestsProvider).value ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -68,26 +70,107 @@ class NotificationsScreen extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: notificationsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Center(child: Text('Error: $err')),
-          data: (notifications) {
-            if (notifications.isEmpty) {
-              return const EmptyStateView(
-                icon: Icons.notifications_none_rounded,
-                title: 'No Notifications',
-                message: 'You are all caught up! New connection requests, messages, and circle updates will notify you here.',
-              );
-            }
-
-            return ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: notifications.length,
-              separatorBuilder: (_, __) => Divider(
-                height: 1,
-                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        child: Column(
+          children: [
+            if (receivedRequests.isNotEmpty)
+              InkWell(
+                onTap: () => context.push('/requests'),
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.surface : AppColors.lightCardBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.tkmPurple.withOpacity(0.5),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.tkmPurple.withOpacity(0.12),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.tkmPurple.withOpacity(0.2),
+                        ),
+                        child: const Icon(Icons.people_alt, color: AppColors.tkmPurple, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Connection Requests',
+                                  style: AppTypography.titleMedium(
+                                    isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                  ).copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.tkmPurple,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '${receivedRequests.length}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Tap to view and respond to incoming requests',
+                              style: AppTypography.bodySmall(
+                                isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, color: AppColors.tkmPurple),
+                    ],
+                  ),
+                ),
               ),
-              itemBuilder: (context, index) {
+            Expanded(
+              child: notificationsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, _) => Center(child: Text('Error: $err')),
+                data: (notifications) {
+                  if (notifications.isEmpty) {
+                    return const EmptyStateView(
+                      icon: Icons.notifications_none_rounded,
+                      title: 'No Notifications',
+                      message: 'You are all caught up! New connection requests, messages, and circle updates will notify you here.',
+                    );
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: notifications.length,
+                    separatorBuilder: (_, __) => Divider(
+                      height: 1,
+                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    ),
+                    itemBuilder: (context, index) {
                 final notif = notifications[index];
                 return Dismissible(
                   key: Key(notif.id),
@@ -159,8 +242,9 @@ class NotificationsScreen extends ConsumerWidget {
                   ),
                 );
               },
-            );
-          },
+              ),
+            ),
+          ],
         ),
       ),
     );

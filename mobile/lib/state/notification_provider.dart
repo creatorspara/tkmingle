@@ -1,9 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/constants/app_constants.dart';
 import '../data/models/notification_model.dart';
 import '../data/repositories/notification_repository.dart';
+import '../data/repositories/supabase_notification_repository.dart';
 import 'auth_provider.dart';
 
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  if (AppConstants.isSupabaseConfigured) {
+    return SupabaseNotificationRepository();
+  }
   return LocalNotificationRepository();
 });
 
