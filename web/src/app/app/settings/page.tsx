@@ -2,11 +2,13 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ShieldCheck,
   Eye,
   LogOut,
   CheckCircle2,
+  FileText,
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/useUser";
 
@@ -105,6 +107,13 @@ export default function SettingsPage() {
         </p>
         <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border/60 text-xs text-brand-muted">
           No blocked students currently.
+        </div>
+
+        <div className="pt-2 flex items-center justify-between text-xs text-brand-muted border-t border-brand-border/40">
+          <span>Official malware &amp; security verification</span>
+          <Link href="/security" className="text-brand-teal hover:underline flex items-center gap-1 font-medium">
+            <ShieldCheck className="w-3.5 h-3.5 text-brand-teal" /> View MetaDefender Report &rarr;
+          </Link>
         </div>
       </div>
 

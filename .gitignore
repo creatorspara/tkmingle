@@ -8,6 +8,8 @@
 *.zip
 *.bin
 *.dill
+Generated Image*.jpg
+mobile/android/app/Generated Image*.jpg
 tkmingle.apk
 shared/tkmingle.apk
 mobile/android/app/*.exe

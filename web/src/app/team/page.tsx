@@ -511,6 +511,7 @@ export default function EquipoKromiumPage() {
 
           <div className="flex items-center gap-6">
             <Link href="/" className="hover:text-white transition-colors">TKMingle Home</Link>
+            <Link href="/security" className="hover:text-white transition-colors">Security Audit</Link>
             <a
               href="https://github.com/creatorspara/tkmingle"
               target="_blank"

@@ -34,10 +34,13 @@ import {
   PlusSquare,
   Info,
   Globe,
+  FileText,
 } from "lucide-react";
 import { MOCK_CIRCLES } from "@/lib/mockData";
 import UserAvatar from "@/components/UserAvatar";
 import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
+import MetaDefenderModal from "@/components/MetaDefenderModal";
+import { METADEFENDER_REPORT } from "@/lib/securityData";
 
 interface DisplayStudent {
   id: string;
@@ -127,6 +130,7 @@ export default function LandingPage() {
   const [copiedHash, setCopiedHash] = useState(false);
   const [copiedPwaUrl, setCopiedPwaUrl] = useState(false);
   const [activePlatformTab, setActivePlatformTab] = useState<"android" | "ios">("android");
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
 
   // Contact Modal State
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -291,6 +295,10 @@ export default function LandingPage() {
       a: `Download the APK (${latestRelease.version_name}) directly from the download section. Once downloaded, open the file. If Android prompts 'Install unknown apps', enable 'Allow from this source', then tap Install. Future updates are detected automatically when opening the app.`,
     },
     {
+      q: "Is the Android APK safe? Has it been scanned for viruses or malware?",
+      a: `Yes, 100%. Every APK release undergoes automated multi-engine malware analysis by OPSWAT MetaDefender across 21 enterprise antivirus engines (including Bitdefender, Sophos, ESET, SentinelOne, Trellix, ClamAV, AhnLab, Avira, and Quick Heal). The latest scan of tkmmingle-k1-release.apk detected 0 threats (100% clean). You can inspect the engine verdicts or download the official MetaDefender Analysis Report PDF directly on our download section or Security Hub.`,
+    },
+    {
       q: "How do I install TKMingle on an iPhone (iOS)?",
       a: "Open https://tkmingle.vercel.app in Safari on your iPhone, tap the Share button (square with arrow at the bottom), and choose 'Add to Home Screen'. TKMingle will install directly to your home screen and run in full-screen standalone mode without browser bars.",
     },
@@ -344,14 +352,18 @@ export default function LandingPage() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-brand-muted">
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-brand-muted">
             <a href="#discover" className="hover:text-white transition-colors">
               Discover
             </a>
             <a href="#download" className="hover:text-white transition-colors flex items-center gap-1.5 text-brand-teal font-medium">
               <Download className="w-3.5 h-3.5" />
-              Download &amp; Install
+              Download
             </a>
+            <Link href="/security" className="hover:text-white transition-colors flex items-center gap-1 text-xs text-brand-teal font-medium">
+              <ShieldCheck className="w-3.5 h-3.5 text-brand-teal" />
+              Security (0/21)
+            </Link>
             <a href="#circles" className="hover:text-white transition-colors">
               Campus Circles
             </a>
@@ -429,6 +441,13 @@ export default function LandingPage() {
             >
               <Smartphone className="w-4 h-4" /> Download (Android &amp; iOS)
             </a>
+            <Link
+              href="/security"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm font-medium text-brand-teal hover:text-white flex items-center gap-2"
+            >
+              <ShieldCheck className="w-4 h-4 text-brand-teal" /> Security &amp; Virus Analysis (0/21)
+            </Link>
             <a
               href="#circles"
               onClick={() => setMobileMenuOpen(false)}
@@ -567,6 +586,28 @@ export default function LandingPage() {
                 <span className="text-[11px] text-brand-muted">
                   iOS: Safari Add to Home Screen (PWA)
                 </span>
+              </div>
+
+              {/* MetaDefender Verification Trust Badge */}
+              <div className="pt-0.5 flex flex-wrap items-center justify-center lg:justify-start gap-2">
+                <button
+                  onClick={() => setSecurityModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-teal/10 hover:bg-brand-teal/20 border border-brand-teal/30 text-[11px] font-semibold text-brand-teal transition-colors"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-brand-teal" />
+                  <span>MetaDefender Threat Scan: 0/21 Clean</span>
+                  <span className="text-[10px] text-brand-muted hover:text-white underline ml-1">Inspect Details &rarr;</span>
+                </button>
+                <a
+                  href="/tkmmingle-k1-release.apk.pdf"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] text-brand-lavender hover:text-white transition-colors"
+                >
+                  <FileText className="w-3.5 h-3.5 text-brand-purple" />
+                  <span>Official PDF Report</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
               </div>
 
               {/* Department representation */}
@@ -770,6 +811,58 @@ export default function LandingPage() {
                         {latestRelease.sha256_checksum}
                       </div>
                     </div>
+
+                    {/* MetaDefender Threat Verification Banner */}
+                    <div className="p-4 rounded-xl bg-brand-teal/10 border border-brand-teal/30 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-brand-teal/20 flex items-center justify-center text-brand-teal flex-shrink-0 mt-0.5">
+                            <ShieldCheck className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-white">
+                                OPSWAT MetaDefender Virus Analysis
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full bg-brand-teal/20 text-brand-teal text-[10px] font-bold border border-brand-teal/30">
+                                0 / 21 CLEAN
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-brand-muted mt-0.5 leading-snug">
+                              Scanned against 21 enterprise antivirus engines (Bitdefender, Sophos, ESET, SentinelOne, Trellix, ClamAV, AhnLab, Avira) &bull; No threats or malware detected.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-1 flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => setSecurityModalOpen(true)}
+                          className="px-3 py-1.5 rounded-lg bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white text-[11px] font-semibold flex items-center gap-1.5 transition-colors"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5 text-brand-teal" />
+                          <span>Inspect 21 Security Engines</span>
+                        </button>
+
+                        <a
+                          href="/tkmmingle-k1-release.apk.pdf"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-1.5 rounded-lg bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-lavender hover:text-white text-[11px] font-semibold flex items-center gap-1.5 transition-colors"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-brand-purple" />
+                          <span>Official Report (PDF)</span>
+                          <ExternalLink className="w-3 h-3 ml-0.5" />
+                        </a>
+
+                        <Link
+                          href="/security"
+                          className="text-[11px] font-medium text-brand-teal hover:underline ml-auto flex items-center gap-1"
+                        >
+                          Security Hub &rarr;
+                        </Link>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="pt-3 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
@@ -821,6 +914,10 @@ export default function LandingPage() {
                         <div>
                           <h4 className="font-semibold text-white">Allow Unknown Apps</h4>
                           <p className="mt-0.5">If Android prompts about unknown apps, tap <strong>Settings</strong> and turn on <strong>Allow from this source</strong>.</p>
+                          <div className="mt-2 p-2 rounded-lg bg-brand-teal/10 border border-brand-teal/20 text-[11px] text-brand-teal flex items-start gap-1.5 leading-tight">
+                            <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                            <span>Verified Safe: 0/21 threats on MetaDefender. Android shows this standard prompt for any app installed outside Google Play.</span>
+                          </div>
                         </div>
                       </div>
 
@@ -1409,10 +1506,20 @@ export default function LandingPage() {
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-white">Platform</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white">Platform &amp; Trust</h4>
               <ul className="space-y-1.5 text-xs text-brand-muted">
                 <li><a href="#download" onClick={() => setActivePlatformTab("android")} className="text-brand-teal hover:underline flex items-center gap-1"><Smartphone className="w-3 h-3" /> Android APK</a></li>
                 <li><a href="#download" onClick={() => setActivePlatformTab("ios")} className="text-brand-lavender hover:underline flex items-center gap-1"><Apple className="w-3 h-3" /> iOS Safari Web App</a></li>
+                <li>
+                  <Link href="/security" className="text-brand-teal hover:underline flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3" /> Security &amp; Virus Analysis
+                  </Link>
+                </li>
+                <li>
+                  <a href="/tkmmingle-k1-release.apk.pdf" target="_blank" rel="noreferrer" className="text-brand-lavender hover:underline flex items-center gap-1">
+                    <FileText className="w-3 h-3" /> MetaDefender PDF Report
+                  </a>
+                </li>
                 <li><a href="#discover" className="hover:text-white transition-colors">Discover Students</a></li>
                 <li><a href="#circles" className="hover:text-white transition-colors">Campus Circles</a></li>
                 <li><a href="#connect" className="hover:text-white transition-colors">Connect &amp; Chat</a></li>
@@ -1599,6 +1706,14 @@ export default function LandingPage() {
           </div>
         </div>
       )}
+
+      {/* MetaDefender Threat Verification Modal */}
+      <MetaDefenderModal
+        isOpen={securityModalOpen}
+        onClose={() => setSecurityModalOpen(false)}
+        downloadUrl={latestRelease.download_url}
+        versionName={latestRelease.version_name}
+      />
     </div>
   );
 }
