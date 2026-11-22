@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Sora } from "next/font/google";
+import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 import "./globals.css";
 
 const sora = Sora({
@@ -43,6 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${sora.variable}`}>
       <body className="min-h-screen bg-brand-navy text-brand-text antialiased selection:bg-brand-purple selection:text-white">
+        <AuthRedirectHandler />
         {children}
       </body>
     </html>

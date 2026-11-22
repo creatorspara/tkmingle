@@ -19,35 +19,88 @@ export default function ResetPasswordPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    let isSubscribed = true;
+
     async function checkRecoverySession() {
       if (!isLiveSupabaseConfigured()) {
-        setHasValidSession(true);
-        setVerifyingSession(false);
+        if (isSubscribed) {
+          setHasValidSession(true);
+          setVerifyingSession(false);
+        }
         return;
       }
 
-      // Check current session
+      // 1. Process URL query parameters (token_hash or code)
+      if (typeof window !== "undefined") {
+        const searchParams = new URLSearchParams(window.location.search);
+        const token_hash = searchParams.get("token_hash");
+        const type = searchParams.get("type");
+        const code = searchParams.get("code");
+
+        if (token_hash) {
+          try {
+            const { data, error } = await supabase.auth.verifyOtp({
+              token_hash,
+              type: (type as any) || "recovery",
+            });
+            if (!error && data?.session) {
+              if (isSubscribed) {
+                setHasValidSession(true);
+                setVerifyingSession(false);
+              }
+              return;
+            }
+          } catch (err) {
+            console.warn("token_hash verification notice:", err);
+          }
+        }
+
+        if (code) {
+          try {
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            if (!error && data?.session) {
+              if (isSubscribed) {
+                setHasValidSession(true);
+                setVerifyingSession(false);
+              }
+              return;
+            }
+          } catch (err) {
+            console.warn("code exchange notice:", err);
+          }
+        }
+      }
+
+      // 2. Check current session
       const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setHasValidSession(true);
-        setVerifyingSession(false);
+      if (data?.session) {
+        if (isSubscribed) {
+          setHasValidSession(true);
+          setVerifyingSession(false);
+        }
         return;
       }
 
-      // Listen for auth state change (e.g. PASSWORD_RECOVERY event from URL hash/code)
+      // 3. Listen for auth state change (e.g. PASSWORD_RECOVERY event from URL hash)
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange((event, session) => {
         if (event === "PASSWORD_RECOVERY" || session) {
-          setHasValidSession(true);
+          if (isSubscribed) {
+            setHasValidSession(true);
+          }
         }
-        setVerifyingSession(false);
+        if (isSubscribed) {
+          setVerifyingSession(false);
+        }
       });
 
-      // Timeout fallback in case no hash or code was supplied
+      // 4. Timeout fallback in case no hash or code was supplied
       const timer = setTimeout(() => {
-        setVerifyingSession(false);
-      }, 1500);
+        if (isSubscribed) {
+          setVerifyingSession(false);
+        }
+      }, 2500);
 
       return () => {
         subscription.unsubscribe();
@@ -56,6 +109,10 @@ export default function ResetPasswordPage() {
     }
 
     checkRecoverySession();
+
+    return () => {
+      isSubscribed = false;
+    };
   }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {

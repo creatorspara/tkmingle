@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(errorUrl);
   }
 
+  let sessionHash = "";
+
   // Handle PKCE code exchange or token_hash verification
   if (code || (token_hash && type)) {
     const supabaseUrl =
@@ -38,12 +40,22 @@ export async function GET(request: NextRequest) {
 
     try {
       if (code) {
-        await supabase.auth.exchangeCodeForSession(code);
+        const { data, error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
+        if (data?.session) {
+          sessionHash = `#access_token=${data.session.access_token}&refresh_token=${data.session.refresh_token}&token_type=bearer&type=${type || "recovery"}`;
+        } else if (exchangeErr) {
+          console.warn("exchangeCodeForSession notice:", exchangeErr.message);
+        }
       } else if (token_hash && type) {
-        await supabase.auth.verifyOtp({
+        const { data, error: verifyErr } = await supabase.auth.verifyOtp({
           token_hash,
           type: type as any,
         });
+        if (data?.session) {
+          sessionHash = `#access_token=${data.session.access_token}&refresh_token=${data.session.refresh_token}&token_type=bearer&type=${type}`;
+        } else if (verifyErr) {
+          console.warn("verifyOtp on server failed, forwarding token_hash to client:", verifyErr.message);
+        }
       }
     } catch (err) {
       console.error("Auth callback verification error:", err);
@@ -54,6 +66,12 @@ export async function GET(request: NextRequest) {
   const safeNext = next.startsWith("/") ? next : `/${next}`;
   const redirectUrl = new URL(safeNext, canonicalBase);
 
+  // If sessionHash wasn't established and token_hash is present, forward token_hash so client can verify
+  if (!sessionHash && token_hash) {
+    redirectUrl.searchParams.set("token_hash", token_hash);
+    if (type) redirectUrl.searchParams.set("type", type);
+  }
+
   // Preserve non-auth parameters (such as verified=true, email, etc.)
   requestUrl.searchParams.forEach((value, key) => {
     if (!["code", "token_hash", "type", "next"].includes(key)) {
@@ -61,5 +79,6 @@ export async function GET(request: NextRequest) {
     }
   });
 
-  return NextResponse.redirect(redirectUrl);
+  const finalRedirectTarget = sessionHash ? `${redirectUrl.toString()}${sessionHash}` : redirectUrl.toString();
+  return NextResponse.redirect(finalRedirectTarget);
 }
