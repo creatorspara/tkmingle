@@ -24,8 +24,8 @@ class AppUpdateInfo {
 }
 
 class UpdateService {
-  static const int currentVersionCode = 5;
-  static const String currentVersionName = "1.0.1";
+  static const int currentVersionCode = 6;
+  static const String currentVersionName = "1.0.2";
   static const MethodChannel _channel = MethodChannel("com.tkmingle.app/updater");
 
   /// Checks Supabase `app_releases` table first, with fallback to GitHub Releases API.
@@ -43,18 +43,23 @@ class UpdateService {
 
       if (response != null) {
         final remoteCode = response['version_code'] as int? ?? 0;
-        if (remoteCode > currentVersionCode) {
+        final remoteName = response['version_name'] as String? ?? "v$remoteCode";
+        if (remoteCode > currentVersionCode || _isRemoteNewer(remoteName, remoteName)) {
           return AppUpdateInfo(
-            versionName: response['version_name'] as String? ?? "v$remoteCode",
+            versionName: remoteName,
             versionCode: remoteCode,
             downloadUrl: response['download_url'] as String? ?? "",
             changelog: response['changelog'] as String? ?? "Performance updates and bug fixes.",
             isMandatory: response['is_mandatory'] as bool? ?? false,
           );
+        } else {
+          // Installed app is equal to or newer than Supabase registry
+          debugPrint("TKMingle is up to date via Supabase registry (Installed: $currentVersionCode, Remote: $remoteCode)");
+          return null;
         }
       }
     } catch (e) {
-      debugPrint("Notice: Supabase app_releases query error or not migrated: $e. Checking GitHub releases.");
+      debugPrint("Notice: Supabase app_releases query notice: $e. Checking GitHub releases.");
     }
 
     // 2. Fallback to GitHub Releases API directly
@@ -91,17 +96,19 @@ class UpdateService {
         }
 
         if (apkDownloadUrl != null) {
-          // Parse version code or compare tag
-          int remoteCode = _extractVersionCode(tagName, releaseName);
-          if (remoteCode > currentVersionCode) {
+          // Strictly compare SemVer and Build Code to prevent update loops
+          final isNewer = _isRemoteNewer(tagName, releaseName);
+          if (isNewer) {
             return AppUpdateInfo(
               versionName: releaseName,
-              versionCode: remoteCode,
+              versionCode: _extractVersionCode(tagName, releaseName),
               downloadUrl: apkDownloadUrl,
               changelog: _cleanChangelog(bodyNotes),
               isMandatory: false,
               sizeBytes: apkSize,
             );
+          } else {
+            debugPrint("TKMingle is up to date (Current: $currentVersionName, Remote: $tagName)");
           }
         }
       }
@@ -164,20 +171,52 @@ class UpdateService {
     }
   }
 
+  /// Validates whether the remote release is strictly strictly newer than currently installed
+  static bool _isRemoteNewer(String remoteTag, String remoteName) {
+    // 1. SemVer comparison: e.g. v1.0.2 vs v1.0.1
+    final remoteMatch = RegExp(r'v?(\d+)\.(\d+)\.(\d+)').firstMatch(remoteTag) ??
+        RegExp(r'v?(\d+)\.(\d+)\.(\d+)').firstMatch(remoteName);
+    final currentMatch = RegExp(r'v?(\d+)\.(\d+)\.(\d+)').firstMatch(currentVersionName);
+
+    if (remoteMatch != null && currentMatch != null) {
+      final rMajor = int.parse(remoteMatch.group(1)!);
+      final rMinor = int.parse(remoteMatch.group(2)!);
+      final rPatch = int.parse(remoteMatch.group(3)!);
+
+      final cMajor = int.parse(currentMatch.group(1)!);
+      final cMinor = int.parse(currentMatch.group(2)!);
+      final cPatch = int.parse(currentMatch.group(3)!);
+
+      if (rMajor > cMajor) return true;
+      if (rMajor < cMajor) return false;
+      if (rMinor > cMinor) return true;
+      if (rMinor < cMinor) return false;
+      if (rPatch > cPatch) return true;
+      if (rPatch < cPatch) return false;
+    }
+
+    // 2. Build / Version code suffix check (+6 > +5)
+    final rCodeMatch = RegExp(r'\+(\d+)').firstMatch(remoteTag) ?? RegExp(r'\+(\d+)').firstMatch(remoteName);
+    if (rCodeMatch != null) {
+      final rCode = int.tryParse(rCodeMatch.group(1)!) ?? currentVersionCode;
+      return rCode > currentVersionCode;
+    }
+
+    return false;
+  }
+
   static int _extractVersionCode(String tag, String name) {
-    // Try to extract from v1.0.1 (k1) or v1.0.1+5
     final match = RegExp(r'\+(\d+)').firstMatch(tag) ?? RegExp(r'\+(\d+)').firstMatch(name);
     if (match != null) {
       return int.tryParse(match.group(1)!) ?? currentVersionCode;
     }
 
-    // Try semver: 1.0.1 -> major*1000 + minor*100 + patch
-    final semver = RegExp(r'v?(\d+)\.(\d+)\.(\d+)').firstMatch(tag);
+    final semver = RegExp(r'v?(\d+)\.(\d+)\.(\d+)').firstMatch(tag) ?? RegExp(r'v?(\d+)\.(\d+)\.(\d+)').firstMatch(name);
     if (semver != null) {
       final major = int.tryParse(semver.group(1)!) ?? 1;
       final minor = int.tryParse(semver.group(2)!) ?? 0;
       final patch = int.tryParse(semver.group(3)!) ?? 0;
-      return (major * 100) + (minor * 10) + patch + 2; // e.g. 1.0.1 -> 100 + 0 + 1 + 2 = 103 (or higher)
+      return (major * 100) + (minor * 10) + patch;
     }
 
     return currentVersionCode;
@@ -187,7 +226,6 @@ class UpdateService {
     if (rawNotes.trim().isEmpty) {
       return "General performance improvements and bug fixes for campus students.";
     }
-    // Limit to first 400 chars for clean dialog display
     if (rawNotes.length > 400) {
       return "${rawNotes.substring(0, 400).trim()}...";
     }

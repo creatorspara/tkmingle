@@ -156,16 +156,36 @@ class NotificationsScreen extends ConsumerWidget {
                 error: (err, _) => Center(child: Text('Error: $err')),
                 data: (notifications) {
                   if (notifications.isEmpty) {
-                    return const EmptyStateView(
-                      icon: Icons.notifications_none_rounded,
-                      title: 'No Notifications',
-                      message: 'You are all caught up! New connection requests, messages, and circle updates will notify you here.',
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        ref.invalidate(receivedRequestsProvider);
+                        ref.invalidate(notificationsListProvider);
+                        ref.invalidate(unreadNotificationsCountProvider);
+                      },
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: const EmptyStateView(
+                            icon: Icons.notifications_none_rounded,
+                            title: 'No Notifications',
+                            message: 'You are all caught up! New connection requests, messages, and circle updates will notify you here.',
+                          ),
+                        ),
+                      ),
                     );
                   }
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: notifications.length,
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      ref.invalidate(receivedRequestsProvider);
+                      ref.invalidate(notificationsListProvider);
+                      ref.invalidate(unreadNotificationsCountProvider);
+                    },
+                    child: ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: notifications.length,
                     separatorBuilder: (_, __) => Divider(
                       height: 1,
                       color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
@@ -242,7 +262,8 @@ class NotificationsScreen extends ConsumerWidget {
                   ),
                 );
               },
-            );
+            ),
+          );
           },
         ),
       ),

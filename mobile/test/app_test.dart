@@ -207,8 +207,8 @@ void main() {
 
     test('Bidirectional Connection Request System validation', () async {
       // Test reverse scenario: User B (Ananya) sends User A (Gautham) request
-      final uB = 'user_ananya';
-      final uA = 'user_gautham';
+      const uB = 'user_ananya';
+      const uA = 'user_gautham';
 
       // 1. Initial state is none
       final status1 = await connRepo.getConnectionState(uB, uA);
