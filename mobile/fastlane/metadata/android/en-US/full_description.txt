@@ -1,0 +1,7 @@
+TKMingle is a student collaboration and social discovery platform built exclusively for TKM College of Engineering (TKMCE), Kollam.
+
+Features:
+- Cross-department student networking (breaking branch silos)
+- Campus Circles for coding, robotics, arts, and clubs
+- Real-time peer direct messaging powered by open Supabase infrastructure
+- Verified student profiles
