@@ -145,7 +145,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ListTile(
                 leading: const Icon(Icons.camera_alt_outlined, color: AppColors.highlight),
                 title: const Text('Take Photo', style: TextStyle(color: Colors.white)),
-                subtitle: const Text('Use camera with auto square crop & optimization', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                subtitle: const Text('Use camera with auto square crop & optimization', style: TextStyle(color: AppColors.darkTextMuted, fontSize: 11)),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _processAndUploadPhoto(ImageSource.camera);
@@ -154,7 +154,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined, color: AppColors.primaryAccent),
                 title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
-                subtitle: const Text('Pick photo from your device (compressed <= 100 KB)', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                subtitle: const Text('Pick photo from your device (compressed <= 100 KB)', style: TextStyle(color: AppColors.darkTextMuted, fontSize: 11)),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _processAndUploadPhoto(ImageSource.gallery);
@@ -163,7 +163,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ListTile(
                 leading: const Icon(Icons.face_outlined, color: AppColors.lavender),
                 title: const Text('Choose Brand Avatar', style: TextStyle(color: Colors.white)),
-                subtitle: const Text('24 built-in campus illustrations', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                subtitle: const Text('24 built-in campus illustrations', style: TextStyle(color: AppColors.darkTextMuted, fontSize: 11)),
                 onTap: () async {
                   Navigator.pop(sheetContext);
                   final selected = await PresetAvatarPickerSheet.show(
@@ -179,7 +179,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: AppColors.error),
                   title: const Text('Remove Photo', style: TextStyle(color: AppColors.error)),
-                  subtitle: const Text('Reset to brand initials fallback', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                  subtitle: const Text('Reset to brand initials fallback', style: TextStyle(color: AppColors.darkTextMuted, fontSize: 11)),
                   onTap: () {
                     Navigator.pop(sheetContext);
                     _removeAvatar();

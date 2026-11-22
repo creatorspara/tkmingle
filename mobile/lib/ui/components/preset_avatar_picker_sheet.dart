@@ -93,13 +93,13 @@ class _PresetAvatarPickerSheetState extends State<PresetAvatarPickerSheet> {
                     const SizedBox(height: 2),
                     Text(
                       '24 built-in campus avatars — no upload needed',
-                      style: AppTypography.bodySmall(AppColors.textMuted),
+                      style: AppTypography.labelSmall(AppColors.darkTextMuted),
                     ),
                   ],
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: AppColors.textMuted, size: 20),
+                  icon: const Icon(Icons.close, color: AppColors.darkTextMuted, size: 20),
                 ),
               ],
             ),
@@ -122,7 +122,7 @@ class _PresetAvatarPickerSheetState extends State<PresetAvatarPickerSheet> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected ? Colors.white : AppColors.textMuted,
+                      color: isSelected ? Colors.white : AppColors.darkTextMuted,
                     ),
                   ),
                   selected: isSelected,
