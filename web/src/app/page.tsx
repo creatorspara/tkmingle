@@ -35,12 +35,14 @@ import {
   Info,
   Globe,
   FileText,
+  Coffee,
+  Quote,
+  EyeOff,
+  Shuffle,
 } from "lucide-react";
 import { MOCK_CIRCLES } from "@/lib/mockData";
 import UserAvatar from "@/components/UserAvatar";
 import { supabase, isLiveSupabaseConfigured } from "@/lib/supabaseClient";
-import MetaDefenderModal from "@/components/MetaDefenderModal";
-import { METADEFENDER_REPORT } from "@/lib/securityData";
 
 interface DisplayStudent {
   id: string;
@@ -64,12 +66,12 @@ interface AppRelease {
 }
 
 const DEFAULT_RELEASE: AppRelease = {
-  version_name: "v1.0.7-k1",
-  version_code: 11,
-  download_url: "https://github.com/creatorspara/tkmingle/releases/download/v1.0.7-k1/tkmmingle-k1-release.apk",
-  changelog: "Push notification recipient isolation, account mismatch suppression, and active chat in-conversation silence.",
-  sha256_checksum: "57E805E9C59E4F3D2EA8FAB706E78B7D5507BC7BA7C82EA75B10D860B26DA4A8",
-  published_at: "2026-11-22T10:41:26.073Z",
+  version_name: "v2.0.0",
+  version_code: 13,
+  download_url: "https://github.com/creatorspara/tkmingle/releases/download/v2.0.0/tkmingle-v2-release.apk",
+  changelog: "V2 Major Release: Spill the Tea campus whispers with 10 Malayalam pop culture icons, instant real-time chat sync, and performance enhancements.",
+  sha256_checksum: "505CB75982A00B8FDEF2639D7E5BEA60AD1D9ECF9AE530E16B942F000E201504",
+  published_at: "2026-11-22T23:08:14.325Z",
 };
 
 const DEFAULT_STUDENTS: DisplayStudent[] = [
@@ -124,13 +126,23 @@ export default function LandingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [sessionUser, setSessionUser] = useState<any>(null);
   const [students, setStudents] = useState<DisplayStudent[]>(DEFAULT_STUDENTS);
+  const [allStudentsPool, setAllStudentsPool] = useState<DisplayStudent[]>(DEFAULT_STUDENTS);
+  const [heroStudent, setHeroStudent] = useState<DisplayStudent>(DEFAULT_STUDENTS[0]);
+
+  // Fisher-Yates random sampling function to ensure rich variety
+  const pickRandomSample = (pool: DisplayStudent[]) => {
+    if (!pool || pool.length === 0) return;
+    const shuffled = [...pool];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    setStudents(shuffled.slice(0, 4));
+    setHeroStudent(shuffled[0]);
+  };
 
   // Dynamic Latest Release State (Auto-updates with new builds)
   const [latestRelease, setLatestRelease] = useState<AppRelease>(DEFAULT_RELEASE);
-  const [copiedHash, setCopiedHash] = useState(false);
-  const [copiedPwaUrl, setCopiedPwaUrl] = useState(false);
-  const [activePlatformTab, setActivePlatformTab] = useState<"android" | "ios">("android");
-  const [securityModalOpen, setSecurityModalOpen] = useState(false);
 
   // Contact Modal State
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -155,30 +167,62 @@ export default function LandingPage() {
         setSessionUser(session?.user ?? null);
       });
 
-      // Fetch live discoverable profiles
+      // Fetch live discoverable profiles with full variety and connection suppression
       const loadLiveProfiles = async () => {
         try {
+          const { data: authData } = await supabase.auth.getSession();
+          const currentUserId = authData?.session?.user?.id;
+          const connectedSet = new Set<string>();
+
+          // Exclude already connected users if visitor is logged in
+          if (currentUserId) {
+            const { data: conns } = await supabase
+              .from("connections")
+              .select("user_one, user_two")
+              .or(`user_one.eq.${currentUserId},user_two.eq.${currentUserId}`);
+            if (conns) {
+              conns.forEach((c: any) => {
+                if (c.user_one && c.user_one !== currentUserId) connectedSet.add(c.user_one);
+                if (c.user_two && c.user_two !== currentUserId) connectedSet.add(c.user_two);
+              });
+            }
+          }
+
           const { data, error } = await supabase
             .from("profiles")
             .select("id, full_name, username, department, academic_year, bio, profile_image, avatar_id, interests, availability")
             .eq("discoverable", true)
             .not("full_name", "is", null)
-            .order("created_at", { ascending: false })
-            .limit(4);
+            .limit(100);
 
           if (!error && data && data.length > 0) {
-            const liveProfiles: DisplayStudent[] = data.map((p: any) => ({
-              id: p.id,
-              full_name: p.full_name || "TKMCE Student",
-              username: p.username || "student",
-              department: p.department || "Engineering",
-              academic_year: p.academic_year || "Student",
-              bio: p.bio || "Student at TKM College of Engineering.",
-              profile_image: p.profile_image || (p.avatar_id ? `preset:${p.avatar_id}` : "preset:tk_avatar_01"),
-              interests: Array.isArray(p.interests) && p.interests.length > 0 ? p.interests : ["Campus", "Engineering", "Technology"],
-              availability: p.availability || "Available on campus",
-            }));
-            setStudents(liveProfiles);
+            const liveProfiles: DisplayStudent[] = data
+              .filter((p: any) => {
+                // Filter out self
+                if (currentUserId && p.id === currentUserId) return false;
+                // Filter out already established connections
+                if (connectedSet.has(p.id)) return false;
+                // Filter out test/audit bot records
+                const lowerName = (p.full_name || "").toLowerCase();
+                if (lowerName.includes("audit") || lowerName.startsWith("test account")) return false;
+                return true;
+              })
+              .map((p: any) => ({
+                id: p.id,
+                full_name: p.full_name || "TKMCE Student",
+                username: p.username || "student",
+                department: p.department || "Engineering",
+                academic_year: p.academic_year || "Student",
+                bio: p.bio || `Student at TKM College of Engineering (${p.department || "TKMCE"}).`,
+                profile_image: p.profile_image || (p.avatar_id ? `preset:${p.avatar_id}` : "preset:tk_avatar_01"),
+                interests: Array.isArray(p.interests) && p.interests.length > 0 ? p.interests : ["Campus", "Engineering", "Technology"],
+                availability: p.availability || "Available on campus",
+              }));
+
+            if (liveProfiles.length > 0) {
+              setAllStudentsPool(liveProfiles);
+              pickRandomSample(liveProfiles);
+            }
           }
         } catch {
           // Keep default clean profiles
@@ -234,20 +278,6 @@ export default function LandingPage() {
     }
   }, []);
 
-  const copyChecksum = () => {
-    if (latestRelease.sha256_checksum) {
-      navigator.clipboard.writeText(latestRelease.sha256_checksum);
-      setCopiedHash(true);
-      setTimeout(() => setCopiedHash(false), 2000);
-    }
-  };
-
-  const copyPwaLink = () => {
-    navigator.clipboard.writeText("https://tkmingle.vercel.app");
-    setCopiedPwaUrl(true);
-    setTimeout(() => setCopiedPwaUrl(false), 2000);
-  };
-
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactMessage.trim()) return;
@@ -296,7 +326,7 @@ export default function LandingPage() {
     },
     {
       q: "Is the Android APK safe? Has it been scanned for viruses or malware?",
-      a: `Yes, 100%. Every APK release undergoes automated multi-engine malware analysis by OPSWAT MetaDefender across 21 enterprise antivirus engines (including Bitdefender, Sophos, ESET, SentinelOne, Trellix, ClamAV, AhnLab, Avira, and Quick Heal). The latest scan of tkmmingle-k1-release.apk detected 0 threats (100% clean). You can inspect the engine verdicts or download the official MetaDefender Analysis Report PDF directly on our download section or Security Hub.`,
+      a: `Yes, 100%. Every APK release undergoes automated multi-engine malware analysis by OPSWAT MetaDefender across 21 enterprise antivirus engines (including Bitdefender, Sophos, ESET, SentinelOne, Trellix, ClamAV, AhnLab, Avira, and Quick Heal). The latest scan of tkmingle-v2-release.apk detected 0 threats (100% clean). You can inspect the engine verdicts or download the official MetaDefender Analysis Report PDF directly on our download section or Security Hub.`,
     },
     {
       q: "How do I install TKMingle on an iPhone (iOS)?",
@@ -330,7 +360,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 bg-brand-navy/90 backdrop-blur-md border-b border-brand-border/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 flex-shrink-0">
             <div className="w-10 h-10 rounded-xl bg-brand-navyCard border border-brand-border flex items-center justify-center p-1.5 shadow-sm">
               <Image
                 src="/images/logo_compact.svg"
@@ -351,24 +381,13 @@ export default function LandingPage() {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-brand-muted">
+          {/* Desktop Navigation - Clean, un-crammed layout */}
+          <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-brand-muted">
             <a href="#discover" className="hover:text-white transition-colors">
               Discover
             </a>
-            <a href="#download" className="hover:text-white transition-colors flex items-center gap-1.5 text-brand-teal font-medium">
-              <Download className="w-3.5 h-3.5" />
-              Download
-            </a>
-            <Link href="/security" className="hover:text-white transition-colors flex items-center gap-1 text-xs text-brand-teal font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 text-brand-teal" />
-              Security (0/21)
-            </Link>
             <a href="#circles" className="hover:text-white transition-colors">
               Campus Circles
-            </a>
-            <a href="#connect" className="hover:text-white transition-colors">
-              Connect &amp; Chat
             </a>
             <a href="#kromium" className="hover:text-white transition-colors flex items-center gap-1 text-brand-lavender font-medium">
               Equipo Kromium
@@ -380,14 +399,6 @@ export default function LandingPage() {
 
           {/* Action CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href="#download"
-              className="px-3.5 py-2 text-xs font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-teal transition-colors flex items-center gap-1.5"
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>Get the App</span>
-            </a>
-
             {sessionUser ? (
               <Link
                 href="/app/discover"
@@ -406,7 +417,7 @@ export default function LandingPage() {
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-2 text-sm font-semibold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors"
+                  className="px-4 py-2 text-sm font-semibold rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white transition-colors shadow-purple-glow"
                 >
                   Join TKMingle
                 </Link>
@@ -435,32 +446,11 @@ export default function LandingPage() {
               Discover Students
             </a>
             <a
-              href="#download"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-sm font-semibold text-brand-teal hover:text-white flex items-center gap-2"
-            >
-              <Smartphone className="w-4 h-4" /> Download (Android &amp; iOS)
-            </a>
-            <Link
-              href="/security"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-sm font-medium text-brand-teal hover:text-white flex items-center gap-2"
-            >
-              <ShieldCheck className="w-4 h-4 text-brand-teal" /> Security &amp; Virus Analysis (0/21)
-            </Link>
-            <a
               href="#circles"
               onClick={() => setMobileMenuOpen(false)}
               className="block text-sm font-medium text-brand-muted hover:text-white"
             >
               Campus Circles
-            </a>
-            <a
-              href="#connect"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-sm font-medium text-brand-muted hover:text-white"
-            >
-              Connect &amp; Chat
             </a>
             <a
               href="#kromium"
@@ -549,30 +539,30 @@ export default function LandingPage() {
                   <span>Download APK (Android)</span>
                 </a>
 
-                <a
-                  href="#download"
-                  onClick={() => setActivePlatformTab("ios")}
-                  className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white transition-colors flex items-center justify-center gap-2"
-                >
-                  <Apple className="w-4 h-4 text-brand-lavender" />
-                  <span>iOS Safari Web App</span>
-                </a>
-
                 {sessionUser ? (
                   <Link
                     href="/app/discover"
-                    className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn border border-brand-border text-brand-text hover:text-white transition-colors flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white transition-colors flex items-center justify-center gap-2"
                   >
-                    Enter Portal
-                    <ArrowRight className="w-4 h-4" />
+                    <span>Open Campus Portal</span>
+                    <ArrowRight className="w-4 h-4 text-brand-lavender" />
                   </Link>
                 ) : (
-                  <Link
-                    href="/login"
-                    className="w-full sm:w-auto px-4 py-3 text-sm font-semibold text-brand-muted hover:text-white transition-colors flex items-center justify-center gap-1"
-                  >
-                    Sign In &rarr;
-                  </Link>
+                  <>
+                    <Link
+                      href="/register"
+                      className="w-full sm:w-auto px-5 py-3 text-sm font-semibold rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4 text-brand-lavender" />
+                      <span>Join Campus Network</span>
+                    </Link>
+                    <Link
+                      href="/login"
+                      className="w-full sm:w-auto px-4 py-3 text-sm font-semibold text-brand-muted hover:text-white transition-colors flex items-center justify-center gap-1"
+                    >
+                      Sign In &rarr;
+                    </Link>
+                  </>
                 )}
               </div>
 
@@ -580,34 +570,12 @@ export default function LandingPage() {
               <div className="pt-1 flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs text-brand-muted">
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-brand-teal font-medium">
                   <span className="w-2 h-2 rounded-full bg-brand-teal" />
-                  Android APK {latestRelease.version_name} (Build {latestRelease.version_code})
+                  Android APK {latestRelease.version_name}
                 </span>
                 <span className="text-brand-border">|</span>
                 <span className="text-[11px] text-brand-muted">
-                  iOS: Safari Add to Home Screen (PWA)
+                  iOS &amp; Desktop: Safari / Chrome Web App (PWA)
                 </span>
-              </div>
-
-              {/* MetaDefender Verification Trust Badge */}
-              <div className="pt-0.5 flex flex-wrap items-center justify-center lg:justify-start gap-2">
-                <button
-                  onClick={() => setSecurityModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-teal/10 hover:bg-brand-teal/20 border border-brand-teal/30 text-[11px] font-semibold text-brand-teal transition-colors"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-brand-teal" />
-                  <span>MetaDefender Threat Scan: 0/21 Clean</span>
-                  <span className="text-[10px] text-brand-muted hover:text-white underline ml-1">Inspect Details &rarr;</span>
-                </button>
-                <a
-                  href="/tkmmingle-k1-release.apk.pdf"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] text-brand-lavender hover:text-white transition-colors"
-                >
-                  <FileText className="w-3.5 h-3.5 text-brand-purple" />
-                  <span>Official PDF Report</span>
-                  <ExternalLink className="w-2.5 h-2.5" />
-                </a>
               </div>
 
               {/* Department representation */}
@@ -636,18 +604,18 @@ export default function LandingPage() {
               <div className="w-full max-w-sm glass-panel rounded-2xl p-5 border border-brand-border/80 space-y-4 shadow-xl">
                 <div className="flex items-center gap-3">
                   <UserAvatar
-                    src="preset:tk_avatar_03"
-                    name="Devika S."
+                    src={heroStudent.profile_image}
+                    name={heroStudent.full_name}
                     size={56}
                     className="rounded-2xl border border-brand-purple/40"
                   />
                   <div>
                     <h3 className="font-bold text-base text-white flex items-center gap-1.5">
-                      Devika S.
+                      {heroStudent.full_name}
                       <CheckCircle2 className="w-4 h-4 text-brand-teal" />
                     </h3>
                     <p className="text-xs text-brand-muted">
-                      Robotics &amp; AI • 3rd Year
+                      {heroStudent.department} • {heroStudent.academic_year}
                     </p>
                     <span className="text-[10px] text-brand-teal font-medium">
                       Verified Student
@@ -655,24 +623,23 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <p className="text-xs text-brand-text/90 leading-relaxed">
-                  Embedded systems &amp; AI robotics explorer. Working on autonomous quadcopters and creative web projects across campus!
+                <p className="text-xs text-brand-text/90 leading-relaxed line-clamp-3">
+                  {heroStudent.bio}
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-brand-navySecondary border border-brand-border text-brand-lavender font-medium">
-                    Robotics
-                  </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-brand-navySecondary border border-brand-border text-brand-lavender font-medium">
-                    IoT
-                  </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-brand-navySecondary border border-brand-border text-brand-lavender font-medium">
-                    UI/UX
-                  </span>
+                  {heroStudent.interests.slice(0, 3).map((interest) => (
+                    <span
+                      key={interest}
+                      className="text-[10px] px-2 py-0.5 rounded-md bg-brand-navySecondary border border-brand-border text-brand-lavender font-medium"
+                    >
+                      {interest}
+                    </span>
+                  ))}
                 </div>
 
                 <div className="pt-2 border-t border-brand-border/60 flex items-center justify-between text-xs">
-                  <span className="text-brand-muted text-[11px]">Free weekends &amp; evenings</span>
+                  <span className="text-brand-muted text-[11px] truncate max-w-[170px]">{heroStudent.availability}</span>
                   <Link
                     href={sessionUser ? "/app/discover" : "/register"}
                     className="px-3 py-1.5 rounded-tk-btn bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-medium transition-colors"
@@ -686,416 +653,26 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. RELEASE STRATEGY & INSTALLATION (ANDROID APK & IOS PWA) */}
-      <section id="download" className="py-16 bg-[#090C15] border-b border-brand-border/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          {/* Header */}
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Download &amp; Install
-            </h2>
-            <p className="text-sm text-brand-muted">
-              Choose your platform below to get TKMingle on your device.
-            </p>
-          </div>
-
-          {/* Strategy note */}
-          <div className="max-w-3xl mx-auto p-4 rounded-xl bg-brand-navySecondary/60 border border-brand-border/70 text-xs text-brand-muted leading-relaxed flex items-start gap-3">
-            <Info className="w-4 h-4 text-brand-lavender flex-shrink-0 mt-0.5" />
-            <div>
-              <span className="font-semibold text-white block mb-0.5">Distribution Note</span>
-              <span>
-                We distribute TKMingle directly via GitHub Releases (Android APK) and Safari PWA (iOS) to keep it free for all students and avoid commercial developer program fees ($99/year Apple Developer fee). Store releases will be considered in the future.
-              </span>
-            </div>
-          </div>
-
-          {/* Platform Switcher */}
-          <div className="flex justify-center">
-            <div className="inline-flex p-1 rounded-xl bg-brand-navySecondary border border-brand-border">
-              <button
-                onClick={() => setActivePlatformTab("android")}
-                className={`px-5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 ${
-                  activePlatformTab === "android"
-                    ? "bg-brand-purple text-white shadow-sm"
-                    : "text-brand-muted hover:text-white"
-                }`}
-              >
-                <Smartphone className="w-4 h-4" />
-                <span>Android (APK)</span>
-              </button>
-              <button
-                onClick={() => setActivePlatformTab("ios")}
-                className={`px-5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 ${
-                  activePlatformTab === "ios"
-                    ? "bg-brand-purple text-white shadow-sm"
-                    : "text-brand-muted hover:text-white"
-                }`}
-              >
-                <Apple className="w-4 h-4" />
-                <span>iOS (Safari Web App)</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Platform Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {activePlatformTab === "android" ? (
-              <>
-                {/* Android Card */}
-                <div className="lg:col-span-7 glass-panel rounded-2xl border border-brand-border/90 p-6 sm:p-7 space-y-5 flex flex-col justify-between shadow-xl">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-brand-border/60">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-base text-white">
-                            Android Universal APK
-                          </span>
-                          <span className="px-2 py-0.5 rounded-full bg-brand-purple/20 text-brand-lavender text-xs font-semibold border border-brand-purple/30">
-                            {latestRelease.version_name}
-                          </span>
-                        </div>
-                        <span className="text-xs text-brand-muted">
-                          Build {latestRelease.version_code} • Android 8.0+
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-brand-teal font-medium px-2 py-0.5 rounded bg-brand-teal/10 border border-brand-teal/20">
-                        Latest Release
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-brand-muted leading-relaxed">
-                      Download the universal APK file directly to your phone. The app checks for new updates on launch.
-                    </p>
-
-                    {/* Download Button */}
-                    <div className="pt-1">
-                      <a
-                        href={latestRelease.download_url}
-                        download
-                        className="w-full py-3.5 px-5 rounded-xl bg-brand-purple hover:bg-brand-purple/90 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors shadow-purple-glow"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span>Download APK ({latestRelease.version_name})</span>
-                      </a>
-                      <p className="text-[11px] text-center text-brand-muted mt-1.5">
-                        Universal APK (~61 MB)
-                      </p>
-                    </div>
-
-                    {/* Release Notes */}
-                    <div className="space-y-1.5 pt-1">
-                      <span className="text-[11px] font-semibold text-white uppercase tracking-wider block">
-                        Changes in this build:
-                      </span>
-                      <div className="p-3 rounded-xl bg-brand-navyCard border border-brand-border text-xs text-brand-text/90 leading-relaxed font-mono">
-                        {latestRelease.changelog}
-                      </div>
-                    </div>
-
-                    {/* Checksum */}
-                    <div className="space-y-1 pt-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
-                          SHA-256 Checksum
-                        </span>
-                        <button
-                          onClick={copyChecksum}
-                          className="inline-flex items-center gap-1 text-[11px] text-brand-teal hover:underline font-medium"
-                        >
-                          {copiedHash ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                          <span>{copiedHash ? "Copied" : "Copy"}</span>
-                        </button>
-                      </div>
-                      <div className="p-2.5 rounded-lg bg-black/40 border border-brand-border/60 text-[11px] font-mono text-brand-lavender break-all select-all">
-                        {latestRelease.sha256_checksum}
-                      </div>
-                    </div>
-
-                    {/* MetaDefender Threat Verification Banner */}
-                    <div className="p-4 rounded-xl bg-brand-teal/10 border border-brand-teal/30 space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-brand-teal/20 flex items-center justify-center text-brand-teal flex-shrink-0 mt-0.5">
-                            <ShieldCheck className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-white">
-                                OPSWAT MetaDefender Virus Analysis
-                              </span>
-                              <span className="px-2 py-0.5 rounded-full bg-brand-teal/20 text-brand-teal text-[10px] font-bold border border-brand-teal/30">
-                                0 / 21 CLEAN
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-brand-muted mt-0.5 leading-snug">
-                              Scanned against 21 enterprise antivirus engines (Bitdefender, Sophos, ESET, SentinelOne, Trellix, ClamAV, AhnLab, Avira) &bull; No threats or malware detected.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="pt-1 flex flex-wrap items-center gap-2">
-                        <button
-                          onClick={() => setSecurityModalOpen(true)}
-                          className="px-3 py-1.5 rounded-lg bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white text-[11px] font-semibold flex items-center gap-1.5 transition-colors"
-                        >
-                          <ShieldCheck className="w-3.5 h-3.5 text-brand-teal" />
-                          <span>Inspect 21 Security Engines</span>
-                        </button>
-
-                        <a
-                          href="/tkmmingle-k1-release.apk.pdf"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-3 py-1.5 rounded-lg bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-lavender hover:text-white text-[11px] font-semibold flex items-center gap-1.5 transition-colors"
-                        >
-                          <FileText className="w-3.5 h-3.5 text-brand-purple" />
-                          <span>Official Report (PDF)</span>
-                          <ExternalLink className="w-3 h-3 ml-0.5" />
-                        </a>
-
-                        <Link
-                          href="/security"
-                          className="text-[11px] font-medium text-brand-teal hover:underline ml-auto flex items-center gap-1"
-                        >
-                          Security Hub &rarr;
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
-                    <span>Hosted on GitHub Releases</span>
-                    <a
-                      href="https://github.com/creatorspara/tkmingle/releases"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-brand-lavender hover:text-white transition-colors flex items-center gap-1"
-                    >
-                      Release notes <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                </div>
-
-                {/* Android Steps */}
-                <div className="lg:col-span-5 glass-panel rounded-2xl border border-brand-border/80 p-6 sm:p-7 space-y-5 flex flex-col justify-between shadow-lg">
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-brand-teal" />
-                      Installation Steps (Android)
-                    </h3>
-
-                    <div className="space-y-3 pt-1 text-xs text-brand-muted">
-                      <div className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                          1
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">Download APK</h4>
-                          <p className="mt-0.5">Tap the download button to save <code className="text-brand-lavender bg-black/30 px-1 py-0.5 rounded">tkmmingle-k1-release.apk</code>.</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                          2
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">Open the File</h4>
-                          <p className="mt-0.5">Tap the notification or open the file from your Downloads folder.</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                          3
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">Allow Unknown Apps</h4>
-                          <p className="mt-0.5">If Android prompts about unknown apps, tap <strong>Settings</strong> and turn on <strong>Allow from this source</strong>.</p>
-                          <div className="mt-2 p-2 rounded-lg bg-brand-teal/10 border border-brand-teal/20 text-[11px] text-brand-teal flex items-start gap-1.5 leading-tight">
-                            <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                            <span>Verified Safe: 0/21 threats on MetaDefender. Android shows this standard prompt for any app installed outside Google Play.</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-brand-lavender/20 text-brand-lavender flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                          4
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">Install &amp; Log In</h4>
-                          <p className="mt-0.5">Tap <strong>Install</strong>. Once done, open TKMingle and sign in with your college email.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-brand-navySecondary border border-brand-border/60 text-xs text-brand-muted">
-                    Only the single latest release is hosted here to keep versioning consistent.
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* iOS Card */}
-                <div className="lg:col-span-7 glass-panel rounded-2xl border border-brand-border/90 p-6 sm:p-7 space-y-5 flex flex-col justify-between shadow-xl">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-brand-border/60">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-base text-white">
-                            iOS Safari Web App (PWA)
-                          </span>
-                          <span className="px-2 py-0.5 rounded-full bg-brand-teal/20 text-brand-teal text-xs font-semibold border border-brand-teal/30">
-                            Standalone
-                          </span>
-                        </div>
-                        <span className="text-xs text-brand-muted">
-                          iPhone &amp; iPad • iOS 14.0+
-                        </span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-brand-muted leading-relaxed">
-                      You can add TKMingle directly to your iPhone home screen via Safari. It runs in full-screen standalone mode without browser bars.
-                    </p>
-
-                    {/* Quick Access CTA Buttons */}
-                    <div className="space-y-2 pt-1">
-                      <div className="flex flex-col sm:flex-row gap-2.5">
-                        <Link
-                          href="/login"
-                          className="flex-1 py-3 px-4 rounded-xl bg-brand-purple hover:bg-brand-purple/90 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow-purple-glow"
-                        >
-                          <Globe className="w-4 h-4" />
-                          <span>Open in Safari</span>
-                        </Link>
-                        <button
-                          onClick={copyPwaLink}
-                          className="py-3 px-4 rounded-xl bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
-                        >
-                          {copiedPwaUrl ? <Check className="w-3.5 h-3.5 text-brand-teal" /> : <Copy className="w-3.5 h-3.5 text-brand-muted" />}
-                          <span>{copiedPwaUrl ? "Copied" : "Copy URL"}</span>
-                        </button>
-                      </div>
-                      <p className="text-[11px] text-center text-brand-muted">
-                        URL: <code className="text-brand-lavender">https://tkmingle.vercel.app</code>
-                      </p>
-                    </div>
-
-                    {/* PWA Features */}
-                    <div className="space-y-1.5 pt-1">
-                      <span className="text-[11px] font-semibold text-white uppercase tracking-wider block">
-                        Features:
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-brand-muted">
-                        <div className="p-2.5 rounded-lg bg-brand-navyCard border border-brand-border">
-                          <strong className="text-white block">Full-screen display</strong>
-                          <span>Hides browser address and navigation bars.</span>
-                        </div>
-                        <div className="p-2.5 rounded-lg bg-brand-navyCard border border-brand-border">
-                          <strong className="text-white block">Home screen icon</strong>
-                          <span>Launches directly like an installed app.</span>
-                        </div>
-                        <div className="p-2.5 rounded-lg bg-brand-navyCard border border-brand-border">
-                          <strong className="text-white block">Realtime chat</strong>
-                          <span>WebSockets support for messaging.</span>
-                        </div>
-                        <div className="p-2.5 rounded-lg bg-brand-navyCard border border-brand-border">
-                          <strong className="text-white block">Always up to date</strong>
-                          <span>Loads the latest web build on launch.</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-brand-navySecondary/80 border border-brand-border/60 text-xs text-brand-muted flex items-start gap-2">
-                      <Info className="w-4 h-4 text-brand-lavender flex-shrink-0 mt-0.5" />
-                      <span>
-                        Runs as a Progressive Web App (PWA) in Safari. This is not an App Store native application.
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-brand-border/60 flex items-center justify-between text-xs text-brand-muted">
-                    <span>Manifest: <code>/manifest.webmanifest</code></span>
-                    <span className="text-brand-teal font-medium">Standalone enabled</span>
-                  </div>
-                </div>
-
-                {/* iOS Steps */}
-                <div className="lg:col-span-5 glass-panel rounded-2xl border border-brand-border/80 p-6 sm:p-7 space-y-5 flex flex-col justify-between shadow-lg">
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <Apple className="w-4 h-4 text-brand-lavender" />
-                      Installation Steps (iOS Safari)
-                    </h3>
-
-                    <div className="space-y-3 pt-1 text-xs text-brand-muted">
-                      <div className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                          1
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">Open in Safari</h4>
-                          <p className="mt-0.5">Go to <code className="text-brand-lavender bg-black/30 px-1 py-0.5 rounded">https://tkmingle.vercel.app</code> in <strong>Safari</strong> on your iPhone.</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                          2
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">Tap Share</h4>
-                          <p className="mt-0.5">Tap the <strong>Share</strong> button (square with arrow) at the bottom of Safari.</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                          3
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">Add to Home Screen</h4>
-                          <p className="mt-0.5">Scroll down the menu and tap <strong>Add to Home Screen</strong>.</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-brand-lavender/20 text-brand-lavender flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                          4
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">Confirm Add</h4>
-                          <p className="mt-0.5">Tap <strong>Add</strong> in the top-right corner. The TKMingle icon will appear on your home screen.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-brand-navySecondary border border-brand-border/60 text-xs text-brand-muted">
-                    Session authentication is preserved across launches.
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. DISCOVER PEOPLE SECTION */}
+      {/* 3. DISCOVER PEOPLE SECTION */}
       <section id="discover" className="py-16 bg-brand-navySecondary/40 border-b border-brand-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-              Connect across departments
-            </h2>
-            <p className="text-sm text-brand-muted">
-              Discover students with shared technical and creative interests across all TKMCE branches.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1 text-center sm:text-left">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+                Connect across departments
+              </h2>
+              <p className="text-sm text-brand-muted">
+                Discover students with shared technical and creative interests across all TKMCE branches.
+              </p>
+            </div>
+            <button
+              onClick={() => pickRandomSample(allStudentsPool)}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-tk-btn bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/40 text-brand-lavender hover:text-white text-xs font-semibold transition-all self-center sm:self-auto shadow-sm"
+              title="Shuffle student suggestions"
+            >
+              <Shuffle className="w-3.5 h-3.5 text-brand-purple" />
+              <span>Shuffle Suggestions</span>
+            </button>
           </div>
 
           {/* Student Profile Cards */}
@@ -1225,105 +802,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 6. CONNECT AND CHAT SECTION */}
-      <section id="connect" className="py-16 bg-brand-navySecondary/40 border-b border-brand-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-6 space-y-5">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-                Mutual consent communication
-              </h2>
-              <p className="text-sm text-brand-muted leading-relaxed">
-                Direct messaging is enabled only after both students accept a connection request. No unsolicited messages or contact sharing without your permission.
-              </p>
-
-              <div className="space-y-3 pt-1">
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-brand-purple/20 text-brand-purple flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-white">Mutual Approval</h4>
-                    <p className="text-xs text-brand-muted">Both students must accept before direct chat opens.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-brand-teal/20 text-brand-teal flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-white">Private &amp; Direct</h4>
-                    <p className="text-xs text-brand-muted">Only the two participants can view conversations.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-brand-lavender/20 text-brand-lavender flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Users2 className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-white">Instant Block &amp; Report</h4>
-                    <p className="text-xs text-brand-muted">Control your contacts and manage privacy at any time.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Chat Mockup Card */}
-            <div className="lg:col-span-6">
-              <div className="glass-panel rounded-2xl border border-brand-border p-5 space-y-3 max-w-md mx-auto shadow-2xl">
-                <div className="flex items-center gap-3 pb-3 border-b border-brand-border/60">
-                  <UserAvatar
-                    src="preset:tk_avatar_03"
-                    name="Devika S."
-                    size={36}
-                    isOnline={true}
-                  />
-                  <div>
-                    <div className="font-bold text-xs text-white flex items-center gap-1.5">
-                      Devika S.
-                      <span className="w-2 h-2 rounded-full bg-brand-teal inline-block" />
-                    </div>
-                    <div className="text-[10px] text-brand-muted">Active • Robotics &amp; AI 3rd Year</div>
-                  </div>
-                </div>
-
-                <div className="space-y-2.5 py-1">
-                  <div className="flex flex-col items-start">
-                    <div className="bg-brand-navyCard border border-brand-border/80 px-3 py-2 rounded-xl text-xs text-brand-text max-w-[85%]">
-                      Hey! Saw your project post in Robotics &amp; AI Club.
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-end">
-                    <div className="bg-brand-purple px-3 py-2 rounded-xl text-xs text-white max-w-[85%]">
-                      Hey Devika! Yes, looking for someone for the IoT hardware and autonomous navigation track.
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-start">
-                    <div className="bg-brand-navyCard border border-brand-border/80 px-3 py-2 rounded-xl text-xs text-brand-text max-w-[85%]">
-                      Count me in! Let&apos;s meet near the Nescafe corner after 4:30.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex items-center gap-2">
-                  <div className="flex-1 py-1.5 px-3 rounded-tk-btn bg-brand-navyCard border border-brand-border text-xs text-brand-muted">
-                    Type a message...
-                  </div>
-                  <button className="p-1.5 rounded-tk-btn bg-brand-purple text-white">
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. EQUIPO KROMIUM SECTION */}
+      {/* 5. EQUIPO KROMIUM SECTION */}
       <section id="kromium" className="py-16 bg-[#090C15] border-b border-brand-border/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-2">
@@ -1508,21 +987,21 @@ export default function LandingPage() {
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-white">Platform &amp; Trust</h4>
               <ul className="space-y-1.5 text-xs text-brand-muted">
-                <li><a href="#download" onClick={() => setActivePlatformTab("android")} className="text-brand-teal hover:underline flex items-center gap-1"><Smartphone className="w-3 h-3" /> Android APK</a></li>
-                <li><a href="#download" onClick={() => setActivePlatformTab("ios")} className="text-brand-lavender hover:underline flex items-center gap-1"><Apple className="w-3 h-3" /> iOS Safari Web App</a></li>
+                <li><a href={latestRelease.download_url} download className="text-brand-teal hover:underline flex items-center gap-1"><Smartphone className="w-3 h-3" /> Android APK ({latestRelease.version_name})</a></li>
                 <li>
                   <Link href="/security" className="text-brand-teal hover:underline flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3" /> Security &amp; Virus Analysis
+                    <ShieldCheck className="w-3 h-3" /> Security &amp; Virus Analysis (0/21)
                   </Link>
                 </li>
                 <li>
                   <a href="/tkmmingle-k1-release.apk.pdf" target="_blank" rel="noreferrer" className="text-brand-lavender hover:underline flex items-center gap-1">
-                    <FileText className="w-3 h-3" /> MetaDefender PDF Report
+                    <FileText className="w-3 h-3" /> MetaDefender Scan Report (PDF)
                   </a>
                 </li>
                 <li><a href="#discover" className="hover:text-white transition-colors">Discover Students</a></li>
                 <li><a href="#circles" className="hover:text-white transition-colors">Campus Circles</a></li>
-                <li><a href="#connect" className="hover:text-white transition-colors">Connect &amp; Chat</a></li>
+                <li><a href="#kromium" className="hover:text-white transition-colors">Equipo Kromium</a></li>
+                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
               </ul>
             </div>
 
@@ -1547,7 +1026,7 @@ export default function LandingPage() {
           <div className="pt-6 border-t border-brand-border/60 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-muted gap-3">
             <p>&copy; 2026 TKMingle &bull; Equipo Kromium &bull; TKM College of Engineering.</p>
             <div className="flex items-center gap-5">
-              <a href="#download" className="hover:text-white transition-colors">Get App</a>
+              <a href={latestRelease.download_url} download className="hover:text-white transition-colors">Download APK</a>
               <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
               <button
                 onClick={() => setContactModalOpen(true)}
@@ -1707,13 +1186,7 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* MetaDefender Threat Verification Modal */}
-      <MetaDefenderModal
-        isOpen={securityModalOpen}
-        onClose={() => setSecurityModalOpen(false)}
-        downloadUrl={latestRelease.download_url}
-        versionName={latestRelease.version_name}
-      />
+      
     </div>
   );
 }

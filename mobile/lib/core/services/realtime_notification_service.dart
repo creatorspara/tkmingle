@@ -21,6 +21,8 @@ class RealtimeNotificationService {
   RealtimeChannel? _notifChannel;
   RealtimeChannel? _reqChannel;
   RealtimeChannel? _msgChannel;
+  RealtimeChannel? _memberChannel;
+  RealtimeChannel? _convChannel;
   String? _subscribedUserId;
 
   RealtimeNotificationService(this._ref) {
@@ -46,7 +48,7 @@ class RealtimeNotificationService {
     final client = Supabase.instance.client;
 
     try {
-      // 1. Listen for new notifications (likes, circle alerts, mentions)
+      // 1. Listen for new notifications (likes, circle alerts, mentions, new messages)
       _notifChannel = client
           .channel('realtime:notifications:$userId')
           .onPostgresChanges(
@@ -63,6 +65,7 @@ class RealtimeNotificationService {
               HapticFeedback.lightImpact();
               _ref.invalidate(notificationsListProvider);
               _ref.invalidate(unreadNotificationsCountProvider);
+              _ref.invalidate(conversationsProvider);
             },
           )
           .subscribe();
@@ -88,7 +91,27 @@ class RealtimeNotificationService {
           )
           .subscribe();
 
-      // 3. Listen for new incoming direct messages
+      // 3. Listen for new conversation memberships (instantly detects new conversations created by another user)
+      _memberChannel = client
+          .channel('realtime:members:$userId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'conversation_members',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId,
+            ),
+            callback: (payload) {
+              debugPrint('Realtime conversation member received: ${payload.eventType}');
+              HapticFeedback.selectionClick();
+              _ref.invalidate(conversationsProvider);
+            },
+          )
+          .subscribe();
+
+      // 4. Listen for new direct messages
       _msgChannel = client
           .channel('realtime:messages:$userId')
           .onPostgresChanges(
@@ -96,16 +119,27 @@ class RealtimeNotificationService {
             schema: 'public',
             table: 'messages',
             callback: (payload) {
-              final newRow = payload.newRecord;
-              if (newRow['sender_id'] != userId) {
-                // Incoming message from another student
-                HapticFeedback.selectionClick();
-                _ref.invalidate(conversationsProvider);
-              }
+              debugPrint('Realtime message event: ${payload.eventType}');
+              HapticFeedback.selectionClick();
+              _ref.invalidate(conversationsProvider);
             },
           )
           .subscribe();
-          
+
+      // 5. Listen for conversation updates (e.g. last_message_preview, last_message_at)
+      _convChannel = client
+          .channel('realtime:conversations:$userId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'conversations',
+            callback: (payload) {
+              debugPrint('Realtime conversation updated: ${payload.eventType}');
+              _ref.invalidate(conversationsProvider);
+            },
+          )
+          .subscribe();
+
       debugPrint('Supabase Realtime subscriptions established for user: $userId');
     } catch (e) {
       debugPrint('Notice: Realtime subscription setup: $e');
@@ -117,10 +151,14 @@ class RealtimeNotificationService {
       _notifChannel?.unsubscribe();
       _reqChannel?.unsubscribe();
       _msgChannel?.unsubscribe();
+      _memberChannel?.unsubscribe();
+      _convChannel?.unsubscribe();
     } catch (_) {}
     _notifChannel = null;
     _reqChannel = null;
     _msgChannel = null;
+    _memberChannel = null;
+    _convChannel = null;
     _subscribedUserId = null;
   }
 }

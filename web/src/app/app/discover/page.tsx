@@ -17,6 +17,7 @@ import {
   UserPlus,
   Inbox,
   AlertCircle,
+  Shuffle,
 } from "lucide-react";
 import { TKMCE_DEPARTMENTS, StudentProfile } from "@/lib/mockData";
 import { useCurrentUser } from "@/lib/useUser";
@@ -43,6 +44,7 @@ export default function DiscoverPage() {
 
   // Connection states
   const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
+  const [showConnected, setShowConnected] = useState(false);
   const [pendingSentMap, setPendingSentMap] = useState<Map<string, string>>(new Map()); // targetUserId -> requestId
   const [pendingReceivedMap, setPendingReceivedMap] = useState<Map<string, string>>(new Map()); // targetUserId -> requestId
   const [incomingRequests, setIncomingRequests] = useState<ConnectionRequestItem[]>([]);
@@ -51,6 +53,18 @@ export default function DiscoverPage() {
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   const years = ["All Years", "1st Year", "2nd Year", "3rd Year", "4th Year"];
+
+  // Fisher-Yates shuffle for true randomness in discover suggestions
+  const shuffleStudents = () => {
+    setStudents((prev) => {
+      const copy = [...prev];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    });
+  };
 
   const loadConnections = useCallback(async (userId: string) => {
     try {
@@ -98,6 +112,13 @@ export default function DiscoverPage() {
             discoverable: p.discoverable ?? true,
             verification_status: p.verification_status || "verified",
           }));
+
+          // Randomize / shuffle list on initial fetch
+          for (let i = liveList.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [liveList[i], liveList[j]] = [liveList[j], liveList[i]];
+          }
+
           setStudents(liveList);
         } else {
           setStudents([]);
@@ -222,9 +243,14 @@ export default function DiscoverPage() {
     }
   };
 
-  // Filter out self and apply search/filters
+  // Filter out self and already connected students, and apply search/filters
   const filteredStudents = students.filter((student) => {
+    // 1. Exclude self
     if (user && student.id === user.id) return false;
+
+    // 2. Exclude already connected students from discover suggestions
+    if (!showConnected && connectedIds.has(student.id)) return false;
+
     const matchesSearch =
       student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.interests.some((i) => i.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -419,12 +445,39 @@ export default function DiscoverPage() {
             ))}
           </select>
 
-          {(searchQuery || selectedDept !== "All Departments" || selectedYear !== "All Years") && (
+          {/* Randomize / Shuffle suggestions */}
+          <button
+            onClick={shuffleStudents}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/40 text-xs font-semibold text-brand-lavender hover:text-white transition-colors"
+            title="Randomize discover suggestions"
+          >
+            <Shuffle className="w-3.5 h-3.5 text-brand-purple" />
+            <span>Randomize</span>
+          </button>
+
+          {/* Filter out already connected students */}
+          {connectedIds.size > 0 && (
+            <button
+              onClick={() => setShowConnected(!showConnected)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                showConnected
+                  ? "bg-brand-teal/20 border-brand-teal text-brand-teal"
+                  : "bg-brand-navySecondary border-brand-border text-brand-muted hover:text-white"
+              }`}
+              title={showConnected ? "Showing connected students" : "Hiding connected students from suggestions"}
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>{showConnected ? "Showing Connected" : `Hiding Connected (${connectedIds.size})`}</span>
+            </button>
+          )}
+
+          {(searchQuery || selectedDept !== "All Departments" || selectedYear !== "All Years" || showConnected) && (
             <button
               onClick={() => {
                 setSearchQuery("");
                 setSelectedDept("All Departments");
                 setSelectedYear("All Years");
+                setShowConnected(false);
               }}
               className="text-xs text-brand-lavender hover:underline ml-auto"
             >

@@ -16,6 +16,7 @@ import '../../ui/screens/circles/circles_screen.dart';
 import '../../ui/screens/circles/circle_detail_screen.dart';
 import '../../ui/screens/circles/create_circle_screen.dart';
 import '../../ui/screens/circles/post_discussion_screen.dart';
+import '../../ui/screens/tea/spill_the_tea_screen.dart';
 import '../../ui/screens/chat/chat_list_screen.dart';
 import '../../ui/screens/chat/individual_chat_screen.dart';
 import '../../ui/screens/notifications/notifications_screen.dart';
@@ -85,21 +86,21 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 3: Messages
+        // Tab 3: Spill the Tea
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/tea',
+              builder: (context, state) => const SpillTheTeaScreen(),
+            ),
+          ],
+        ),
+        // Tab 4: Messages
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/messages',
               builder: (context, state) => const ChatListScreen(),
-            ),
-          ],
-        ),
-        // Tab 4: Notifications
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/notifications',
-              builder: (context, state) => const NotificationsScreen(),
             ),
           ],
         ),
@@ -115,6 +116,14 @@ final GoRouter appRouter = GoRouter(
       ],
     ),
     // Additional Global Routes
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationsScreen(),
+    ),
+    GoRoute(
+      path: '/tea',
+      builder: (context, state) => const SpillTheTeaScreen(),
+    ),
     GoRoute(
       path: '/profile/:id',
       builder: (context, state) {

@@ -156,7 +156,41 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="text-center text-xs text-brand-muted pt-2">
+          {/* Quick Demo Test Accounts for Local / Wi-Fi Testing */}
+          <div className="pt-2 border-t border-brand-border/60 space-y-2">
+            <span className="text-[11px] font-semibold text-brand-teal uppercase tracking-wider block">
+              ⚡ Local Wi-Fi Quick Test Accounts
+            </span>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("test@tkmce.ac.in");
+                  setPassword("Password123!");
+                }}
+                className="p-2.5 rounded-xl bg-brand-navySecondary hover:bg-brand-navyCard border border-brand-border/80 text-left transition-colors group"
+              >
+                <span className="font-bold text-white block text-[11px] group-hover:text-brand-teal">Test User (CSE)</span>
+                <span className="text-[10px] text-brand-muted block truncate font-mono">test@tkmce.ac.in</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("demo@tkmce.ac.in");
+                  setPassword("Password123!");
+                }}
+                className="p-2.5 rounded-xl bg-brand-navySecondary hover:bg-brand-navyCard border border-brand-border/80 text-left transition-colors group"
+              >
+                <span className="font-bold text-white block text-[11px] group-hover:text-brand-lavender">Demo User (Mech)</span>
+                <span className="text-[10px] text-brand-muted block truncate font-mono">demo@tkmce.ac.in</span>
+              </button>
+            </div>
+            <p className="text-[10px] text-brand-muted text-center">
+              Tap above to auto-fill &bull; Password: <code className="text-brand-lavender font-mono">Password123!</code>
+            </p>
+          </div>
+
+          <div className="text-center text-xs text-brand-muted pt-1">
             New to TKMCE campus?{" "}
             <Link href="/register" className="font-semibold text-brand-lavender hover:text-white">
               Create an account

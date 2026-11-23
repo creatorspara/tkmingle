@@ -25,8 +25,8 @@ class AppUpdateInfo {
 }
 
 class UpdateService {
-  static const int currentVersionCode = 11;
-  static const String currentVersionName = "1.0.7";
+  static const int currentVersionCode = 14;
+  static const String currentVersionName = "2.0.1";
   static const MethodChannel _channel = MethodChannel("com.tkmingle.app/updater");
 
   /// Dismisses an update notification for 24 hours so it does not loop
@@ -169,10 +169,35 @@ class UpdateService {
     required void Function(double progress, int receivedBytes, int totalBytes) onProgress,
   }) async {
     final client = HttpClient();
-    final request = await client.getUrl(Uri.parse(downloadUrl));
-    request.headers.set("User-Agent", "TKMingle-Flutter-App");
+    client.autoUncompress = true;
 
-    final response = await request.close();
+    Uri targetUri = Uri.parse(downloadUrl);
+    HttpClientRequest request = await client.getUrl(targetUri);
+    request.headers.set("User-Agent", "TKMingle-Flutter-App");
+    request.followRedirects = true;
+    request.maxRedirects = 8;
+
+    HttpClientResponse response = await request.close();
+
+    // Explicitly follow redirects (e.g. GitHub releases redirect to githubusercontent / azure)
+    int redirectCount = 0;
+    while ((response.statusCode == 301 ||
+            response.statusCode == 302 ||
+            response.statusCode == 303 ||
+            response.statusCode == 307 ||
+            response.statusCode == 308) &&
+        redirectCount < 8) {
+      redirectCount++;
+      final location = response.headers.value(HttpHeaders.locationHeader);
+      if (location == null || location.isEmpty) break;
+      targetUri = targetUri.resolve(location);
+      request = await client.getUrl(targetUri);
+      request.headers.set("User-Agent", "TKMingle-Flutter-App");
+      request.followRedirects = true;
+      request.maxRedirects = 8;
+      response = await request.close();
+    }
+
     if (response.statusCode != 200) {
       throw Exception("Failed to download update package: HTTP ${response.statusCode}");
     }

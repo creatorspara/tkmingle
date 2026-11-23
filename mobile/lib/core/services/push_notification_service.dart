@@ -148,6 +148,40 @@ class PushNotificationService {
     }
   }
 
+  /// Displays a heads-up push notification banner for new app releases
+  Future<void> showUpdateNotification({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    try {
+      if (!_isInitialized) {
+        await initialize();
+      }
+      await _localNotifications.show(
+        999999,
+        title,
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            _highImportanceChannel.id,
+            _highImportanceChannel.name,
+            channelDescription: _highImportanceChannel.description,
+            importance: Importance.max,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+            playSound: true,
+            enableVibration: true,
+            visibility: NotificationVisibility.public,
+          ),
+        ),
+        payload: payload,
+      );
+    } catch (e) {
+      debugPrint("Error displaying update notification: $e");
+    }
+  }
+
   /// Registers the device's FCM token in Supabase `public.device_tokens`
   Future<void> syncDeviceToken(String userId) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;

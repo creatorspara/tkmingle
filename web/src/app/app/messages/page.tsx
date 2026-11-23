@@ -186,6 +186,55 @@ export default function MessagesPage() {
     loadConversations();
   }, [loadConversations]);
 
+  // Global Realtime listener for incoming messages and conversation creation
+  useEffect(() => {
+    if (!user || !isLiveSupabaseConfigured()) return;
+    const globalChannel = supabase
+      .channel(`global_user_messages_${user.id}_${Date.now()}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "conversation_members",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          loadConversations();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        () => {
+          loadConversations();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.new && (payload.new as any).type === "new_message") {
+            loadConversations();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(globalChannel);
+    };
+  }, [user?.id, loadConversations]);
+
   // Handle ?to=<userId> parameter from Discovery
   useEffect(() => {
     let isCancelled = false;

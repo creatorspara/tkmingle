@@ -14,6 +14,7 @@ import {
   Bell,
   Sparkles,
   Loader2,
+  Coffee,
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/useUser";
 import { fetchReceivedRequests } from "@/lib/connections";
@@ -66,6 +67,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { label: "Discover", href: "/app/discover", icon: Compass },
     { label: "Campus Circles", href: "/app/circles", icon: Users2 },
+    { label: "Spill the Tea ☕", href: "/app/tea", icon: Coffee },
     { label: "Messages", href: "/app/messages", icon: MessageSquare },
     { label: "My Profile", href: "/app/profile", icon: User },
     { label: "Settings", href: "/app/settings", icon: Settings },
@@ -224,11 +226,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-navySecondary/95 backdrop-blur-lg border-t border-brand-border px-6 py-2.5 flex justify-between items-center">
-        {navItems.slice(0, 4).map((item) => {
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-navySecondary/95 backdrop-blur-lg border-t border-brand-border px-4 py-2.5 flex justify-between items-center">
+        {navItems.slice(0, 5).map((item) => {
           const Icon = item.icon;
           const isActive = pathname.startsWith(item.href);
           const showBadge = item.label === "Discover" && incomingCount > 0;
+          const mobileLabel = item.label.includes("Tea") ? "Tea ☕" : item.label.split(" ")[0];
           return (
             <Link
               key={item.href}
@@ -245,7 +248,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </span>
                 )}
               </div>
-              <span>{item.label.split(" ")[0]}</span>
+              <span>{mobileLabel}</span>
             </Link>
           );
         })}

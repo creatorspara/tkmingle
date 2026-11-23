@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/services/push_notification_service.dart';
 import '../../core/services/realtime_notification_service.dart';
 import '../../core/services/update_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../state/chat_provider.dart';
-import '../../state/connection_provider.dart';
-import '../../state/notification_provider.dart';
 import 'update_dialog.dart';
 
 class TKMingleScaffold extends ConsumerStatefulWidget {
@@ -33,6 +32,11 @@ class _TKMingleScaffoldState extends ConsumerState<TKMingleScaffold> {
         try {
           final update = await UpdateService.checkForUpdate();
           if (mounted && update != null) {
+            PushNotificationService().showUpdateNotification(
+              title: '🚀 TKMingle ${update.versionName} Available!',
+              body: 'Tap to update: ${update.changelog}',
+              payload: update.downloadUrl,
+            );
             UpdateDialog.show(context, update);
           }
         } catch (e) {
@@ -48,9 +52,6 @@ class _TKMingleScaffoldState extends ConsumerState<TKMingleScaffold> {
     ref.watch(realtimeNotificationServiceProvider);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final unreadNotifs = ref.watch(unreadNotificationsCountProvider).value ?? 0;
-    final pendingRequests = ref.watch(receivedRequestsProvider).value ?? [];
-    final totalAlerts = unreadNotifs + pendingRequests.length;
     final conversations = ref.watch(conversationsProvider).value ?? [];
     final unreadMessages = conversations.fold<int>(0, (sum, c) => sum + c.unreadCount);
 
@@ -97,6 +98,11 @@ class _TKMingleScaffoldState extends ConsumerState<TKMingleScaffold> {
                 selectedIcon: Icon(Icons.groups, color: AppColors.tkmPurple),
                 label: 'Circles',
               ),
+              const NavigationDestination(
+                icon: Icon(Icons.coffee_outlined),
+                selectedIcon: Icon(Icons.coffee, color: AppColors.tkmPurple),
+                label: 'Tea ☕',
+              ),
               NavigationDestination(
                 icon: Badge(
                   isLabelVisible: unreadMessages > 0,
@@ -111,21 +117,6 @@ class _TKMingleScaffoldState extends ConsumerState<TKMingleScaffold> {
                   child: const Icon(Icons.chat_bubble, color: AppColors.tkmPurple),
                 ),
                 label: 'Messages',
-              ),
-              NavigationDestination(
-                icon: Badge(
-                  isLabelVisible: totalAlerts > 0,
-                  label: Text('$totalAlerts'),
-                  backgroundColor: AppColors.error,
-                  child: const Icon(Icons.notifications_none),
-                ),
-                selectedIcon: Badge(
-                  isLabelVisible: totalAlerts > 0,
-                  label: Text('$totalAlerts'),
-                  backgroundColor: AppColors.error,
-                  child: const Icon(Icons.notifications, color: AppColors.tkmPurple),
-                ),
-                label: 'Alerts',
               ),
               const NavigationDestination(
                 icon: Icon(Icons.person_outline),

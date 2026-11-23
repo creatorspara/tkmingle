@@ -99,7 +99,7 @@ class LocalUserRepository implements UserRepository {
       }
 
       return true;
-    }).toList();
+    }).toList()..shuffle();
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/services/push_notification_service.dart';
 import '../../../core/services/update_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -37,6 +38,11 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       final update = await UpdateService.checkForUpdate(force: true);
       if (!context.mounted) return;
       if (update != null) {
+        PushNotificationService().showUpdateNotification(
+          title: '🚀 TKMingle ${update.versionName} Available!',
+          body: 'Tap to update: ${update.changelog}',
+          payload: update.downloadUrl,
+        );
         UpdateDialog.show(context, update);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

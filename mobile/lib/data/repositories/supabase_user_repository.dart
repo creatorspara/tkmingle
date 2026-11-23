@@ -74,6 +74,31 @@ class SupabaseUserRepository implements UserRepository {
           ).toList();
         }
 
+        // Filter out already connected peers
+        if (excludeConnected && currentUserId != null && currentUserId.isNotEmpty) {
+          try {
+            final conns = await _client
+                .from('connections')
+                .select('user_one, user_two')
+                .or('user_one.eq.$currentUserId,user_two.eq.$currentUserId');
+            final connectedIds = <String>{};
+            for (final c in conns) {
+              final u1 = c['user_one'] as String?;
+              final u2 = c['user_two'] as String?;
+              if (u1 != null && u1 != currentUserId) connectedIds.add(u1);
+              if (u2 != null && u2 != currentUserId) connectedIds.add(u2);
+            }
+            if (connectedIds.isNotEmpty) {
+              list = list.where((u) => !connectedIds.contains(u.uid)).toList();
+            }
+          } catch (e) {
+            debugPrint('Notice filtering connected users: $e');
+          }
+        }
+
+        // Shuffle so suggestions are randomized on every refresh
+        list.shuffle();
+
         return list;
       }
     } catch (e) {

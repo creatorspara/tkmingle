@@ -59,3 +59,7 @@ mobile/android/key.properties
 Thumbs.db
 
 *firebase-adminsdk*.json
+mobile/android/app/*.md
+mobile/android/app/*.png
+*.md.bak
+industrial_quality_control_module_1_2_complete_solutions.md

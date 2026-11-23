@@ -11,6 +11,7 @@ import '../../../data/models/connection_request_model.dart';
 import '../../../state/auth_provider.dart';
 import '../../../state/discovery_provider.dart';
 import '../../../state/connection_provider.dart';
+import '../../../state/notification_provider.dart';
 import '../../../state/user_provider.dart';
 import '../../components/custom_button.dart';
 import '../../components/empty_state_view.dart';
@@ -209,6 +210,25 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   ),
                 ),
                 onPressed: () => context.push('/requests'),
+              );
+            },
+          ),
+          // Notifications / Alerts Button with Badge
+          Consumer(
+            builder: (context, ref, child) {
+              final unreadNotifs = ref.watch(unreadNotificationsCountProvider).value ?? 0;
+              return IconButton(
+                tooltip: 'Alerts & Notifications',
+                icon: Badge(
+                  isLabelVisible: unreadNotifs > 0,
+                  label: Text('$unreadNotifs'),
+                  backgroundColor: AppColors.error,
+                  child: Icon(
+                    unreadNotifs > 0 ? Icons.notifications : Icons.notifications_none,
+                    color: unreadNotifs > 0 ? AppColors.tkmPurple : null,
+                  ),
+                ),
+                onPressed: () => context.push('/notifications'),
               );
             },
           ),

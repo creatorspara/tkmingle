@@ -31,8 +31,8 @@ interface MetaDefenderModalProps {
 export default function MetaDefenderModal({
   isOpen,
   onClose,
-  downloadUrl = "https://github.com/creatorspara/tkmingle/releases/download/v1.0.7-k1/tkmmingle-k1-release.apk",
-  versionName = "v1.0.7-k1",
+  downloadUrl = "https://github.com/creatorspara/tkmingle/releases/download/v2.0.0/tkmingle-v2-release.apk",
+  versionName = "v2.0.0",
 }: MetaDefenderModalProps) {
   const [activeTab, setActiveTab] = useState<"engines" | "hashes" | "preview">("engines");
   const [searchQuery, setSearchQuery] = useState("");
