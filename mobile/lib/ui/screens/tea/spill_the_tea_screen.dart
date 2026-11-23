@@ -22,6 +22,7 @@ class _SpillTheTeaScreenState extends ConsumerState<SpillTheTeaScreen> {
   String _filter = 'all'; // all, tea, quote, anonymous, profiled
   String _sort = 'latest'; // latest, spicy
   final Set<String> _expandedComments = {};
+  final Set<String> _reportedPostIds = {};
   final Map<String, TextEditingController> _commentControllers = {};
   final Map<String, bool> _commentAnonMap = {};
 
@@ -268,6 +269,9 @@ class _SpillTheTeaScreenState extends ConsumerState<SpillTheTeaScreen> {
                                   ? detailsController.text.trim()
                                   : null,
                             );
+                        setState(() {
+                          _reportedPostIds.add(item.id);
+                        });
                         if (context.mounted) {
                           Navigator.of(ctx).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -844,16 +848,31 @@ class _SpillTheTeaScreenState extends ConsumerState<SpillTheTeaScreen> {
 
                 const Spacer(),
 
-                // Report Tea to Admin
-                IconButton(
-                  tooltip: 'Report Tea to Admin',
-                  icon: Icon(
-                    Icons.flag_outlined,
-                    size: 18,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                // Report Tea to Admin (Only on other students' posts, not self)
+                if (!isAuthor)
+                  IconButton(
+                    tooltip: _reportedPostIds.contains(item.id)
+                        ? 'Report submitted to admin'
+                        : 'Report Tea to Admin',
+                    icon: Icon(
+                      _reportedPostIds.contains(item.id)
+                          ? Icons.check_circle_outline
+                          : Icons.flag_outlined,
+                      size: 18,
+                      color: _reportedPostIds.contains(item.id)
+                          ? AppColors.accentTeal
+                          : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                    ),
+                    onPressed: _reportedPostIds.contains(item.id)
+                        ? () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('You have already reported this post. Our moderation team is reviewing it.'),
+                              ),
+                            );
+                          }
+                        : () => _showReportTeaDialog(context, item),
                   ),
-                  onPressed: () => _showReportTeaDialog(context, item),
-                ),
 
                 // Share / Copy
                 IconButton(

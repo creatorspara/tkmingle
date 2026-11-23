@@ -14,6 +14,8 @@ export interface StudentProfile {
   availability: string;
   discoverable: boolean;
   verification_status: "verified" | "pending" | "rejected" | "suspended";
+  role?: "student" | "admin" | string;
+  email?: string;
 }
 
 export interface CircleItem {

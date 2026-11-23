@@ -85,6 +85,26 @@ export default function SpillTheTeaPage() {
   const [reportDetails, setReportDetails] = useState<string>("");
   const [isSubmittingReport, setIsSubmittingReport] = useState<boolean>(false);
   const [reportSuccessMsg, setReportSuccessMsg] = useState<string | null>(null);
+  const [reportedPostIds, setReportedPostIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("tk_reported_tea_ids");
+      if (stored) {
+        setReportedPostIds(new Set(JSON.parse(stored)));
+      }
+    } catch (e) {}
+  }, []);
+
+  const AUTHORIZED_ADMIN_EMAILS = [
+    "tkmmingle@gmail.com",
+    "vaishnavvfisc@gmail.com",
+    "vaishnavceh@gmail.com",
+    "test@tkmce.ac.in",
+  ];
+  const isAdmin = Boolean(
+    profile?.role === "admin" || (user?.email && AUTHORIZED_ADMIN_EMAILS.includes(user.email.toLowerCase()))
+  );
 
   useEffect(() => {
     // 1. Initial fast load from cache
@@ -222,6 +242,12 @@ export default function SpillTheTeaPage() {
         authorAlias: reportingPost.anonymous_alias || reportingPost.author_name,
       });
       setReportSuccessMsg("Report submitted to campus admin for review. Thank you!");
+      const nextSet = new Set(reportedPostIds);
+      nextSet.add(reportingPost.id);
+      setReportedPostIds(nextSet);
+      try {
+        localStorage.setItem("tk_reported_tea_ids", JSON.stringify(Array.from(nextSet)));
+      } catch (e) {}
       setTimeout(() => {
         setReportingPost(null);
         setReportReason("Defamation or Personal Target");
@@ -363,14 +389,16 @@ export default function SpillTheTeaPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/app/tea/admin"
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-lavender text-xs font-semibold hover:border-brand-purple/50 transition-all shadow-sm"
-            title="Open Admin Tea Reports Dashboard"
-          >
-            <Shield className="w-4 h-4 text-brand-purple" />
-            <span>Admin Reports</span>
-          </Link>
+          {isAdmin && (
+            <Link
+              href="/app/tea/admin"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-tk-btn bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/40 text-brand-lavender text-xs font-semibold transition-all shadow-sm"
+              title="Open Admin Tea Reports Dashboard (Admin Only)"
+            >
+              <Shield className="w-4 h-4 text-brand-purple" />
+              <span>Admin Reports</span>
+            </Link>
+          )}
           <button
             onClick={() => {
               randomizeAlias();
@@ -694,15 +722,33 @@ export default function SpillTheTeaPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {/* Report Button */}
-                  <button
-                    onClick={() => setReportingPost(item)}
-                    className="inline-flex items-center gap-1 text-xs text-brand-muted hover:text-red-400 transition-colors px-2 py-1 rounded-lg hover:bg-red-500/10"
-                    title="Report post to campus admin"
-                  >
-                    <Flag className="w-3.5 h-3.5" />
-                    <span>Report</span>
-                  </button>
+                  {/* Report Button: Only available on other users' posts */}
+                  {!isAuthor && (
+                    reportedPostIds.has(item.id) ? (
+                      <span
+                        className="inline-flex items-center gap-1 text-[11px] text-brand-muted px-2 py-1 rounded-lg bg-white/5 border border-white/10"
+                        title="You have already flagged this post for admin review"
+                      >
+                        <Check className="w-3 h-3 text-brand-teal" />
+                        <span>Reported</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          if (!user) {
+                            alert("Please log in to report a post.");
+                            return;
+                          }
+                          setReportingPost(item);
+                        }}
+                        className="inline-flex items-center gap-1 text-xs text-brand-muted hover:text-red-400 transition-colors px-2 py-1 rounded-lg hover:bg-red-500/10"
+                        title="Report post to campus admin"
+                      >
+                        <Flag className="w-3.5 h-3.5" />
+                        <span>Report</span>
+                      </button>
+                    )
+                  )}
 
                   {/* Share Button */}
                   <button

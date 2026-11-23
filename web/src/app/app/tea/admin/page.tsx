@@ -16,21 +16,49 @@ import {
   Coffee,
   Check,
   ExternalLink,
+  Lock,
+  ShieldAlert,
+  KeyRound,
 } from "lucide-react";
 import {
   fetchTeaReportsFromDb,
   updateReportStatusInDb,
   TeaReport,
 } from "@/lib/teaData";
+import { useCurrentUser } from "@/lib/useUser";
+
+const AUTHORIZED_ADMIN_EMAILS = [
+  "tkmmingle@gmail.com",
+  "vaishnavvfisc@gmail.com",
+  "vaishnavceh@gmail.com",
+  "test@tkmce.ac.in",
+];
+
+// Fallback emergency admin passcode for the site owner
+const MASTER_ADMIN_PASSCODE = "tkmadmin2026";
 
 export default function TeaAdminReportsPage() {
+  const { user, profile, loading: userLoading } = useCurrentUser();
   const [reports, setReports] = useState<TeaReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "resolved" | "dismissed">("pending");
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
+  // Passcode unlock state
+  const [inputPasscode, setInputPasscode] = useState("");
+  const [passcodeUnlocked, setPasscodeUnlocked] = useState(false);
+  const [passcodeError, setPasscodeError] = useState(false);
+
+  // Determine if the current user is an authorized admin
+  const isEmailAdmin = Boolean(
+    user?.email && AUTHORIZED_ADMIN_EMAILS.includes(user.email.toLowerCase())
+  );
+  const isRoleAdmin = profile?.role === "admin";
+  const isAuthorized = passcodeUnlocked || isEmailAdmin || isRoleAdmin;
+
   const loadReports = async () => {
+    if (!isAuthorized) return;
     setLoading(true);
     try {
       const data = await fetchTeaReportsFromDb();
@@ -43,12 +71,29 @@ export default function TeaAdminReportsPage() {
   };
 
   useEffect(() => {
-    loadReports();
-  }, []);
+    if (isAuthorized) {
+      loadReports();
+    }
+  }, [isAuthorized]);
+
+  const handlePasscodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputPasscode.trim() === MASTER_ADMIN_PASSCODE) {
+      setPasscodeUnlocked(true);
+      setPasscodeError(false);
+    } else {
+      setPasscodeError(true);
+    }
+  };
 
   const handleResolveAndDelete = async (report: TeaReport) => {
+    if (!isAuthorized) {
+      alert("Unauthorized: Administrator permissions required.");
+      return;
+    }
+
     const confirmDelete = window.confirm(
-      `Are you sure you want to DELETE this post from TKMingle and mark the report as resolved?\n\nPost: "${report.post_snippet || report.post_id}"`
+      `⚠️ CRITICAL ADMIN ACTION:\n\nAre you sure you want to permanently DELETE this post from TKMingle campus feed and mark this report as resolved?\n\nAuthor: ${report.author_alias || "Anonymous"}\nSnippet: "${report.post_snippet || report.post_id}"`
     );
     if (!confirmDelete) return;
 
@@ -68,6 +113,11 @@ export default function TeaAdminReportsPage() {
   };
 
   const handleDismiss = async (reportId: string) => {
+    if (!isAuthorized) {
+      alert("Unauthorized: Administrator permissions required.");
+      return;
+    }
+
     setActionLoadingId(reportId);
     try {
       await updateReportStatusInDb(reportId, "dismissed");
@@ -83,6 +133,107 @@ export default function TeaAdminReportsPage() {
     }
   };
 
+  // 1. Loading User State
+  if (userLoading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 space-y-3">
+        <RefreshCw className="w-8 h-8 animate-spin text-brand-purple" />
+        <p className="text-xs text-brand-muted">Verifying administrator credentials...</p>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated State
+  if (!user) {
+    return (
+      <div className="min-h-[75vh] flex flex-col items-center justify-center p-6 max-w-md mx-auto text-center space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400">
+          <Lock className="w-8 h-8" />
+        </div>
+        <h1 className="text-xl font-bold text-white">Authentication Required</h1>
+        <p className="text-xs text-brand-muted">
+          You must be logged in as a verified campus administrator to access the moderation console.
+        </p>
+        <Link
+          href="/login"
+          className="px-6 py-2.5 rounded-xl bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-semibold shadow-purple-glow transition-all"
+        >
+          Sign In to TKMingle
+        </Link>
+      </div>
+    );
+  }
+
+  // 3. Unauthorized State (403 Forbidden with Passcode Override)
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-[75vh] flex flex-col items-center justify-center p-6 max-w-lg mx-auto space-y-6">
+        <div className="w-full glass-panel border border-red-500/30 rounded-3xl p-8 text-center space-y-5 shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 mx-auto shadow-lg">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-1.5">
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              Access Restricted
+            </h1>
+            <p className="text-xs text-brand-muted max-w-sm mx-auto leading-relaxed">
+              This moderation dashboard is strictly restricted to designated TKMCE campus administrators. Your student account does not have moderation authority.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-brand-navySecondary/60 border border-brand-border/60 text-xs text-brand-muted flex items-center justify-center gap-2">
+            <span>Signed in as:</span>
+            <strong className="text-white font-mono">{user.email}</strong>
+            <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] uppercase font-bold text-brand-lavender">
+              {profile?.role || "student"}
+            </span>
+          </div>
+
+          {/* Admin Passcode Override */}
+          <div className="pt-2 border-t border-brand-border/60 text-left space-y-3">
+            <div className="flex items-center gap-1.5 text-xs text-brand-muted">
+              <KeyRound className="w-3.5 h-3.5 text-brand-purple" />
+              <span>Are you a campus admin on a new device? Enter Admin Key:</span>
+            </div>
+            <form onSubmit={handlePasscodeSubmit} className="flex gap-2">
+              <input
+                type="password"
+                placeholder="Enter Admin Passcode..."
+                value={inputPasscode}
+                onChange={(e) => {
+                  setInputPasscode(e.target.value);
+                  setPasscodeError(false);
+                }}
+                className="flex-1 px-3 py-2 rounded-xl bg-brand-navyCard border border-brand-border text-xs text-white focus:outline-none focus:border-brand-purple"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-xl bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-semibold transition-all"
+              >
+                Unlock
+              </button>
+            </form>
+            {passcodeError && (
+              <p className="text-[11px] text-red-400 font-medium">Invalid administrator passcode.</p>
+            )}
+          </div>
+
+          <div className="pt-2">
+            <Link
+              href="/app/tea"
+              className="inline-flex items-center gap-1.5 text-xs text-brand-muted hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Return to Spill the Tea</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Authorized Admin Moderation View
   const filteredReports = reports.filter((r) => {
     if (filter === "all") return true;
     return r.status === filter;
@@ -106,7 +257,10 @@ export default function TeaAdminReportsPage() {
               <span>Back to Spill the Tea</span>
             </Link>
             <span className="text-brand-muted/40">&bull;</span>
-            <span className="text-xs font-semibold text-brand-lavender">Moderation Dashboard</span>
+            <span className="text-xs font-semibold text-brand-lavender">Admin Moderation Console</span>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase tracking-wider">
+              Verified Admin
+            </span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
@@ -316,7 +470,7 @@ export default function TeaAdminReportsPage() {
                         <button
                           onClick={() => handleDismiss(report.id)}
                           disabled={isLoading}
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-muted hover:text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-brand-muted hover:text-white text-xs font-semibold transition-colors disabled:opacity-50"
                           title="Dismiss report as non-violating"
                         >
                           <XCircle className="w-3.5 h-3.5" />

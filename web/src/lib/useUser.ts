@@ -50,6 +50,8 @@ export function useCurrentUser(): CurrentUserData {
             availability: data.availability || "Available to mingle",
             discoverable: data.discoverable ?? true,
             verification_status: data.verification_status || (authUser.email_confirmed_at ? "verified" : "pending"),
+            role: data.role || "student",
+            email: data.email || authUser.email,
           });
           return;
         }
