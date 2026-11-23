@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Equipo Kromium Vault — Authenticated File Security Ecosystem</title>
+  <meta name="description" content="Direct downloads for Equipo Kromium Vault: Windows Standalone (.exe) and Android (.apk). Zero-knowledge file encryption using NIST SP 800-38D AES-256-GCM and PBKDF2." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0A0F;
+      --card-bg: #12121A;
+      --card-border: #2A2640;
+      --purple: #6C4DFF;
+      --lavender: #A78BFA;
+      --light-purple: #D1C4FF;
+      --teal: #50D6C2;
+      --text-main: #F5F5F7;
+      --text-muted: #9D9AA8;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Sora', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      line-height: 1.5;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      width: 100%;
+    }
+    /* Header */
+    header {
+      border-bottom: 1px solid rgba(42, 38, 64, 0.6);
+      background: rgba(12, 14, 26, 0.85);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-content {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: rgba(108, 77, 255, 0.2);
+      border: 1px solid rgba(108, 77, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--teal);
+    }
+    .brand-text h1 {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tagline {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .badge {
+      font-size: 0.625rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: rgba(108, 77, 255, 0.25);
+      border: 1px solid rgba(108, 77, 255, 0.4);
+      color: var(--light-purple);
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-header {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-header-ghost {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+    }
+    .btn-header-ghost:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+    .btn-header-primary {
+      background: var(--purple);
+      border: none;
+      color: #fff;
+    }
+    .btn-header-primary:hover {
+      background: #5b3ce6;
+    }
+    /* Main */
+    main {
+      padding: 3.5rem 0;
+    }
+    .hero {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 3rem auto;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--light-purple);
+      background: rgba(108, 77, 255, 0.15);
+      border: 1px solid rgba(108, 77, 255, 0.3);
+      padding: 4px 14px;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+    }
+    .hero-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .hero-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    /* Cards Grid */
+    .download-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    @media (min-width: 640px) {
+      .download-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.5rem;
+      transition: all 0.25s ease;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+    .card:hover {
+      border-color: rgba(108, 77, 255, 0.5);
+      transform: translateY(-2px);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-pc {
+      background: rgba(108, 77, 255, 0.15);
+      border: 1px solid rgba(108, 77, 255, 0.3);
+      color: var(--teal);
+    }
+    .icon-android {
+      background: rgba(80, 214, 194, 0.15);
+      border: 1px solid rgba(80, 214, 194, 0.3);
+      color: var(--teal);
+    }
+    .card-status {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      padding: 3px 10px;
+      border-radius: 9999px;
+    }
+    .card-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-top: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    .card-file {
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+    }
+    .card-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+      line-height: 1.5;
+    }
+    .card-specs {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .card-specs .row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .card-specs .val {
+      color: #fff;
+      font-weight: 500;
+    }
+    .btn-download {
+      width: 100%;
+      padding: 14px;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-pc {
+      background: var(--purple);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(108, 77, 255, 0.3);
+    }
+    .btn-pc:hover {
+      background: #5b3ce6;
+    }
+    .btn-android {
+      background: var(--teal);
+      color: #0A0A0F;
+      box-shadow: 0 4px 18px rgba(80, 214, 194, 0.25);
+    }
+    .btn-android:hover {
+      background: #42bca9;
+    }
+    /* Tech Specs Bar */
+    .specs-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .specs-panel h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .spec-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
+      padding: 1rem;
+    }
+    .spec-item .label {
+      font-size: 0.65rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .spec-item .title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .spec-item .desc {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    /* Verification */
+    .verify-box {
+      background: #0D0E1A;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.75rem;
+    }
+    @media (min-width: 640px) {
+      .verify-box {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+    .verify-box code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: var(--light-purple);
+      font-size: 0.7rem;
+    }
+    /* Footer */
+    footer {
+      border-top: 1px solid rgba(42, 38, 64, 0.6);
+      background: #0C0E1A;
+      padding: 1.75rem 0;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    @media (min-width: 640px) {
+      .footer-content {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+    }
+    .footer-links {
+      display: flex;
+      gap: 16px;
+    }
+    .footer-links a:hover {
+      color: #fff;
+    }
+    /* Toast notice */
+    #download-toast {
+      display: none;
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0C0E1A;
+      border: 1px solid var(--teal);
+      color: var(--teal);
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 100;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- DOWNLOAD TOAST -->
+  <div id="download-toast">
+    ⚡ Download triggered! Saving directly to your Downloads folder...
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="container header-content">
+      <div class="brand-group">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="brand-text">
+          <h1>Equipo Kromium Vault <span class="badge">v1.0.1 Stable</span></h1>
+          <span class="tagline">Build · Open · Share</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button onclick="downloadFile('pc')" class="btn-header btn-header-ghost">
+          PC (.exe)
+        </button>
+        <button onclick="downloadFile('android')" class="btn-header btn-header-primary">
+          Android (.apk)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <div class="container">
+
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="hero-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          NIST SP 800-38D AES-256-GCM Container Standard
+        </div>
+        <h2 class="hero-title">Direct File Security Downloads</h2>
+        <p class="hero-desc">
+          Official zero-knowledge cryptographic file container ecosystem by Equipo Kromium. Select your platform below to instantly download the standalone binaries.
+        </p>
+      </section>
+
+      <!-- Download Cards -->
+      <section class="download-grid">
+
+        <!-- PC CARD -->
+        <div class="card">
+          <div>
+            <div class="card-top">
+              <div class="card-icon icon-pc">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              </div>
+              <span class="card-status">Standalone .EXE</span>
+            </div>
+
+            <h3 class="card-title">Download for PC</h3>
+            <div class="card-file">EquipoKromium-Windows.exe</div>
+            <p class="card-desc">
+              Portable single-file desktop runner with background worker encryption, zero external dependencies, and automatic plaintext shredding.
+            </p>
+
+            <div class="card-specs">
+              <div class="row">
+                <span>Target OS:</span>
+                <span class="val">Windows 10 / 11 (64-bit)</span>
+              </div>
+              <div class="row">
+                <span>Format:</span>
+                <span class="val">Native Standalone Executable</span>
+              </div>
+              <div class="row">
+                <span>Installation:</span>
+                <span class="val" style="color: #34d399;">Zero-Install (Portable)</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <button onclick="downloadFile('pc')" class="btn-download btn-pc">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Download for PC (.exe)
+            </button>
+          </div>
+        </div>
+
+        <!-- ANDROID CARD -->
+        <div class="card">
+          <div>
+            <div class="card-top">
+              <div class="card-icon icon-android">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+              </div>
+              <span class="card-status">Android .APK</span>
+            </div>
+
+            <h3 class="card-title">Download for Android</h3>
+            <div class="card-file">EquipoKromium-Android.apk</div>
+            <p class="card-desc">
+              Mobile encrypted vault package built using Flutter. Encrypt, decrypt, and manage .kromium containers on your phone with zero network access required.
+            </p>
+
+            <div class="card-specs">
+              <div class="row">
+                <span>Target OS:</span>
+                <span class="val">Android 7.0+ (ARM64 / x86_64)</span>
+              </div>
+              <div class="row">
+                <span>Format:</span>
+                <span class="val">Application Package (.apk)</span>
+              </div>
+              <div class="row">
+                <span>Permissions:</span>
+                <span class="val" style="color: #34d399;">Local Storage Only</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <button onclick="downloadFile('android')" class="btn-download btn-android">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Download for Android (.apk)
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Technical Architecture -->
+      <section class="specs-panel">
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#50D6C2" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Cryptographic Architecture &bull; .kromium Specification
+        </h3>
+
+        <div class="specs-grid">
+          <div class="spec-item">
+            <div class="label">Authenticated Cipher</div>
+            <div class="title">AES-256-GCM</div>
+            <div class="desc">NIST SP 800-38D verified AEAD encryption with 128-bit authentication tags to detect any tampering.</div>
+          </div>
+
+          <div class="spec-item">
+            <div class="label">Key Stretching</div>
+            <div class="title">PBKDF2-SHA256</div>
+            <div class="desc">600,000 iterations and a 32-byte unique cryptographic salt to defeat brute-force and precomputation.</div>
+          </div>
+
+          <div class="spec-item">
+            <div class="label">Container Format</div>
+            <div class="title">.kromium Container</div>
+            <div class="desc">Interoperable container format packing original filename, metadata, nonce, and ciphertext securely.</div>
+          </div>
+
+          <div class="spec-item">
+            <div class="label">Execution Model</div>
+            <div class="title">Zero-Knowledge Offline</div>
+            <div class="desc">Runs locally on CPU. Zero cloud dependencies, zero analytics, zero external network requests.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Verification Helper -->
+      <section class="verify-box">
+        <div>
+          <span style="font-weight: 600; color: #fff;">Verify SHA-256 Checksum (PowerShell):</span>
+          <code>Get-FileHash -Algorithm SHA256 .\EquipoKromium-Windows.exe</code>
+        </div>
+        <button onclick="navigator.clipboard.writeText('Get-FileHash -Algorithm SHA256 .\\EquipoKromium-Windows.exe'); alert('Copied PowerShell verification command!');" class="btn-header btn-header-ghost" style="font-size: 0.7rem;">
+          Copy Command
+        </button>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-content">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6C4DFF" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <strong style="color: #fff;">Equipo Kromium Vault</strong> &bull; TKM College of Engineering (TKMCE)
+      </div>
+
+      <div class="footer-links">
+        <a href="#" onclick="downloadFile('pc'); return false;">Windows (.exe)</a>
+        <a href="#" onclick="downloadFile('android'); return false;">Android (.apk)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const ASSETS = {
+      pc: "https://github.com/creatorspara/equipo-kromium-vault/releases/latest/download/EquipoKromium-Windows.exe",
+      android: "https://github.com/creatorspara/equipo-kromium-vault/releases/latest/download/EquipoKromium-Android.apk"
+    };
+
+    function downloadFile(platform) {
+      const url = ASSETS[platform];
+      const filename = platform === 'pc' ? 'EquipoKromium-Windows.exe' : 'EquipoKromium-Android.apk';
+
+      const toast = document.getElementById("download-toast");
+      toast.style.display = "block";
+      toast.textContent = `⚡ Direct download started for ${filename}...`;
+
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 4000);
+
+      // Trigger direct download without page navigation
+      const a = document.createElement("a");
+      a.href = url;
+      a.setAttribute("download", filename);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  </script>
+</body>
+</html>

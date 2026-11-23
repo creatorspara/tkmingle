@@ -877,16 +877,13 @@ export default function LandingPage() {
               </div>
 
               <div className="flex items-center gap-3 shrink-0 flex-wrap">
-                <a
-                  href="https://github.com/creatorspara/equipo-kromium-vault"
-                  target="_blank"
-                  rel="noreferrer"
+                <Link
+                  href="/vault"
                   className="px-4 py-2.5 rounded-tk-btn bg-[#6C4DFF] hover:bg-[#6C4DFF]/90 text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-[#6C4DFF]/25"
                 >
-                  <Code2 className="w-3.5 h-3.5" />
-                  Explore Vault
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+                  <Download className="w-3.5 h-3.5" />
+                  Download Vault (.exe / .apk)
+                </Link>
                 <Link
                   href="/team#projects"
                   className="px-4 py-2.5 rounded-tk-btn bg-brand-navyCard hover:bg-brand-navySecondary border border-brand-border text-white font-semibold text-xs transition-colors"
@@ -1055,14 +1052,12 @@ export default function LandingPage() {
                   </Link>
                 </li>
                 <li>
-                  <a
-                    href="https://github.com/creatorspara/equipo-kromium-vault"
-                    target="_blank"
-                    rel="noreferrer"
+                  <Link
+                    href="/vault"
                     className="text-[#50D6C2] hover:underline transition-colors flex items-center gap-1 font-medium"
                   >
-                    <ShieldCheck className="w-3 h-3" /> Equipo Kromium Vault (v2.0)
-                  </a>
+                    <ShieldCheck className="w-3 h-3" /> Equipo Kromium Vault (v1.0.1)
+                  </Link>
                 </li>
                 <li><span className="text-brand-muted">tkmmingle@gmail.com</span></li>
                 <li><span className="text-brand-text">TKMCE, Karicode, Kollam</span></li>

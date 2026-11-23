@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "name": "equipo-kromium-vault",
+  "routes": [
+    {
+      "src": "/download/pc",
+      "status": 302,
+      "headers": {
+        "Location": "https://github.com/creatorspara/equipo-kromium-vault/releases/latest/download/EquipoKromium-Windows.exe",
+        "Content-Disposition": "attachment; filename=\"EquipoKromium-Windows.exe\""
+      }
+    },
+    {
+      "src": "/download/android",
+      "status": 302,
+      "headers": {
+        "Location": "https://github.com/creatorspara/equipo-kromium-vault/releases/latest/download/EquipoKromium-Android.apk",
+        "Content-Disposition": "attachment; filename=\"EquipoKromium-Android.apk\""
+      }
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

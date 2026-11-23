@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { Shield, ExternalLink, X, Sparkles } from "lucide-react";
 
 export default function NewProjectNotification() {
@@ -97,15 +98,14 @@ export default function NewProjectNotification() {
 
           {/* Action & Close Buttons */}
           <div className="flex items-center gap-2 shrink-0">
-            <a
-              href="https://github.com/creatorspara/equipo-kromium-vault"
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href="/vault"
+              onClick={dismiss}
               className="px-3 py-1.5 rounded-xl bg-[#6C4DFF] hover:bg-[#6C4DFF]/90 text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-[#6C4DFF]/30 active:scale-95"
             >
-              <span>View</span>
+              <span>Download</span>
               <ExternalLink className="w-3 h-3" />
-            </a>
+            </Link>
             <button
               onClick={dismiss}
               aria-label="Close notification"

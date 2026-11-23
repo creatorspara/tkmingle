@@ -21,6 +21,7 @@ import {
   Sparkles,
   Shield,
   Lock,
+  Download,
 } from "lucide-react";
 
 export default function EquipoKromiumPage() {
@@ -342,24 +343,25 @@ export default function EquipoKromiumPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <a
-                    href="https://github.com/creatorspara/equipo-kromium-vault"
-                    target="_blank"
-                    rel="noreferrer"
+                  <Link
+                    href="/vault"
                     className="px-4 py-2 rounded-xl bg-[#6C4DFF] hover:bg-[#6C4DFF]/90 text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-[#6C4DFF]/25"
                   >
-                    <Github className="w-3.5 h-3.5" />
-                    View on GitHub
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    <Download className="w-3.5 h-3.5" />
+                    Direct Downloads (.exe / .apk)
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <a
+                    href="/api/vault/download?platform=pc"
+                    className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors"
+                  >
+                    Quick PC (.exe)
                   </a>
                   <a
-                    href="https://github.com/creatorspara/equipo-kromium-vault/releases"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors"
+                    href="/api/vault/download?platform=android"
+                    className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors"
                   >
-                    Releases (.exe / .apk)
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    Quick APK
                   </a>
                 </div>
               </div>
