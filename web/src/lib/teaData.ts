@@ -354,6 +354,17 @@ export async function fetchLiveTeaPosts(): Promise<TeaItem[]> {
       });
     });
 
+    let likedPostIds = new Set<string>();
+    let firedPostIds = new Set<string>();
+    if (typeof window !== "undefined") {
+      try {
+        const storedLikes = localStorage.getItem("tk_liked_tea_post_ids");
+        if (storedLikes) likedPostIds = new Set(JSON.parse(storedLikes));
+        const storedFires = localStorage.getItem("tk_fired_tea_post_ids");
+        if (storedFires) firedPostIds = new Set(JSON.parse(storedFires));
+      } catch (_) {}
+    }
+
     const items: TeaItem[] = postsData.map((p: any) => ({
       id: p.id,
       user_id: p.user_id || undefined,
@@ -373,6 +384,8 @@ export async function fetchLiveTeaPosts(): Promise<TeaItem[]> {
       department: p.department,
       likes_count: p.likes_count ?? 0,
       fires_count: p.fires_count ?? 0,
+      is_liked_by_me: likedPostIds.has(p.id),
+      is_fired_by_me: firedPostIds.has(p.id),
       allow_comments: p.allow_comments !== undefined ? Boolean(p.allow_comments) : true,
       comments: commentsByPost[p.id] || [],
       created_at: formatTimeAgo(p.created_at),
@@ -447,12 +460,63 @@ export async function toggleTeaCommentsInDb(postId: string, allowComments: boole
   }
 }
 
-export async function updateTeaReactionsInDb(postId: string, likes: number, fires: number): Promise<void> {
+export async function updateTeaReactionsInDb(
+  postId: string,
+  likes: number,
+  fires: number,
+  reactionKind?: "like" | "fire",
+  isActive?: boolean,
+  userId?: string
+): Promise<void> {
+  // 1. Update localStorage immediately so reaction survives reload
+  if (typeof window !== "undefined" && reactionKind && isActive !== undefined) {
+    try {
+      const key = reactionKind === "fire" ? "tk_fired_tea_post_ids" : "tk_liked_tea_post_ids";
+      const stored = localStorage.getItem(key);
+      const set = new Set<string>(stored ? JSON.parse(stored) : []);
+      if (isActive) {
+        set.add(postId);
+      } else {
+        set.delete(postId);
+      }
+      localStorage.setItem(key, JSON.stringify(Array.from(set)));
+    } catch (_) {}
+  }
+
   if (!isLiveSupabaseConfigured()) return;
+
+  // 2. Update post reaction counts in tea_posts
   try {
     await supabase.from("tea_posts").update({ likes_count: likes, fires_count: fires }).eq("id", postId);
   } catch (err) {
     console.error("updateTeaReactionsInDb notice:", err);
+  }
+
+  // 3. Upsert / delete from tea_reactions table
+  if (reactionKind && isActive !== undefined) {
+    try {
+      const effectiveUserId = userId || (await supabase.auth.getUser()).data?.user?.id;
+      if (effectiveUserId) {
+        if (isActive) {
+          await supabase.from("tea_reactions").upsert(
+            {
+              post_id: postId,
+              user_id: effectiveUserId,
+              reaction_type: reactionKind,
+            },
+            { onConflict: "post_id,user_id,reaction_type" }
+          );
+        } else {
+          await supabase.from("tea_reactions").delete().match({
+            post_id: postId,
+            user_id: effectiveUserId,
+            reaction_type: reactionKind,
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("tea_reactions sync notice:", err);
+    }
   }
 }
 

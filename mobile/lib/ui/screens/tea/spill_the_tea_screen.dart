@@ -26,6 +26,117 @@ class _SpillTheTeaScreenState extends ConsumerState<SpillTheTeaScreen> {
   final Set<String> _reportedPostIds = {};
   final Map<String, TextEditingController> _commentControllers = {};
   final Map<String, bool> _commentAnonMap = {};
+  final Map<String, MalayalamAlias> _commentAliasMap = {};
+
+  MalayalamAlias _getCommentAlias(String postId) {
+    return _commentAliasMap[postId] ??
+        MalayalamAlias.all[postId.hashCode.abs() % MalayalamAlias.all.length];
+  }
+
+  void _showCommentAliasModal(BuildContext context, String postId) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final current = _getCommentAlias(postId);
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Select Anonymous Character',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: AppColors.darkTextMuted, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Choose how your avatar & alias appear on this reply:',
+                    style: TextStyle(fontSize: 11, color: AppColors.darkTextMuted),
+                  ),
+                  const SizedBox(height: 12),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: MalayalamAlias.all.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 5,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 0.85,
+                    ),
+                    itemBuilder: (c, idx) {
+                      final alias = MalayalamAlias.all[idx];
+                      final isSelected = alias.id == current.id;
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _commentAliasMap[postId] = alias;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.tkmPurple.withOpacity(0.3)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: isSelected
+                                ? Border.all(color: AppColors.tkmPurple, width: 2)
+                                : null,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              AliasAvatar(
+                                alias: alias,
+                                radius: 18,
+                                showBorder: isSelected,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                alias.name.split(' ').first,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  color: isSelected ? Colors.white : AppColors.darkTextMuted,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -550,6 +661,7 @@ class _SpillTheTeaScreenState extends ConsumerState<SpillTheTeaScreen> {
     final isExpanded = _expandedComments.contains(item.id);
     final commentCtrl = _getCommentController(item.id);
     final isAnonComment = _commentAnonMap[item.id] ?? true;
+    final commentAlias = _getCommentAlias(item.id);
     final currentUser = ref.watch(authProvider).value;
     final isAuthor = currentUser != null && item.userId != null && currentUser.uid == item.userId;
 
@@ -1008,7 +1120,99 @@ class _SpillTheTeaScreenState extends ConsumerState<SpillTheTeaScreen> {
 
                   // Add comment input (only if comments allowed)
                   if (item.allowComments) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
+
+                    // 🎭 Character Alias Selection Bar (when replying anonymously)
+                    if (isAnonComment) ...[
+                      Row(
+                        children: [
+                          AliasAvatar(alias: commentAlias, radius: 10, showBorder: true),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Replying as ${commentAlias.name}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.tkmPurple,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () => _showCommentAliasModal(context, item.id),
+                            child: const Text(
+                              'Change character',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: AppColors.accentTeal,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Quick horizontal avatar picker
+                      SizedBox(
+                        height: 48,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: MalayalamAlias.all.length,
+                          itemBuilder: (context, idx) {
+                            final a = MalayalamAlias.all[idx];
+                            final isSel = a.id == commentAlias.id;
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _commentAliasMap[item.id] = a;
+                                });
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isSel
+                                      ? AppColors.tkmPurple.withOpacity(0.2)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: isSel
+                                      ? Border.all(color: AppColors.tkmPurple, width: 1.5)
+                                      : null,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    AliasAvatar(
+                                      alias: a,
+                                      radius: 12,
+                                      showBorder: isSel,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      a.name.split(' ').first,
+                                      style: TextStyle(
+                                        fontSize: 8,
+                                        fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                                        color: isSel ? Colors.white : AppColors.darkTextMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                    ],
+
                     Row(
                       children: [
                         Expanded(
@@ -1018,7 +1222,9 @@ class _SpillTheTeaScreenState extends ConsumerState<SpillTheTeaScreen> {
                               isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                             ),
                             decoration: InputDecoration(
-                              hintText: isAnonComment ? 'Reply anonymously...' : 'Reply as profile...',
+                              hintText: isAnonComment
+                                  ? 'Reply anonymously as ${commentAlias.name.split(" ").first}...'
+                                  : 'Reply as profile...',
                               hintStyle: TextStyle(
                                 fontSize: 11,
                                 color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
@@ -1026,26 +1232,43 @@ class _SpillTheTeaScreenState extends ConsumerState<SpillTheTeaScreen> {
                               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               isDense: true,
                             ),
+                            onSubmitted: (_) async {
+                              final text = commentCtrl.text.trim();
+                              if (text.isEmpty) return;
+                              setState(() {
+                                _expandedComments.add(item.id);
+                              });
+                              commentCtrl.clear();
+                              await ref.read(teaFeedProvider.notifier).addComment(
+                                    item.id,
+                                    text,
+                                    isAnonymous: isAnonComment,
+                                    selectedAlias: isAnonComment ? commentAlias : null,
+                                  );
+                            },
                           ),
                         ),
                         const SizedBox(width: 6),
                         IconButton(
                           icon: const Icon(Icons.send, size: 18, color: AppColors.tkmPurple),
-                          onPressed: () {
+                          onPressed: () async {
                             final text = commentCtrl.text.trim();
-                            if (text.isNotEmpty) {
-                              ref.read(teaFeedProvider.notifier).addComment(
-                                    item.id,
-                                    text,
-                                    isAnonymous: isAnonComment,
-                                  );
-                              commentCtrl.clear();
-                            }
+                            if (text.isEmpty) return;
+                            setState(() {
+                              _expandedComments.add(item.id);
+                            });
+                            commentCtrl.clear();
+                            await ref.read(teaFeedProvider.notifier).addComment(
+                                  item.id,
+                                  text,
+                                  isAnonymous: isAnonComment,
+                                  selectedAlias: isAnonComment ? commentAlias : null,
+                                );
                           },
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     GestureDetector(
                       onTap: () {
                         setState(() {

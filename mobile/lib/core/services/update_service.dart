@@ -25,8 +25,8 @@ class AppUpdateInfo {
 }
 
 class UpdateService {
-  static const int currentVersionCode = 26;
-  static const String currentVersionName = "2.5.5";
+  static const int currentVersionCode = 27;
+  static const String currentVersionName = "2.5.5.Fx";
   static const MethodChannel _channel = MethodChannel("com.tkmingle.app/updater");
 
   /// Dismisses an update notification for 24 hours so it does not loop

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_constants.dart';
 import '../models/tea_post_model.dart';
@@ -12,7 +13,7 @@ class TeaRepository {
 
   bool get isLive => _supabase != null;
 
-  /// Fetch all posts ordered by creation date desc
+  /// Fetch all posts ordered by creation date desc, with user reactions hydrated
   Future<List<TeaPost>> getTeaPosts() async {
     final client = _supabase;
     if (client == null) {
@@ -36,12 +37,39 @@ class TeaRepository {
         commentsMap.putIfAbsent(comment.postId, () => []).add(comment);
       }
 
+      // Hydrate user reaction state from SharedPreferences (local persistence across reloads)
+      final prefs = await SharedPreferences.getInstance();
+      final likedIds = (prefs.getStringList('tk_liked_tea_post_ids') ?? []).toSet();
+      final firedIds = (prefs.getStringList('tk_fired_tea_post_ids') ?? []).toSet();
+
+      // Optionally sync from Supabase tea_reactions if user has active session
+      final currentUserId = client.auth.currentUser?.id;
+      if (currentUserId != null && currentUserId.isNotEmpty) {
+        try {
+          final reactionsRes = await client
+              .from('tea_reactions')
+              .select('post_id, reaction_type')
+              .eq('user_id', currentUserId);
+          for (final r in (reactionsRes as List)) {
+            final pid = r['post_id']?.toString();
+            final type = r['reaction_type']?.toString();
+            if (pid != null) {
+              if (type == 'like') likedIds.add(pid);
+              if (type == 'fire') firedIds.add(pid);
+            }
+          }
+        } catch (_) {}
+      }
+
       final List<TeaPost> posts = [];
       for (final raw in (postsRes as List)) {
         final id = raw['id']?.toString() ?? '';
         final post = TeaPost.fromJson(
           Map<String, dynamic>.from(raw),
           comments: commentsMap[id] ?? [],
+        ).copyWith(
+          isLiked: likedIds.contains(id),
+          isFired: firedIds.contains(id),
         );
         posts.add(post);
       }
@@ -56,19 +84,31 @@ class TeaRepository {
     }
   }
 
+  static final RegExp _uuidRegex = RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
   /// Create a new tea post
   Future<void> createPost(TeaPost post, {String? userId}) async {
     final client = _supabase;
     if (client == null) return;
     try {
       final payload = post.toJson();
-      if (userId != null && userId.isNotEmpty) {
+      if (userId != null && userId.isNotEmpty && _uuidRegex.hasMatch(userId)) {
         payload['user_id'] = userId;
+      } else {
+        payload['user_id'] = null;
       }
       await client.from('tea_posts').insert(payload);
     } catch (e) {
       debugPrint('Error inserting tea post: $e');
-      rethrow;
+      try {
+        final fallback = post.toJson();
+        fallback['user_id'] = null;
+        await client.from('tea_posts').insert(fallback);
+      } catch (inner) {
+        debugPrint('Fallback error inserting tea post: $inner');
+        rethrow;
+      }
     }
   }
 
@@ -78,13 +118,86 @@ class TeaRepository {
     if (client == null) return;
     try {
       final payload = comment.toJson();
-      if (userId != null && userId.isNotEmpty) {
+      if (comment.authorType != 'anonymous' &&
+          userId != null &&
+          userId.isNotEmpty &&
+          _uuidRegex.hasMatch(userId)) {
         payload['user_id'] = userId;
+      } else {
+        payload['user_id'] = null;
       }
       await client.from('tea_comments').insert(payload);
     } catch (e) {
-      debugPrint('Error inserting tea comment: $e');
-      rethrow;
+      debugPrint('Error inserting tea comment with user_id: $e');
+      try {
+        final fallback = comment.toJson();
+        fallback['user_id'] = null;
+        await client.from('tea_comments').insert(fallback);
+      } catch (inner) {
+        debugPrint('Fallback error inserting tea comment: $inner');
+        rethrow;
+      }
+    }
+  }
+
+  /// Update reaction state persistently in both SharedPreferences and Supabase
+  Future<void> updateReactionState({
+    required String postId,
+    required bool isFire,
+    required bool isActive,
+    required int likesCount,
+    required int firesCount,
+    String? userId,
+  }) async {
+    // 1. Persist locally to SharedPreferences (immediate and survives reload/restart)
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = isFire ? 'tk_fired_tea_post_ids' : 'tk_liked_tea_post_ids';
+      final ids = (prefs.getStringList(key) ?? []).toSet();
+      if (isActive) {
+        ids.add(postId);
+      } else {
+        ids.remove(postId);
+      }
+      await prefs.setStringList(key, ids.toList());
+    } catch (e) {
+      debugPrint('Error updating local reaction prefs: $e');
+    }
+
+    final client = _supabase;
+    if (client == null) return;
+
+    // 2. Update post reaction counts in tea_posts
+    try {
+      await client.from('tea_posts').update({
+        'likes_count': likesCount,
+        'fires_count': firesCount,
+      }).eq('id', postId);
+    } catch (e) {
+      debugPrint('Error updating tea reactions in tea_posts: $e');
+    }
+
+    // 3. Persist individual reaction in tea_reactions table
+    final effectiveUserId = userId ?? client.auth.currentUser?.id;
+    if (effectiveUserId != null && effectiveUserId.isNotEmpty) {
+      final reactionType = isFire ? 'fire' : 'like';
+      try {
+        if (isActive) {
+          await client.from('tea_reactions').upsert({
+            'post_id': postId,
+            'user_id': effectiveUserId,
+            'reaction_type': reactionType,
+          }, onConflict: 'post_id,user_id,reaction_type');
+        } else {
+          await client.from('tea_reactions').delete().match({
+            'post_id': postId,
+            'user_id': effectiveUserId,
+            'reaction_type': reactionType,
+          });
+        }
+      } catch (e) {
+        debugPrint('Error updating tea_reactions table: $e');
+      }
     }
   }
 

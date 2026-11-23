@@ -28,18 +28,33 @@ class TeaFeedNotifier extends StateNotifier<AsyncValue<List<TeaPost>>> {
   Future<void> toggleReaction(String postId, {required bool isFire}) async {
     final current = state.value;
     if (current == null) return;
+    final user = _ref.read(authProvider).value;
 
     final updated = current.map((p) {
       if (p.id != postId) return p;
       if (isFire) {
         final nextFired = !p.isFired;
         final newFires = nextFired ? p.firesCount + 1 : (p.firesCount > 0 ? p.firesCount - 1 : 0);
-        _repository.updateReactions(postId, p.likesCount, newFires);
+        _repository.updateReactionState(
+          postId: postId,
+          isFire: true,
+          isActive: nextFired,
+          likesCount: p.likesCount,
+          firesCount: newFires,
+          userId: user?.uid,
+        );
         return p.copyWith(firesCount: newFires, isFired: nextFired);
       } else {
         final nextLiked = !p.isLiked;
         final newLikes = nextLiked ? p.likesCount + 1 : (p.likesCount > 0 ? p.likesCount - 1 : 0);
-        _repository.updateReactions(postId, newLikes, p.firesCount);
+        _repository.updateReactionState(
+          postId: postId,
+          isFire: false,
+          isActive: nextLiked,
+          likesCount: newLikes,
+          firesCount: p.firesCount,
+          userId: user?.uid,
+        );
         return p.copyWith(likesCount: newLikes, isLiked: nextLiked);
       }
     }).toList();
@@ -71,33 +86,45 @@ class TeaFeedNotifier extends StateNotifier<AsyncValue<List<TeaPost>>> {
     state = AsyncValue.data(updated);
   }
 
-  Future<void> addComment(String postId, String text, {required bool isAnonymous}) async {
+  Future<void> addComment(
+    String postId,
+    String text, {
+    required bool isAnonymous,
+    MalayalamAlias? selectedAlias,
+  }) async {
     final current = state.value;
     if (current == null) return;
 
     final user = _ref.read(authProvider).value;
-    final randomAlias = (MalayalamAlias.all..shuffle()).first;
+    final alias = selectedAlias ?? (MalayalamAlias.all..shuffle()).first;
 
     final newComment = TeaComment(
       id: 'comm-${DateTime.now().millisecondsSinceEpoch}',
       postId: postId,
       authorType: isAnonymous ? 'anonymous' : 'profiled',
-      authorName: isAnonymous ? randomAlias.name : (user?.name ?? 'TKM Student'),
+      authorName: isAnonymous ? alias.name : (user?.name ?? 'TKM Student'),
       authorAvatar: isAnonymous ? null : user?.profileImage,
-      authorAlias: isAnonymous ? randomAlias.name : null,
-      authorIcon: isAnonymous ? randomAlias.iconUrl : null,
+      authorAlias: isAnonymous ? alias.name : null,
+      authorIcon: isAnonymous ? alias.iconUrl : null,
       content: text.trim(),
       createdAt: DateTime.now(),
     );
 
-    await _repository.addComment(newComment, userId: user?.uid);
-
+    // 1. Optimistic UI update: instantly render comment in APK feed
     final updated = current.map((p) {
       if (p.id != postId) return p;
       return p.copyWith(comments: [...p.comments, newComment]);
     }).toList();
 
     state = AsyncValue.data(updated);
+
+    // 2. Persist to backend without breaking local UI
+    try {
+      final validUserId = (isAnonymous || user == null) ? null : user.uid;
+      await _repository.addComment(newComment, userId: validUserId);
+    } catch (e) {
+      debugPrint('Error inserting tea comment to remote Supabase: $e');
+    }
   }
 
   Future<void> reportPost({

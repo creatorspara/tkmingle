@@ -61,6 +61,7 @@ export default function SpillTheTeaPage() {
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [commentAnonMap, setCommentAnonMap] = useState<Record<string, boolean>>({});
+  const [commentAliasMap, setCommentAliasMap] = useState<Record<string, string>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // New Tea Modal State
@@ -229,7 +230,7 @@ export default function SpillTheTeaPage() {
       if (kind === "like") {
         const isLiked = p.is_liked_by_me;
         const newLikes = isLiked ? p.likes_count - 1 : p.likes_count + 1;
-        updateTeaReactionsInDb(p.id, newLikes, p.fires_count);
+        updateTeaReactionsInDb(p.id, newLikes, p.fires_count, "like", !isLiked, user?.id);
         return {
           ...p,
           likes_count: newLikes,
@@ -238,7 +239,7 @@ export default function SpillTheTeaPage() {
       } else {
         const isFired = p.is_fired_by_me;
         const newFires = isFired ? p.fires_count - 1 : p.fires_count + 1;
-        updateTeaReactionsInDb(p.id, p.likes_count, newFires);
+        updateTeaReactionsInDb(p.id, p.likes_count, newFires, "fire", !isFired, user?.id);
         return {
           ...p,
           fires_count: newFires,
@@ -317,7 +318,13 @@ export default function SpillTheTeaPage() {
     if (!text) return;
 
     const isAnon = commentAnonMap[postId] ?? true;
-    const anonCommentAlias = ANONYMOUS_ALIASES[Math.floor(Math.random() * ANONYMOUS_ALIASES.length)];
+    const chosenAliasId = commentAliasMap[postId];
+    const anonCommentAlias =
+      ANONYMOUS_ALIASES.find((a) => a.id === chosenAliasId) ||
+      ANONYMOUS_ALIASES[
+        Math.abs(postId.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)) %
+          ANONYMOUS_ALIASES.length
+      ];
     const authorName = isAnon
       ? anonCommentAlias.name
       : profile?.full_name || user?.user_metadata?.full_name || "TKM Student";
@@ -911,6 +918,42 @@ export default function SpillTheTeaPage() {
                           <Send className="w-3.5 h-3.5" />
                         </button>
                       </div>
+
+                      {(commentAnonMap[item.id] ?? true) && (
+                        <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
+                          <span className="text-[10px] text-brand-muted shrink-0 font-medium">Character:</span>
+                          {ANONYMOUS_ALIASES.map((alias) => {
+                            const currentAliasId =
+                              commentAliasMap[item.id] ||
+                              ANONYMOUS_ALIASES[
+                                Math.abs(item.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)) %
+                                  ANONYMOUS_ALIASES.length
+                              ].id;
+                            const isSel = alias.id === currentAliasId;
+                            return (
+                              <button
+                                key={alias.id}
+                                type="button"
+                                onClick={() =>
+                                  setCommentAliasMap({ ...commentAliasMap, [item.id]: alias.id })
+                                }
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border shrink-0 transition-all ${
+                                  isSel
+                                    ? "bg-brand-purple/20 border-brand-purple text-white font-semibold shadow-sm"
+                                    : "bg-brand-navySecondary border-brand-border/60 text-brand-muted hover:text-white"
+                                }`}
+                              >
+                                <img
+                                  src={alias.local_icon || alias.icon}
+                                  alt={alias.name}
+                                  className="w-3.5 h-3.5 rounded-full object-cover"
+                                />
+                                <span>{alias.name.split(" ")[0]}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
 
                       <div className="flex items-center justify-between text-[11px] text-brand-muted">
                         <button
