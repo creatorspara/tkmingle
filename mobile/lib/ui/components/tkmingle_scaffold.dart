@@ -98,11 +98,6 @@ class _TKMingleScaffoldState extends ConsumerState<TKMingleScaffold> {
                 selectedIcon: Icon(Icons.groups, color: AppColors.tkmPurple),
                 label: 'Circles',
               ),
-              const NavigationDestination(
-                icon: Icon(Icons.coffee_outlined),
-                selectedIcon: Icon(Icons.coffee, color: AppColors.tkmPurple),
-                label: 'Tea ☕',
-              ),
               NavigationDestination(
                 icon: Badge(
                   isLabelVisible: unreadMessages > 0,

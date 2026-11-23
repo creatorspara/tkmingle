@@ -67,7 +67,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { label: "Discover", href: "/app/discover", icon: Compass },
     { label: "Campus Circles", href: "/app/circles", icon: Users2 },
-    { label: "Spill the Tea ☕", href: "/app/tea", icon: Coffee },
     { label: "Messages", href: "/app/messages", icon: MessageSquare },
     { label: "My Profile", href: "/app/profile", icon: User },
     { label: "Settings", href: "/app/settings", icon: Settings },

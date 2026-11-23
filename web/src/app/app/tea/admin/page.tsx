@@ -34,8 +34,8 @@ const AUTHORIZED_ADMIN_EMAILS = [
   "test@tkmce.ac.in",
 ];
 
-// Fallback emergency admin passcode for the site owner
-const MASTER_ADMIN_PASSCODE = "tkmadmin2026";
+// Emergency master admin passcode for site owner
+const MASTER_ADMIN_PASSCODE = "UTSn1%6,bmFjFYC3wc5&oUHU6_sp{JaTn8N5tti7TsdRit0J$}";
 
 export default function TeaAdminReportsPage() {
   const { user, profile, loading: userLoading } = useCurrentUser();
