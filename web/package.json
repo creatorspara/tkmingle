@@ -1,6 +1,6 @@
 {
   "name": "tkmingle-web",
-  "version": "2.5.0",
+  "version": "2.5.5",
   "private": true,
   "scripts": {
     "dev": "next dev",

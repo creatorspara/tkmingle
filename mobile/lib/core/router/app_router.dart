@@ -86,7 +86,16 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 3: Messages
+        // Tab 3: Spill the Tea
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/tea',
+              builder: (context, state) => const SpillTheTeaScreen(),
+            ),
+          ],
+        ),
+        // Tab 4: Messages
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -95,7 +104,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 4: Profile
+        // Tab 5: Profile
         StatefulShellBranch(
           routes: [
             GoRoute(

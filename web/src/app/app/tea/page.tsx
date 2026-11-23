@@ -437,16 +437,6 @@ export default function SpillTheTeaPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {isAdmin && (
-            <Link
-              href="/app/tea/admin"
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-tk-btn bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/40 text-brand-lavender text-xs font-semibold transition-all shadow-sm"
-              title="Open Admin Tea Reports Dashboard (Admin Only)"
-            >
-              <Shield className="w-4 h-4 text-brand-purple" />
-              <span>Admin Reports</span>
-            </Link>
-          )}
           <button
             onClick={() => {
               randomizeAlias();
