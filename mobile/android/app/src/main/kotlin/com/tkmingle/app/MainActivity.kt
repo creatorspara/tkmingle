@@ -40,6 +40,21 @@ class MainActivity: FlutterActivity() {
                 } else {
                     result.error("INVALID_ARGUMENT", "filePath is required", null)
                 }
+            } else if (call.method == "openUrl") {
+                val url = call.argument<String>("url")
+                if (url != null) {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("URL_ERROR", e.localizedMessage, null)
+                    }
+                } else {
+                    result.error("INVALID_ARGUMENT", "url is required", null)
+                }
             } else {
                 result.notImplemented()
             }

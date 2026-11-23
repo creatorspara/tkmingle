@@ -30,6 +30,7 @@ import {
   Lock,
   MessageSquareOff,
   Flag,
+  RefreshCw,
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/useUser";
 import UserAvatar from "@/components/UserAvatar";
@@ -74,6 +75,8 @@ export default function SpillTheTeaPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [imageValid, setImageValid] = useState<boolean | null>(null);
   const [imageChecking, setImageChecking] = useState(false);
+  const [imgbbNotice, setImgbbNotice] = useState<string | null>(null);
+  const [isResolvingImgbb, setIsResolvingImgbb] = useState(false);
   const [allowComments, setAllowComments] = useState(true);
 
   // Image Lightbox Modal
@@ -150,30 +153,75 @@ export default function SpillTheTeaPage() {
     setSelectedAlias(random);
   };
 
-  // Image URL validation check
-  useEffect(() => {
-    if (!imageUrl.trim()) {
+  // ImgBB URL Resolver & Validator
+  const handleImageUrlChange = async (val: string) => {
+    setImageUrl(val);
+    setImgbbNotice(null);
+
+    const raw = val.trim();
+    if (!raw) {
       setImageValid(null);
       return;
     }
-    const cleanUrl = imageUrl.trim();
-    if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
-      setImageValid(false);
-      return;
-    }
 
-    setImageChecking(true);
-    const img = new window.Image();
-    img.onload = () => {
-      setImageValid(true);
-      setImageChecking(false);
-    };
-    img.onerror = () => {
+    try {
+      const parsed = new URL(raw);
+      const host = parsed.hostname.toLowerCase();
+
+      // Enforce ImgBB ONLY policy
+      if (host !== "ibb.co" && host !== "www.ibb.co" && host !== "i.ibb.co") {
+        setImageValid(false);
+        setImgbbNotice("⚠️ Only ImgBB links (ibb.co) are supported on TKMingle. Please upload to https://imgbb.com.");
+        return;
+      }
+
+      // If it's an ibb.co page link (e.g. https://ibb.co/GvsTj5Nn), auto-convert via our API!
+      if (host === "ibb.co" || host === "www.ibb.co") {
+        setIsResolvingImgbb(true);
+        setImageChecking(true);
+        setImgbbNotice("⚡ Converting ImgBB page link to direct image...");
+        try {
+          const res = await fetch(`/api/resolve-imgbb?url=${encodeURIComponent(raw)}`);
+          const data = await res.json();
+          if (res.ok && data.direct_url) {
+            setImageUrl(data.direct_url);
+            setImgbbNotice("✨ Converted ImgBB link to direct image!");
+            setImageValid(true);
+          } else {
+            setImageValid(false);
+            setImgbbNotice(data.error || "Failed to resolve direct image link from ImgBB.");
+          }
+        } catch (e: any) {
+          setImageValid(false);
+          setImgbbNotice("Network error converting ImgBB link.");
+        } finally {
+          setIsResolvingImgbb(false);
+          setImageChecking(false);
+        }
+        return;
+      }
+
+      // If already direct i.ibb.co
+      if (host === "i.ibb.co") {
+        setImageChecking(true);
+        const img = new window.Image();
+        img.onload = () => {
+          setImageValid(true);
+          setImageChecking(false);
+          setImgbbNotice("✓ Direct ImgBB image link verified!");
+        };
+        img.onerror = () => {
+          setImageValid(false);
+          setImageChecking(false);
+          setImgbbNotice("Could not load image from this URL.");
+        };
+        img.src = raw;
+      }
+    } catch (_) {
       setImageValid(false);
-      setImageChecking(false);
-    };
-    img.src = cleanUrl;
-  }, [imageUrl]);
+      setImgbbNotice("Please enter a valid URL beginning with https://");
+    }
+  };
 
   const handleLike = (id: string, kind: "like" | "fire") => {
     const updated = posts.map((p) => {
@@ -1163,41 +1211,70 @@ export default function SpillTheTeaPage() {
                 </select>
               </div>
 
-              {/* Direct Image Link Section (Per User Specification) */}
+              {/* Direct Image Link Section (ImgBB Only with auto-converter) */}
               <div className="p-3.5 rounded-xl bg-brand-navyCard/60 border border-brand-border space-y-2.5">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <label className="font-bold text-white flex items-center gap-1.5 text-xs">
                       <ImageIcon className="w-3.5 h-3.5 text-brand-teal" />
-                      Attach Image (Direct Link Only)
+                      Attach Image Proof (ImgBB Only)
                     </label>
                     <p className="text-[10px] text-brand-muted mt-0.5 leading-snug">
-                      Paste a direct image URL (e.g. from ibb.co, imgur, or any raw image URL ending in .png, .jpg).
+                      ImgBB page links (<code className="text-brand-lavender font-mono">ibb.co/...</code>) are automatically converted to direct images.
                     </p>
                   </div>
 
-                  {/* 1-Click Test Case Button */}
-                  <button
-                    type="button"
-                    onClick={() => setImageUrl(TEST_IMAGE_URL)}
-                    className="px-2.5 py-1 rounded-lg bg-brand-purple/20 border border-brand-purple/40 text-brand-lavender hover:text-white text-[10px] font-semibold flex-shrink-0 transition-colors"
-                  >
-                    ✨ Use Test Case Image
-                  </button>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <a
+                      href="https://imgbb.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1 rounded-lg bg-brand-teal/15 hover:bg-brand-teal/25 border border-brand-teal/30 text-brand-teal text-[10px] font-semibold flex items-center gap-1 transition-colors"
+                      title="Open free ImgBB uploader in new tab"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>Upload on ImgBB.com</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleImageUrlChange("https://ibb.co/GvsTj5Nn")}
+                      className="px-2 py-1 rounded-lg bg-brand-purple/20 border border-brand-purple/40 text-brand-lavender hover:text-white text-[10px] font-semibold transition-colors"
+                      title="Test auto-converting an ibb.co page link to direct image"
+                    >
+                      ✨ Sample ibb.co
+                    </button>
+                  </div>
+                </div>
+
+                {/* ImgBB Instructions Guide */}
+                <div className="p-2.5 rounded-xl bg-brand-navySecondary/60 border border-brand-border/60 text-[11px] text-brand-muted space-y-1">
+                  <div className="font-semibold text-brand-lavender flex items-center justify-between">
+                    <span>💡 How to attach an image (ImgBB Only):</span>
+                    <span className="text-[10px] text-brand-muted font-normal">Free &bull; No registration needed</span>
+                  </div>
+                  <ol className="list-decimal list-inside space-y-0.5 text-[10.5px] text-brand-text/80">
+                    <li>Visit <a href="https://imgbb.com" target="_blank" rel="noreferrer" className="text-brand-teal underline">imgbb.com</a> &amp; click <em>Start Uploading</em>.</li>
+                    <li>Copy your link: either page link (<code className="text-brand-lavender font-mono">ibb.co/xyz</code>) or direct link (<code className="text-brand-lavender font-mono">i.ibb.co/...</code>).</li>
+                    <li>Paste it below — TKMingle will automatically resolve it into a direct image!</li>
+                  </ol>
                 </div>
 
                 <div className="relative">
                   <input
                     type="url"
                     value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://i.ibb.co/0jBt3Gvm/brand-banner-crop.png"
+                    onChange={(e) => handleImageUrlChange(e.target.value)}
+                    placeholder="https://ibb.co/GvsTj5Nn or https://i.ibb.co/..."
                     className="w-full bg-brand-navyCard border border-brand-border rounded-xl px-3 py-2 text-white placeholder-brand-muted/60 focus:outline-none focus:border-brand-purple font-mono text-[11px]"
                   />
                   {imageUrl && (
                     <button
                       type="button"
-                      onClick={() => setImageUrl("")}
+                      onClick={() => {
+                        setImageUrl("");
+                        setImgbbNotice(null);
+                        setImageValid(null);
+                      }}
                       className="absolute right-2.5 top-2.5 text-brand-muted hover:text-white"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -1205,32 +1282,24 @@ export default function SpillTheTeaPage() {
                   )}
                 </div>
 
-                {/* Validation Indicator & Live Preview */}
-                {imageUrl && (
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center gap-1.5 text-[11px]">
-                      {imageChecking ? (
-                        <span className="text-brand-muted">Checking image URL...</span>
-                      ) : imageValid ? (
-                        <span className="text-brand-teal font-semibold flex items-center gap-1">
-                          <Check className="w-3 h-3 text-brand-teal" /> Direct image verified
-                        </span>
-                      ) : (
-                        <span className="text-brand-error flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3 text-brand-error" /> Unable to preview image from URL
-                        </span>
-                      )}
-                    </div>
+                {/* Auto-converter notice / live status */}
+                {imgbbNotice && (
+                  <p className={`text-[11px] font-medium flex items-center gap-1.5 ${
+                    imageValid ? "text-brand-teal" : isResolvingImgbb ? "text-brand-lavender" : "text-amber-400"
+                  }`}>
+                    {isResolvingImgbb && <RefreshCw className="w-3 h-3 animate-spin text-brand-purple" />}
+                    <span>{imgbbNotice}</span>
+                  </p>
+                )}
 
-                    {imageValid && (
-                      <div className="rounded-xl overflow-hidden border border-brand-border bg-black/40 max-h-48 flex items-center justify-center p-1">
-                        <img
-                          src={imageUrl}
-                          alt="Preview"
-                          className="max-h-44 w-auto object-contain rounded-lg"
-                        />
-                      </div>
-                    )}
+                {/* Live Preview */}
+                {imageUrl && imageValid && (
+                  <div className="rounded-xl overflow-hidden border border-brand-border bg-black/40 max-h-48 flex items-center justify-center p-1">
+                    <img
+                      src={imageUrl}
+                      alt="Preview"
+                      className="max-h-44 w-auto object-contain rounded-lg"
+                    />
                   </div>
                 )}
               </div>

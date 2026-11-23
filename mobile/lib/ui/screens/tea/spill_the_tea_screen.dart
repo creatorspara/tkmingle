@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import '../../../core/services/imgbb_resolver.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/tea_post_model.dart';
@@ -1133,6 +1134,9 @@ class _CreateTeaSheetState extends ConsumerState<_CreateTeaSheet> {
   final _imageController = TextEditingController();
   bool _allowComments = true;
   bool _isSubmitting = false;
+  bool _isResolvingImgbb = false;
+  String? _imgbbStatus;
+  bool _imgbbHasError = false;
 
   @override
   void dispose() {
@@ -1148,6 +1152,63 @@ class _CreateTeaSheetState extends ConsumerState<_CreateTeaSheet> {
     setState(() => _selectedAlias = next);
   }
 
+  Future<void> _handleImageUrlChanged(String val) async {
+    final raw = val.trim();
+    if (raw.isEmpty) {
+      setState(() {
+        _imgbbStatus = null;
+        _imgbbHasError = false;
+        _isResolvingImgbb = false;
+      });
+      return;
+    }
+
+    if (!ImgbbResolver.isImgbbHost(raw)) {
+      setState(() {
+        _imgbbStatus = 'Only ImgBB links (ibb.co or i.ibb.co) are allowed.';
+        _imgbbHasError = true;
+        _isResolvingImgbb = false;
+      });
+      return;
+    }
+
+    if (ImgbbResolver.isDirectImage(raw)) {
+      setState(() {
+        _imgbbStatus = '✓ Valid direct ImgBB image link';
+        _imgbbHasError = false;
+        _isResolvingImgbb = false;
+      });
+      return;
+    }
+
+    // It is an ibb.co page link -> resolve it to direct image
+    setState(() {
+      _isResolvingImgbb = true;
+      _imgbbStatus = 'Resolving ImgBB page link to direct image URL...';
+      _imgbbHasError = false;
+    });
+
+    try {
+      final directUrl = await ImgbbResolver.resolveToDirectUrl(raw);
+      if (mounted) {
+        _imageController.text = directUrl;
+        setState(() {
+          _isResolvingImgbb = false;
+          _imgbbStatus = '✓ Converted to direct image URL!';
+          _imgbbHasError = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isResolvingImgbb = false;
+          _imgbbStatus = 'Could not resolve ImgBB link: ${e.toString().replaceAll('Exception: ', '').replaceAll('FormatException: ', '')}';
+          _imgbbHasError = true;
+        });
+      }
+    }
+  }
+
   Future<void> _handleSubmit() async {
     final content = _contentController.text.trim();
     if (content.isEmpty) {
@@ -1155,6 +1216,30 @@ class _CreateTeaSheetState extends ConsumerState<_CreateTeaSheet> {
         const SnackBar(content: Text('Please enter details or quote text')),
       );
       return;
+    }
+
+    String imageUrl = _imageController.text.trim();
+    if (imageUrl.isNotEmpty) {
+      if (!ImgbbResolver.isImgbbHost(imageUrl)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Only ImgBB links (ibb.co) are supported for Spill the Tea.')),
+        );
+        return;
+      }
+
+      if (!ImgbbResolver.isDirectImage(imageUrl)) {
+        setState(() => _isSubmitting = true);
+        try {
+          imageUrl = await ImgbbResolver.resolveToDirectUrl(imageUrl);
+          _imageController.text = imageUrl;
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to resolve ImgBB image link: $e')),
+          );
+          setState(() => _isSubmitting = false);
+          return;
+        }
+      }
     }
 
     setState(() => _isSubmitting = true);
@@ -1166,7 +1251,7 @@ class _CreateTeaSheetState extends ConsumerState<_CreateTeaSheet> {
             title: _titleController.text.trim(),
             content: content,
             quoteAuthor: _quoteAuthorController.text.trim(),
-            imageUrl: _imageController.text.trim(),
+            imageUrl: imageUrl,
             allowComments: _allowComments,
           );
       if (mounted) {
@@ -1492,20 +1577,180 @@ class _CreateTeaSheetState extends ConsumerState<_CreateTeaSheet> {
                     ),
                   ],
 
-                  // 7. Direct Image Link Field
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: _imageController,
-                    decoration: InputDecoration(
-                      labelText: 'Direct Image Link (Optional)',
-                      hintText: 'https://i.ibb.co/... or https://...',
-                      suffixIcon: IconButton(
-                        tooltip: 'Insert Test Image Link',
-                        icon: const Icon(Icons.add_photo_alternate_outlined, size: 20),
-                        onPressed: () {
-                          _imageController.text = 'https://i.ibb.co/0jBt3Gvm/brand-banner-crop.png';
-                        },
+                  // 7. ImgBB Image Proof Attachment
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.tkmPurple.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.tkmPurple.withOpacity(0.25),
                       ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.image_outlined, size: 16, color: AppColors.tkmPurple),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'IMAGE PROOF (IMGBB ONLY)',
+                                  style: AppTypography.labelSmall(
+                                    isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                  ).copyWith(fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.tkmPurple.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'ImgBB Only',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.tkmPurple,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Upload photo proof to ImgBB (free & no account needed), then paste the link here. Auto-converts to direct image proof!',
+                          style: TextStyle(fontSize: 10.5, color: AppColors.darkTextMuted, height: 1.3),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => ImgbbResolver.openBrowser('https://imgbb.com'),
+                                icon: const Icon(Icons.open_in_new, size: 13),
+                                label: const Text('Upload on ImgBB.com', style: TextStyle(fontSize: 10.5)),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.tkmPurple,
+                                  side: const BorderSide(color: AppColors.tkmPurple),
+                                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  _imageController.text = 'https://ibb.co/GvsTj5Nn';
+                                  _handleImageUrlChanged('https://ibb.co/GvsTj5Nn');
+                                },
+                                icon: const Icon(Icons.auto_awesome, size: 13),
+                                label: const Text('Sample Link', style: TextStyle(fontSize: 10.5)),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.accentTeal,
+                                  side: const BorderSide(color: AppColors.accentTeal),
+                                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: _imageController,
+                          onChanged: _handleImageUrlChanged,
+                          decoration: InputDecoration(
+                            labelText: 'Paste ImgBB Link (ibb.co/...)',
+                            hintText: 'https://ibb.co/GvsTj5Nn or https://i.ibb.co/...',
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            suffixIcon: _isResolvingImgbb
+                                ? const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                  )
+                                : (_imageController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear, size: 16),
+                                        onPressed: () {
+                                          _imageController.clear();
+                                          _handleImageUrlChanged('');
+                                        },
+                                      )
+                                    : null),
+                          ),
+                        ),
+                        if (_imgbbStatus != null) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(
+                                _imgbbHasError
+                                    ? Icons.error_outline
+                                    : (_isResolvingImgbb ? Icons.hourglass_top : Icons.check_circle_outline),
+                                size: 13,
+                                color: _imgbbHasError
+                                    ? AppColors.error
+                                    : (_isResolvingImgbb ? AppColors.tkmPurple : AppColors.accentTeal),
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  _imgbbStatus!,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: _imgbbHasError
+                                        ? AppColors.error
+                                        : (_isResolvingImgbb ? AppColors.tkmPurple : AppColors.accentTeal),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (_imageController.text.trim().isNotEmpty &&
+                            !_imgbbHasError &&
+                            ImgbbResolver.isDirectImage(_imageController.text.trim())) ...[
+                          const SizedBox(height: 10),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: CachedNetworkImage(
+                              imageUrl: _imageController.text.trim(),
+                              height: 110,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              placeholder: (c, u) => Container(
+                                height: 110,
+                                color: Colors.black12,
+                                child: const Center(
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ),
+                              errorWidget: (c, u, e) => Container(
+                                height: 60,
+                                color: Colors.black12,
+                                alignment: Alignment.center,
+                                child: const Text(
+                                  'Image preview unavailable',
+                                  style: TextStyle(fontSize: 10, color: AppColors.darkTextMuted),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
 
