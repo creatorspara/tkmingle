@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Sora } from "next/font/google";
 import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 import PwaRegister from "@/components/PwaRegister";
+import NewProjectNotification from "@/components/NewProjectNotification";
 import "./globals.css";
 
 const sora = Sora({
@@ -73,6 +74,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className="min-h-screen bg-brand-navy text-brand-text antialiased selection:bg-brand-purple selection:text-white">
+        <NewProjectNotification />
         <AuthRedirectHandler />
         <PwaRegister />
         {children}

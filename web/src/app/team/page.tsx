@@ -19,6 +19,8 @@ import {
   Heart,
   Layers,
   Sparkles,
+  Shield,
+  Lock,
 } from "lucide-react";
 
 export default function EquipoKromiumPage() {
@@ -308,31 +310,96 @@ export default function EquipoKromiumPage() {
         </div>
       </section>
 
-      {/* 5. FLAGSHIP PROJECT: TKMINGLE */}
+      {/* 5. FEATURED PROJECTS: KROMIUM ECOSYSTEM */}
       <section id="projects" className="py-20 bg-[#0E0E17] border-b border-[#1C1C28]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <div className="text-xs font-bold uppercase tracking-widest text-[#A78BFA]">
               Featured Work
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
-              TKMingle Platform
+              Equipo Kromium Ecosystem
             </h2>
             <p className="text-sm text-gray-400">
-              Our campus-wide social discovery ecosystem connecting students across all engineering branches.
+              Open-source software, high-assurance security engineering, and campus platforms built by student engineers.
             </p>
           </div>
 
+          {/* PROJECT 1: EQUIPO KROMIUM VAULT */}
+          <div className="rounded-3xl bg-[#141422] border border-[#6C4DFF]/30 p-6 sm:p-10 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#6C4DFF]/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+            <div className="space-y-6 relative z-10">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-6 border-b border-white/10">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6C4DFF]/20 border border-[#6C4DFF]/40 text-xs font-medium text-[#D1C4FF]">
+                    <span className="w-2 h-2 rounded-full bg-[#50D6C2] animate-pulse" />
+                    <span>v2.0 Production Release &bull; Multi-Platform</span>
+                  </div>
+                  <h3 className="text-2xl font-extrabold text-white flex items-center gap-2">
+                    <Shield className="w-6 h-6 text-[#50D6C2]" />
+                    Equipo Kromium Vault
+                  </h3>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <a
+                    href="https://github.com/creatorspara/equipo-kromium-vault"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 rounded-xl bg-[#6C4DFF] hover:bg-[#6C4DFF]/90 text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-[#6C4DFF]/25"
+                  >
+                    <Github className="w-3.5 h-3.5" />
+                    View on GitHub
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                  <a
+                    href="https://github.com/creatorspara/equipo-kromium-vault/releases"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors"
+                  >
+                    Releases (.exe / .apk)
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+
+              <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-3xl">
+                Equipo Kromium Vault is a zero-knowledge, multi-platform cryptographic security suite designed to protect sensitive files and archives. Built strictly in accordance with NIST SP 800-38D AES-256-GCM authenticated encryption, PBKDF2 (600,000 rounds) key stretching, and custom <code className="text-[#A78BFA] bg-black/40 px-1.5 py-0.5 rounded">.kromium</code> container architecture with native Windows desktop, Android mobile, and client-side web support.
+              </p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                  <div className="text-gray-400 text-[10px] font-mono">Windows Standalone</div>
+                  <div className="font-semibold text-white mt-1">Native .exe Runner</div>
+                </div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                  <div className="text-gray-400 text-[10px] font-mono">Mobile Ecosystem</div>
+                  <div className="font-semibold text-white mt-1">Flutter Android (.apk)</div>
+                </div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                  <div className="text-gray-400 text-[10px] font-mono">Cryptographic Core</div>
+                  <div className="font-semibold text-white mt-1">AES-256-GCM + PBKDF2</div>
+                </div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                  <div className="text-gray-400 text-[10px] font-mono">Container Format</div>
+                  <div className="font-semibold text-white mt-1">.kromium Encrypted</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* PROJECT 2: TKMINGLE */}
           <div className="rounded-3xl bg-[#141422] border border-white/10 p-6 sm:p-10 shadow-2xl">
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-3 pb-6 border-b border-white/10">
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6C4DFF]/20 border border-[#6C4DFF]/40 text-xs font-medium text-[#D1C4FF]">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>v1.0.1-k1 Production Release</span>
+                    <span>v2.5.5 Production Release</span>
                   </div>
                   <h3 className="text-2xl font-extrabold text-white">
-                    TKMingle
+                    TKMingle Platform
                   </h3>
                 </div>
 
@@ -345,7 +412,7 @@ export default function EquipoKromiumPage() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <a
-                    href="https://github.com/creatorspara/tkmingle/releases/tag/v1.0.1-k1"
+                    href="https://github.com/creatorspara/tkmingle/releases"
                     target="_blank"
                     rel="noreferrer"
                     className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors"
@@ -357,7 +424,7 @@ export default function EquipoKromiumPage() {
               </div>
 
               <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-3xl">
-                TKMingle breaks down department silos at TKM College of Engineering. Built from scratch with Flutter for Android and iOS, Next.js for the responsive web, Supabase for authentication and PostgreSQL data storage, and Brevo SMTP for secure campus email verification.
+                TKMingle breaks down department silos at TKM College of Engineering. Built from scratch with Flutter for Android, Next.js for the responsive web portal, Supabase for authentication and PostgreSQL data storage, and Spill the Tea anonymous campus community.
               </p>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
